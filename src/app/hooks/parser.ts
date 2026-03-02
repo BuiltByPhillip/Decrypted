@@ -30,22 +30,31 @@ type Exercise = {
   answer: Expr[];
 }
 
-export type Expr =
+// Leaf expressions (no children)
+export type LeafExpr =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
-  | { kind: "int"; value: number}
-  | { kind: "placeholder"; index: number }
-  | { kind: "and"; left: Expr, right: Expr }
-  | { kind: "or"; left: Expr, right: Expr }
-  | { kind: "pow"; base: Expr; exp: Expr }
-  | { kind: "mod"; left: Expr; right: Expr }
-  | { kind: "mul"; left: Expr; right: Expr }
-  | { kind: "div"; left: Expr; right: Expr }
-  | { kind: "add"; left: Expr; right: Expr }
-  | { kind: "sub"; left: Expr; right: Expr }
-  | { kind: "less"; left: Expr; right: Expr }
-  | { kind: "greater"; left: Expr; right: Expr }
-  | { kind: "equal"; left: Expr; right: Expr }
+  | { kind: "int"; value: number }
+  | { kind: "placeholder"; index: number };
+
+// Binary operator types
+export type BinaryOp =
+  | "and" | "or"           // logical
+  | "add" | "sub"          // arithmetic
+  | "mul" | "div" | "mod"  // multiplicative
+  | "pow"                  // exponentiation
+  | "less" | "greater" | "equal";  // comparison
+
+// Binary expression (two children)
+export type BinaryExpr = {
+  kind: "binary";
+  op: BinaryOp;
+  left: Expr;
+  right: Expr;
+};
+
+// Combined expression type
+export type Expr = LeafExpr | BinaryExpr
 
 export type PaletteItem =
   | { kind: "var"; name: string }
@@ -262,34 +271,27 @@ class ExpressionParser {
     return left;
   }
 
-  private makeNode(op: string, left: Expr, right: Expr): Expr {
-    switch (op) {
-      // Below should only contain binary operators
-      case "^":
-        return { kind: "pow", base: left, exp: right };
-      case "mod":
-        return { kind: "mod", left: left, right: right };
-      case "and":
-        return { kind: "and", left: left, right: right };
-      case "or":
-        return { kind: "or", left: left, right: right };
-      case "*":
-        return { kind: "mul", left: left, right: right };
-      case "/":
-        return { kind: "div", left: left, right: right };
-      case "+":
-        return { kind: "add", left: left, right: right };
-      case "-":
-        return { kind: "sub", left: left, right: right };
-      case "<":
-        return { kind: "less", left: left, right: right };
-      case ">":
-        return { kind: "greater", left: left, right: right };
-      case "=":
-        return { kind: "equal", left: left, right: right };
-      default:
-        throw new Error(`Unknown operator: ${op}`);
+  private makeNode(op: string, left: Expr, right: Expr): BinaryExpr {
+    const opMap: Record<string, BinaryOp> = {
+      "^": "pow",
+      "mod": "mod",
+      "and": "and",
+      "or": "or",
+      "*": "mul",
+      "/": "div",
+      "+": "add",
+      "-": "sub",
+      "<": "less",
+      ">": "greater",
+      "=": "equal",
+    };
+
+    const binaryOp = opMap[op];
+    if (!binaryOp) {
+      throw new Error(`Unknown operator: ${op}`);
     }
+
+    return { kind: "binary", op: binaryOp, left, right };
   }
 }
 

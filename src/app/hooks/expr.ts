@@ -3,43 +3,29 @@ import type { Expr } from "~/app/hooks/parser";
 
 /* SubstituteRoles take an expressions containing role references ({generator}, {bob_secret}, etc) and replaces with actual user selected symbols */
 export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr {
-
   switch (e.kind) {
     case "role":
-      return definitions[e.name] ?? e
+      return definitions[e.name] ?? e;
 
-    // Leaf nodes
+    // Leaf nodes - return as-is
     case "var":
     case "int":
     case "placeholder":
       return e;
 
-    // Recursive case for pow expression
-    case "pow":
+    // Binary expression - recursively substitute in children
+    case "binary":
       return {
-        kind: e.kind,
-        base: substituteRoles(e.base, definitions),
-        exp: substituteRoles(e.exp, definitions)
-      }
-
-    // Recursive case for left and right expressions
-    case "add":
-    case "sub":
-    case "mul":
-    case "div":
-    case "mod":
-    case "equal":
-    case "less":
-    case "greater":
-    case "and":
-    case "or":
-      return {
-        kind: e.kind,
+        kind: "binary",
+        op: e.op,
         left: substituteRoles(e.left, definitions),
-        right: substituteRoles(e.right, definitions)
+        right: substituteRoles(e.right, definitions),
       };
   }
 }
+
+// Operators where order doesn't matter: a + b === b + a
+const COMMUTATIVE_OPS = new Set(["equal", "add", "mul", "and", "or"]);
 
 /* Checks if two expressions are structurally and mathematically equal */
 export function exprEquals(a: Expr, b: Expr): boolean {
@@ -47,38 +33,44 @@ export function exprEquals(a: Expr, b: Expr): boolean {
 
   switch (a.kind) {
     case "var":
-      return b.kind === a.kind && b.name === a.name;
+      return b.kind === "var" && b.name === a.name;
     case "role":
-      return b.kind === a.kind && b.name === a.name;
+      return b.kind === "role" && b.name === a.name;
     case "int":
-      return b.kind === a.kind && b.value === a.value;
+      return b.kind === "int" && b.value === a.value;
     case "placeholder":
-      return b.kind === a.kind && b.index === a.index;
-    case "pow":
-      return b.kind === a.kind && b.base === a.base && b.exp === a.exp;
+      return b.kind === "placeholder" && b.index === a.index;
 
-    // Commutative - check both orderings
-    case "equal":
-    case "add":
-    case "mul":
-    case "and":
-    case "or":
-      return b.kind === a.kind && (
-        exprEquals(a.left, b.left) && exprEquals(a.right, b.right) ||
-        exprEquals(a.left, b.right) && exprEquals(a.right, b.left)
-      );
+    case "binary":
+      if (b.kind !== "binary" || a.op !== b.op) return false;
 
-    // Non-commutative - order matters
-    case "sub":
-    case "mod":
-    case "div":
-    case "less":
-    case "greater":
-      return b.kind === a.kind && (
-        exprEquals(a.left, b.left) && exprEquals(a.right, b.right)
-      );
+      // Check standard order
+      const standardMatch = exprEquals(a.left, b.left) && exprEquals(a.right, b.right);
+
+      // For commutative operators, also check swapped order
+      if (COMMUTATIVE_OPS.has(a.op)) {
+        const swappedMatch = exprEquals(a.left, b.right) && exprEquals(a.right, b.left);
+        return standardMatch || swappedMatch;
+      }
+
+      return standardMatch;
   }
 }
+
+// Operator symbols for string representation
+const OP_TO_STRING: Record<string, string> = {
+  pow: "^",
+  mod: " mod ",
+  mul: " * ",
+  div: " / ",
+  add: " + ",
+  sub: " - ",
+  less: " < ",
+  greater: " > ",
+  equal: " = ",
+  and: " and ",
+  or: " or ",
+};
 
 export function exprToString(e: Expr): string {
   switch (e.kind) {
@@ -90,28 +82,9 @@ export function exprToString(e: Expr): string {
       return String(e.value);
     case "placeholder":
       return `$${e.index}`;
-    case "pow":
-      return `${exprToString(e.base)}^${exprToString(e.exp)}`;
-    case "mod":
-      return `${exprToString(e.left)} mod ${exprToString(e.right)}`;
-    case "mul":
-      return `${exprToString(e.left)} * ${exprToString(e.right)}`;
-    case "div":
-      return `${exprToString(e.left)} / ${exprToString(e.right)}`;
-    case "add":
-      return `${exprToString(e.left)} + ${exprToString(e.right)}`;
-    case "sub":
-      return `${exprToString(e.left)} - ${exprToString(e.right)}`;
-    case "less":
-      return `${exprToString(e.left)} < ${exprToString(e.right)}`;
-    case "greater":
-      return `${exprToString(e.left)} > ${exprToString(e.right)}`;
-    case "equal":
-      return `${exprToString(e.left)} = ${exprToString(e.right)}`;
-    case "and":
-      return `${exprToString(e.left)} and ${exprToString(e.right)}`;
-    case "or":
-      return `${exprToString(e.left)} or ${exprToString(e.right)}`;
+    case "binary":
+      const opStr = OP_TO_STRING[e.op] ?? ` ${e.op} `;
+      return `${exprToString(e.left)}${opStr}${exprToString(e.right)}`;
   }
 }
 
