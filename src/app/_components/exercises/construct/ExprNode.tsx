@@ -1,23 +1,24 @@
 import type { Expr, PaletteItem } from "~/app/hooks/parser";
 import { operatorSymbol } from "~/app/hooks/parser";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
+import { paletteItemToExpr } from "~/app/hooks/expr";
 
 type ExprNodeProps = {
   expr: Expr;
   className?: string;
+  slotIdPrefix?: string;
+  onSlotFill?: (newExpr: Expr) => void;
+  registerSlot?: (id: string, elem: HTMLDivElement | null, onFill: (item: PaletteItem) => void) => void // Register slot with the parent
   onStartDrag?: (expr: Expr, x: number, y: number, offsetX: number, offsetY: number) => void;
 }
 
-export default function ExprNode({ expr, className, onStartDrag }: ExprNodeProps) {
+export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, onSlotFill, registerSlot }: ExprNodeProps) {
 
-  /*
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-    onStartDrag(expr, e.clientX, e.clientY, offsetX, offsetY);
-  };
-   */
+  function onFill(paletteItem: PaletteItem) {
+    if (onSlotFill) {
+      onSlotFill(paletteItemToExpr(paletteItem));
+    }
+  }
 
   // Leaf expressions - render their value directly
   switch (expr.kind) {
@@ -30,13 +31,29 @@ export default function ExprNode({ expr, className, onStartDrag }: ExprNodeProps
     case "placeholder":
       return <span>{`$${expr.index}`}</span>;
     case "slot":
-      return <Dropable/>
+      return <Dropable ref={(elem) => {
+        registerSlot?.(slotIdPrefix ?? "", elem, onFill);
+      }}/>
     case "binary":
       return (
         <div className="flex items-center gap-1">
-          <ExprNode expr={expr.left} className={className} onStartDrag={onStartDrag} />
+          <ExprNode
+            expr={expr.left}
+            className={className}
+            onStartDrag={onStartDrag}
+            onSlotFill={(newExpr) => onSlotFill?.({...expr, left: newExpr})}
+            slotIdPrefix={(slotIdPrefix ?? "") + "L"}
+            registerSlot={registerSlot}
+          />
           <span>{operatorSymbol[expr.op]}</span>
-          <ExprNode expr={expr.right} className={className} onStartDrag={onStartDrag} />
+          <ExprNode
+            expr={expr.right}
+            className={className}
+            onStartDrag={onStartDrag}
+            onSlotFill={(newExpr) => onSlotFill?.({...expr, right: newExpr})}
+            slotIdPrefix={(slotIdPrefix + "") + "R"}
+            registerSlot={registerSlot}
+          />
         </div>
       );
   }
