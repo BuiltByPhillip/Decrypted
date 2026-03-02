@@ -1,4 +1,4 @@
-import  { operatorSymbol, type PaletteItem } from "~/app/hooks/parser";
+import { operatorSymbol, type PaletteItem } from "~/app/hooks/parser";
 
 type ExprBlockProps = {
   item: PaletteItem;

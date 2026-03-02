@@ -1,5 +1,5 @@
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import type { Expr } from "~/app/hooks/parser";
+import type { Expr, PaletteItem } from "~/app/hooks/parser";
 
 /* SubstituteRoles take an expressions containing role references ({generator}, {bob_secret}, etc) and replaces with actual user selected symbols */
 export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr {
@@ -11,6 +11,7 @@ export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr
     case "var":
     case "int":
     case "placeholder":
+    case "slot":
       return e;
 
     // Binary expression - recursively substitute in children
@@ -40,6 +41,8 @@ export function exprEquals(a: Expr, b: Expr): boolean {
       return b.kind === "int" && b.value === a.value;
     case "placeholder":
       return b.kind === "placeholder" && b.index === a.index;
+    case "slot":
+      return a.kind === "slot" && b.kind === "slot";
 
     case "binary":
       if (b.kind !== "binary" || a.op !== b.op) return false;
@@ -82,6 +85,8 @@ export function exprToString(e: Expr): string {
       return String(e.value);
     case "placeholder":
       return `$${e.index}`;
+    case "slot":
+      return "_";
     case "binary":
       const opStr = OP_TO_STRING[e.op] ?? ` ${e.op} `;
       return `${exprToString(e.left)}${opStr}${exprToString(e.right)}`;
@@ -93,4 +98,23 @@ export function exprListContains(expr: Expr, list: Expr[]): boolean {
     if (exprEquals(expr, list[i]!)) return true;
   }
   return false;
+}
+
+/* Converts a palette item to an expression. Operators become binary expressions with empty slots. */
+export function paletteItemToExpr(item: PaletteItem): Expr {
+  switch (item.kind) {
+    case "var":
+      return { kind: "var", name: item.name };
+    case "role":
+      return { kind: "role", name: item.name };
+    case "int":
+      return { kind: "int", value: item.value };
+    case "operator":
+      return {
+        kind: "binary",
+        op: item.op,
+        left: { kind: "slot" },
+        right: { kind: "slot" },
+      };
+  }
 }

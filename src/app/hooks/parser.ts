@@ -35,7 +35,8 @@ export type LeafExpr =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
-  | { kind: "placeholder"; index: number };
+  | { kind: "placeholder"; index: number } // Defined by user "fill in value here" ($1, $2)
+  | { kind: "slot" }; // Empty drop target in UI
 
 // Binary operator types
 export type BinaryOp =
@@ -190,23 +191,6 @@ export function tokenize(input: string): Token[] {
     throw new Error(`Unexpected character: ${input[i]}`);
   }
   return inner(0, [])
-}
-
-function evaluate(input: string): Expr {
-  const s = input.trim();
-
-  // Integer
-  if (/^\d+$/.test(s)) {
-    return { kind: "int", value: Number(s) };
-  }
-
-  // Variable (including $1, a, p, etc.)
-  if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(s)) {
-    return { kind: "var", name: s };
-  }
-
-  // Expression is invalid and not currently supported
-  throw new Error(`Invalid expression: '${input}'`);
 }
 
 class ExpressionParser {

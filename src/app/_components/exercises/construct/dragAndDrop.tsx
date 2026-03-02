@@ -3,14 +3,14 @@
 import { useRef, useState } from "react";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
 import ExprContainer from "~/app/_components/exercises/construct/ExprContainer";
-import type { PaletteItem as Item} from "~/app/hooks/parser";
+import type { Expr, PaletteItem as Item } from "~/app/hooks/parser";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
-import PaletteItem from "~/app/_components/exercises/construct/PaletteItem";
-import DroppedExpr from "~/app/_components/exercises/construct/DroppedExpr";
+import ExprNode from "~/app/_components/exercises/construct/ExprNode";
+import { paletteItemToExpr } from "~/app/hooks/expr";
 
 export default function DragAndDrop() {
   const dropRef = useRef<HTMLDivElement>(null);
-  const [droppedItems, setDroppedItems] = useState<Item[]>([])
+  const [expression, setExpression] = useState<Expr | null>(null);
   const [dragState, setDragState] = useState<{
     item: Item;
     x: number;
@@ -18,10 +18,6 @@ export default function DragAndDrop() {
     offsetX: number;
     offsetY: number;
   } | null>(null);
-
-  const addItem = (item: Item) => {
-    setDroppedItems([...droppedItems, item]);
-  }
 
   const checkDrop = (x:number, y:number) :  DOMRect | null => {
     const bounds = dropRef.current?.getBoundingClientRect();
@@ -62,17 +58,15 @@ export default function DragAndDrop() {
           offsetY={dragState.offsetY}
           onDrop={(x, y) => {
             const bounds = checkDrop(x, y);
-            if (bounds) {
-              addItem(dragState?.item)
+            if (bounds && dragState) {
+              setExpression(paletteItemToExpr(dragState.item));
             }
-            setDragState(null)
+            setDragState(null);
           }}
         />
       )}
       <Dropable ref={dropRef}>
-        {droppedItems.map((item, i) => (
-          <DroppedExpr key={i} item={item} onStartDrag={onStartDrag}></DroppedExpr>
-        ))}
+        {expression ? <ExprNode expr={expression} /> : <span className="text-muted">Drop here</span>}
       </Dropable>
     </div>
 
