@@ -42,10 +42,10 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             className={className}
             onStartDrag={onStartDrag}
             onSlotFill={(newExpr) => onSlotFill?.({...expr, left: newExpr})}
-            slotIdPrefix={(slotIdPrefix ?? "") + "L"}
+            slotIdPrefix={(slotIdPrefix + "") + "L"}
             registerSlot={registerSlot}
           />
-          <span>{operatorSymbol[expr.op]}</span>
+          <span className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none">{operatorSymbol[expr.op]}</span>
           <ExprNode
             expr={expr.right}
             className={className}
