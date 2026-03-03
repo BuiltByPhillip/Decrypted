@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { operatorSymbol, type PaletteItem } from "~/app/hooks/parser";
+import useDraggable from "./useDraggable";
 
 type DragGhostProps = {
   paletteItem: PaletteItem;
@@ -8,44 +9,12 @@ type DragGhostProps = {
   offsetX: number;
   offsetY: number;
   onDrop: (x: number, y: number) => void;
-}
+};
 
 export default function DragGhost({ paletteItem, onDrop, startX, startY, offsetX, offsetY }: DragGhostProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const posRef = useRef({ startX, startY });
-  const onDropRef = useRef(onDrop);
 
-  useEffect(() => {
-    // Offset by where the user clicked within the palette item
-    ref.current!.style.left = (startX - offsetX) + "px";
-    ref.current!.style.top = (startY - offsetY) + "px";
-
-    const mousemove = (event: MouseEvent) => {
-      const deltaX = posRef.current.startX - event.clientX;
-      const deltaY = posRef.current.startY - event.clientY;
-
-      posRef.current.startX = event.clientX;
-      posRef.current.startY = event.clientY;
-
-      ref.current!.style.top = (ref.current!.offsetTop - deltaY) + "px";
-      ref.current!.style.left = (ref.current!.offsetLeft - deltaX) + "px";
-    };
-
-    const mouseup = (event: MouseEvent) => {
-      document.removeEventListener("mousemove", mousemove);
-      document.removeEventListener("mouseup", mouseup);
-      onDropRef.current(event.clientX, event.clientY);
-    };
-
-    document.addEventListener("mousemove", mousemove);
-    document.addEventListener("mouseup", mouseup);
-
-    return () => {
-      document.removeEventListener("mousemove", mousemove);
-      document.removeEventListener("mouseup", mouseup);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useDraggable({ ref, startX, startY, offsetX, offsetY, onDrop });
 
   const renderValue = (item: PaletteItem) => {
         switch (item.kind) {
