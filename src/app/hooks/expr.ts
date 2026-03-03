@@ -51,7 +51,7 @@ export function exprEquals(a: Expr, b: Expr): boolean {
       const standardMatch = exprEquals(a.left, b.left) && exprEquals(a.right, b.right);
 
       // For commutative operators, also check swapped order
-      if (COMMUTATIVE_OPS.has(a.op)) {
+      if (a.op !== null && COMMUTATIVE_OPS.has(a.op)) {
         const swappedMatch = exprEquals(a.left, b.right) && exprEquals(a.right, b.left);
         return standardMatch || swappedMatch;
       }
@@ -88,7 +88,7 @@ export function exprToString(e: Expr): string {
     case "slot":
       return "_";
     case "binary":
-      const opStr = OP_TO_STRING[e.op] ?? ` ${e.op} `;
+      const opStr = e.op === null ? " _ " : (OP_TO_STRING[e.op] ?? ` ${e.op} `);
       return `${exprToString(e.left)}${opStr}${exprToString(e.right)}`;
   }
 }
@@ -98,6 +98,32 @@ export function exprListContains(expr: Expr, list: Expr[]): boolean {
     if (exprEquals(expr, list[i]!)) return true;
   }
   return false;
+}
+
+/* Normalizes an expression by collapsing empty binary structures to slots.
+   A binary is "empty" when op is null and both children are slots. */
+export function normalizeExpr(e: Expr): Expr {
+  switch (e.kind) {
+    case "var":
+    case "int":
+    case "role":
+    case "placeholder":
+    case "slot":
+      return e;
+
+    case "binary":
+      // First normalize children
+      const left = normalizeExpr(e.left);
+      const right = normalizeExpr(e.right);
+
+      // If op is null and both children are slots, collapse to a single slot
+      if (e.op === null && left.kind === "slot" && right.kind === "slot") {
+        return { kind: "slot" };
+      }
+
+      // Return normalized binary
+      return { ...e, left, right };
+  }
 }
 
 /* Converts a palette item to an expression. Operators become binary expressions with empty slots. */

@@ -6,7 +6,7 @@ import ExprContainer from "~/app/_components/exercises/construct/ExprContainer";
 import type { Expr, PaletteItem as Item } from "~/app/hooks/parser";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
 import ExprNode from "~/app/_components/exercises/construct/ExprNode";
-import { paletteItemToExpr } from "~/app/hooks/expr";
+import { normalizeExpr, paletteItemToExpr } from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 
 export default function DragAndDrop() {
@@ -20,6 +20,7 @@ export default function DragAndDrop() {
     y: number;
     offsetX: number;
     offsetY: number;
+    replaceWithSlot?: () => void;
   } | null>(null);
 
   const registerSlot = (id: string, elem: HTMLDivElement | null, onFill: (item: Item) => void) => {
@@ -68,6 +69,48 @@ export default function DragAndDrop() {
     })
   }
 
+  const exprToPaletteItem = (expr: Expr): Item | null => {
+    switch (expr.kind) {
+      case "int":
+        return { kind: "int", value: expr.value };
+      case "var":
+        return { kind: "var", name: expr.name };
+      case "role":
+        return { kind: "role", name: expr.name };
+      case "binary":
+        // Can't drag a binary with null operator
+        if (expr.op === null) return null;
+        return { kind: "operator", op: expr.op };
+      default:
+        return null;
+    }
+  };
+
+  const onExprStartDrag = (expr: Expr, x: number, y: number, offsetX: number, offsetY: number, replaceWithSlot: () => void) => {
+    const item = exprToPaletteItem(expr);
+    if (!item) return;
+    setDragState({
+      item,
+      x,
+      y,
+      offsetX,
+      offsetY,
+      replaceWithSlot,
+    });
+  }
+
+  // Wrapper that normalizes the expression before setting it
+  // This collapses empty binary structures (op: null, left: slot, right: slot) to a single slot
+  const setNormalizedExpression = (expr: Expr) => {
+    const normalized = normalizeExpr(expr);
+    // If the entire expression collapsed to a slot, clear it
+    if (normalized.kind === "slot") {
+      setExpression(null);
+    } else {
+      setExpression(normalized);
+    }
+  }
+
   return (
     <div className="flex flex-col items-center">
       <ExprContainer
@@ -88,8 +131,8 @@ export default function DragAndDrop() {
               slot.onFill(dragState.item) // Fill the slot
             }
             // Check if dropped in trash can
-            else if (checkTrash(x, y)) {
-              // TODO: Delete expression
+            else if (checkTrash(x, y) && dragState.replaceWithSlot) {
+              dragState.replaceWithSlot();
             }
             // Check if dropped on main canvas
             else if (checkDrop(x, y) && dragState) {
@@ -101,7 +144,7 @@ export default function DragAndDrop() {
         />
       )}
       <Dropable ref={dropRef}>
-        {expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setExpression} /> : <span className="text-muted">Drop here</span>}
+        {expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span className="text-muted">Drop here</span>}
       </Dropable>
       <TrashContainer ref={trashRef} className="absolute right-70 top-50" isDragging={!!dragState}/>
     </div>

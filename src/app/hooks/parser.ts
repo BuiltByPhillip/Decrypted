@@ -47,9 +47,10 @@ export type BinaryOp =
   | "less" | "greater" | "equal";  // comparison
 
 // Binary expression (two children)
+// op can be null when the operator has been removed (operator slot)
 export type BinaryExpr = {
   kind: "binary";
-  op: BinaryOp;
+  op: BinaryOp | null;
   left: Expr;
   right: Expr;
 };

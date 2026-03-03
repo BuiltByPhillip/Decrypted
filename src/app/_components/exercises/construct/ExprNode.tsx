@@ -1,4 +1,4 @@
-import type { Expr, PaletteItem } from "~/app/hooks/parser";
+import type { BinaryOp, Expr, PaletteItem } from "~/app/hooks/parser";
 import { operatorSymbol } from "~/app/hooks/parser";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
 import { paletteItemToExpr } from "~/app/hooks/expr";
@@ -8,8 +8,8 @@ type ExprNodeProps = {
   className?: string;
   slotIdPrefix?: string;
   onSlotFill?: (newExpr: Expr) => void;
-  registerSlot?: (id: string, elem: HTMLDivElement | null, onFill: (item: PaletteItem) => void) => void // Register slot with the parent
-  onStartDrag?: (expr: Expr, x: number, y: number, offsetX: number, offsetY: number) => void;
+  registerSlot?: (id: string, elem: HTMLDivElement | null, onFill: (item: PaletteItem) => void) => void; // Register slot with the parent
+  onStartDrag?: (expr: Expr, x: number, y: number, offsetX: number, offsetY: number, replaceWithSlot: () => void) => void;
 }
 
 export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, onSlotFill, registerSlot }: ExprNodeProps) {
@@ -20,16 +20,56 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
     }
   }
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
+    if (!onStartDrag || !onSlotFill) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    onStartDrag(expr, e.clientX, e.clientY, offsetX, offsetY, () => onSlotFill({ kind: "slot" }));
+  };
+
+  // Handler for dragging operator - sets op to null instead of replacing entire expression
+  const handleOperatorMouseDown = (e: React.MouseEvent<HTMLElement>, op: BinaryOp) => {
+    if (!onStartDrag || !onSlotFill || expr.kind !== "binary") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    // Create a fake "operator" expr for the drag ghost
+    const operatorExpr: Expr = { kind: "binary", op, left: { kind: "slot" }, right: { kind: "slot" } };
+
+    // If both children are slots, removing the operator leaves an empty structure
+    // In that case, replace the entire binary with a single slot
+    const bothChildrenAreSlots = expr.left.kind === "slot" && expr.right.kind === "slot";
+    const replaceWith = bothChildrenAreSlots
+      ? { kind: "slot" } as const
+      : { ...expr, op: null };
+
+    onStartDrag(operatorExpr, e.clientX, e.clientY, offsetX, offsetY, () => onSlotFill(replaceWith));
+  };
+
+  // Handler for filling an operator slot
+  const onOperatorFill = (paletteItem: PaletteItem) => {
+    if (expr.kind !== "binary" || paletteItem.kind !== "operator") return;
+    onSlotFill?.({ ...expr, op: paletteItem.op });
+  };
+
   // Leaf expressions - render their value directly
   switch (expr.kind) {
     case "int":
-      return <span className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none">{expr.value}</span>;
+      return (
+        <span
+          className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none"
+          onMouseDown={handleMouseDown}
+        >
+          {expr.value}
+        </span>
+      );
     case "var":
-      return <span>{expr.name}</span>;
+      return <span onMouseDown={handleMouseDown}>{expr.name}</span>;
     case "role":
-      return <span>{`{${expr.name}}`}</span>;
+      return <span onMouseDown={handleMouseDown}>{`{${expr.name}}`}</span>;
     case "placeholder":
-      return <span>{`$${expr.index}`}</span>;
+      return <span onMouseDown={handleMouseDown}>{`$${expr.index}`}</span>;
     case "slot":
       return <Dropable ref={(elem) => {
         registerSlot?.(slotIdPrefix ?? "", elem, onFill);
@@ -45,7 +85,23 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             slotIdPrefix={(slotIdPrefix + "") + "L"}
             registerSlot={registerSlot}
           />
-          <span className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none">{operatorSymbol[expr.op]}</span>
+          {expr.op === null ? (
+            // Operator slot - render a Dropable for dropping a new operator
+            <Dropable
+              ref={(elem) => {
+                registerSlot?.((slotIdPrefix ?? "") + "OP", elem, onOperatorFill);
+              }}
+              className="h-10 w-10"
+            />
+          ) : (
+            // Operator present - render it and make it draggable
+            <span
+              className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none"
+              onMouseDown={(e) => handleOperatorMouseDown(e, expr.op!)}
+            >
+              {operatorSymbol[expr.op]}
+            </span>
+          )}
           <ExprNode
             expr={expr.right}
             className={className}

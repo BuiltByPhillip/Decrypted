@@ -11,7 +11,7 @@ export default forwardRef<HTMLDivElement, TrashContainerProps>(function TrashCon
   const { className, isDragging } = props
 
   return (
-    <div className={`min-h-100 min-w-30 border border-red-500 rounded-2xl ${className}`}>
+    <div ref={ref} className={`min-h-100 min-w-30 border border-red-500 rounded-2xl ${className}`}>
 
     </div>
   );
