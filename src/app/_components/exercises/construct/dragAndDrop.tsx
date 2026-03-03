@@ -7,9 +7,11 @@ import type { Expr, PaletteItem as Item } from "~/app/hooks/parser";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
 import ExprNode from "~/app/_components/exercises/construct/ExprNode";
 import { paletteItemToExpr } from "~/app/hooks/expr";
+import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 
 export default function DragAndDrop() {
   const dropRef = useRef<HTMLDivElement>(null);
+  const trashRef = useRef<HTMLDivElement>(null);
   const slotsRef = useRef<Map<string, { element: HTMLDivElement; onFill: (item: Item) => void }>>(new Map());
   const [expression, setExpression] = useState<Expr | null>(null);
   const [dragState, setDragState] = useState<{
@@ -24,18 +26,20 @@ export default function DragAndDrop() {
     elem ? slotsRef.current.set(id, {element: elem, onFill}) : slotsRef.current.delete(id)
   }
 
+  const isInside = (x: number, y: number, bounds: DOMRect): boolean => {
+    return (
+      x >= bounds.left &&
+      x <= bounds.right &&
+      y <= bounds.bottom &&
+      y >= bounds.top
+    )
+  }
+
   const findSlotAt = (x: number, y: number) => {
     for (const slot of slotsRef.current.values()) {
       const bounds = slot.element.getBoundingClientRect();
 
-      const isInside = (
-        x >= bounds.left &&
-        x <= bounds.right &&
-        y >= bounds.top &&
-        y <= bounds.bottom
-      );
-
-      if (isInside) return slot;
+      if (isInside(x, y, bounds)) return slot;
     }
     return null;
   }
@@ -44,14 +48,14 @@ export default function DragAndDrop() {
     const bounds = dropRef.current?.getBoundingClientRect();
     if (!bounds) return null;
 
-    const isInside = (
-      x >= bounds.left &&
-      x <= bounds.right &&
-      y <= bounds.bottom &&
-      y >= bounds.top
-    );
+    return isInside(x, y, bounds) ? bounds : null;
+  }
 
-    return isInside ? bounds : null;
+  const checkTrash = (x:number, y:number) => {
+    const bounds = trashRef.current?.getBoundingClientRect();
+    if (!bounds) return null;
+
+    return isInside(x, y, bounds) ? bounds : null;
   }
 
   const onStartDrag = (item: Item, x: number, y: number, offsetX: number, offsetY: number) => {
@@ -67,7 +71,7 @@ export default function DragAndDrop() {
   return (
     <div className="flex flex-col items-center">
       <ExprContainer
-        paletteItems={[{kind: "operator", op: "div"}, {kind: "operator", op: "mul"}]}
+        paletteItems={[{kind: "operator", op: "div"}, {kind: "operator", op: "mul"}, {kind: "int", value: 7}]}
         onStartDrag={onStartDrag}
       />
       {dragState && (
@@ -79,11 +83,15 @@ export default function DragAndDrop() {
           offsetY={dragState.offsetY}
           onDrop={(x, y) => {
             const slot = findSlotAt(x, y);
-            // Check if we dropped in a slot
+            // Check if dropped in a slot
             if (slot && dragState) {
               slot.onFill(dragState.item) // Fill the slot
             }
-            // Check if we dropped on main canvas
+            // Check if dropped in trash can
+            else if (checkTrash(x, y)) {
+              // TODO: Delete expression
+            }
+            // Check if dropped on main canvas
             else if (checkDrop(x, y) && dragState) {
               setExpression(paletteItemToExpr(dragState.item));
             }
@@ -95,6 +103,7 @@ export default function DragAndDrop() {
       <Dropable ref={dropRef}>
         {expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setExpression} /> : <span className="text-muted">Drop here</span>}
       </Dropable>
+      <TrashContainer ref={trashRef} className="absolute right-70 top-50" isDragging={!!dragState}/>
     </div>
 
 

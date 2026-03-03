@@ -23,7 +23,7 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
   // Leaf expressions - render their value directly
   switch (expr.kind) {
     case "int":
-      return <span>{expr.value}</span>;
+      return <span className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none">{expr.value}</span>;
     case "var":
       return <span>{expr.name}</span>;
     case "role":
