@@ -134,8 +134,8 @@ export default function DragAndDrop() {
             else if (checkTrash(x, y) && dragState.replaceWithSlot) {
               dragState.replaceWithSlot();
             }
-            // Check if dropped on main canvas
-            else if (checkDrop(x, y) && dragState) {
+            // Check if dropped on main canvas (only for palette items, not tree items)
+            else if (checkDrop(x, y) && dragState && !dragState.replaceWithSlot) {
               setExpression(paletteItemToExpr(dragState.item));
             }
 
