@@ -38,13 +38,21 @@ export type LeafExpr =
   | { kind: "placeholder"; index: number } // Defined by user "fill in value here" ($1, $2)
   | { kind: "slot" }; // Empty drop target in UI
 
-// Binary operator types
-export type BinaryOp =
-  | "and" | "or"           // logical
-  | "add" | "sub"          // arithmetic
-  | "mul" | "div" | "mod"  // multiplicative
-  | "pow"                  // exponentiation
-  | "less" | "greater" | "equal";  // comparison
+// Binary operator types - single source of truth
+export const ALL_OPERATORS = [
+  // logical
+  "and", "or",
+  // arithmetic
+  "add", "sub",
+  // multiplicative
+  "mul", "div", "mod",
+  // exponentiation
+  "pow",
+  // comparison
+  "less", "greater", "equal"
+] as const;
+
+export type BinaryOp = typeof ALL_OPERATORS[number];
 
 // Binary expression (two children)
 // op can be null when the operator has been removed (operator slot)
@@ -62,7 +70,10 @@ export type PaletteItem =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
-  | { kind: "operator"; op: "and" | "or" | "add" | "sub" | "pow" | "div" | "mod" | "mul" | "less" | "greater" | "equal" };
+  | { kind: "operator"; op: BinaryOp };
+
+// All operators as palette items - for use with "palette: *"
+export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
 
