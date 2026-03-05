@@ -114,6 +114,7 @@ export default function DragAndDrop() {
   return (
     <div className="flex flex-col items-center">
       <ExprContainer
+        category="Operators"
         paletteItems={[...ALL_OPERATOR_PALETTE_ITEMS, {kind: "int", value: 7}]}
         onStartDrag={onStartDrag}
       />
