@@ -11,13 +11,15 @@ type TrashContainerProps = {
 export default forwardRef<HTMLDivElement, TrashContainerProps>(function TrashContainer(props, ref) {
   const { className, isDragging } = props
 
-  if (!isDragging) return <div></div>
-
   return (
     <div
       ref={ref}
-      className={`${className} transition min-h-100 min-w-30 border border-red-500 rounded-2xl ${isDragging ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-      <Trash2 />
+      className={`${className} flex justify-center items-center min-h-100 min-w-30 border rounded-2xl
+        text-muted border-muted
+        hover:text-danger hover:border-danger hover:-translate-y-1 hover:shadow-[0_0_15px_var(--color-danger)] 
+        transition-all duration-300 ease-out
+        ${isDragging ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <Trash2 size={32} strokeWidth={1.5}/>
     </div>
   );
 });

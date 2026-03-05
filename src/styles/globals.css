@@ -37,6 +37,7 @@ html, body {
   --color-muted-foreground: #1e293b;
   --color-soft-white: #fafafa;
   --color-gray: #9ca3af;
+  --color-danger: #ef4444;
 }
 
 .custom-scrollbar {
