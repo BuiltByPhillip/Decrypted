@@ -150,6 +150,11 @@ export default function DragAndDrop() {
         paletteItems={[...ALL_SYMBOL_PALETTE_ITEMS]}
         onStartDrag={onStartDrag}
       />
+      <ExprContainer
+        category="Values"
+        paletteItems={[]}
+        onStartDrag={onStartDrag}
+      />
 
       {dragState && (
         <DragGhost
@@ -188,7 +193,7 @@ export default function DragAndDrop() {
         />
       )}
       <Dropable ref={dropRef}>
-        {expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span className="flex items-center justify-center select-none text-muted border-2 border-dashed border-muted w-150 h-30 rounded-2xl text-2xl">Drop here</span>}
+        {expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span className="flex items-center justify-center select-none text-muted border-2 border-muted w-150 h-30 rounded-2xl text-2xl">Drop here</span>}
       </Dropable>
       <TrashContainer ref={trashRef} className="absolute right-70 top-50" isDragging={!!dragState}/>
     </div>
