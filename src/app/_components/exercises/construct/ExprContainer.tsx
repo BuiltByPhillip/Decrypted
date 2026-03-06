@@ -59,13 +59,15 @@ export default function ExprContainer({ category, defaultItems, searchFn, onStar
     });
   }, [displayedItems]);
 
-  // Focus input when expanded
+  // Focus input when expanded, clear search after collapse animation
   React.useEffect(() => {
     if (isExpanded && inputRef.current) {
       inputRef.current.focus();
     }
     if (!isExpanded) {
-      setSearchQuery("");
+      // Delay clearing search until collapse animation finishes
+      const timeout = setTimeout(() => setSearchQuery(""), 500);
+      return () => clearTimeout(timeout);
     }
   }, [isExpanded]);
 
