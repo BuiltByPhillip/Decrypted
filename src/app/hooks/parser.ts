@@ -54,6 +54,62 @@ export const ALL_OPERATORS = [
 
 export type BinaryOp = typeof ALL_OPERATORS[number];
 
+// Symbol types - for crypto protocols, set theory, etc.
+export const ALL_SYMBOLS = [
+  // Set theory / Relations
+  "elem",           // ∈ element of
+  "notelem",        // ∉ not element of
+  "subset",         // ⊆ subset
+  "union",          // ∪ union
+  "intersection",   // ∩ intersection
+  // Cryptographic
+  "xor",            // ⊕ XOR
+  "concat",         // || concatenation
+  "congruent",      // ≡ congruent (mod)
+  "notequal",       // ≠ not equal
+  // Protocol arrows
+  "leftarrow",      // ← assignment/receives
+  "rightarrow",     // → sends/maps to
+  "biarrow",        // ↔ bidirectional/iff
+  "randomsample",   // ←$ random sampling
+  // Quantifiers
+  "forall",         // ∀ for all
+  "exists",         // ∃ exists
+  // Number theory
+  "divides",        // | divides
+  "notdivides",     // ∤ does not divide
+  // Other
+  "emptyset",       // ∅ empty set
+  "lessequal",      // ≤ less than or equal
+  "greaterequal",   // ≥ greater than or equal
+] as const;
+
+export type Symbol = typeof ALL_SYMBOLS[number];
+
+// Display mapping for symbols
+export const symbolDisplay: Record<Symbol, string> = {
+  elem: "\u2208",         // ∈
+  notelem: "\u2209",      // ∉
+  subset: "\u2286",       // ⊆
+  union: "\u222A",        // ∪
+  intersection: "\u2229", // ∩
+  xor: "\u2295",          // ⊕
+  concat: "||",           // ||
+  congruent: "\u2261",    // ≡
+  notequal: "\u2260",     // ≠
+  leftarrow: "\u2190",    // ←
+  rightarrow: "\u2192",   // →
+  biarrow: "\u2194",      // ↔
+  randomsample: "\u2190$",// ←$
+  forall: "\u2200",       // ∀
+  exists: "\u2203",       // ∃
+  divides: "|",           // |
+  notdivides: "\u2224",   // ∤
+  emptyset: "\u2205",     // ∅
+  lessequal: "\u2264",    // ≤
+  greaterequal: "\u2265", // ≥
+};
+
 // Binary expression (two children)
 // op can be null when the operator has been removed (operator slot)
 export type BinaryExpr = {
@@ -121,9 +177,13 @@ export function tokenize(input: string): Token[] {
     if (input.substring(i, i + 2) === "or") {
       return inner(i + 2, [...acc, { type: "OPERATOR", value: "or"}]);
     }
-    // Check for element of operator
-    if (input.substring(i, i + 5) === "\\elem") {
-      return inner(i + 5, [...acc, { type: "KEYWORD", value: "elem" }]);
+    // Check for keywords/symbols (e.g., \elem, \subset, \forall)
+    if (input[i] === "\\") {
+      const match = input.substring(i + 1).match(/^[a-z]+/);
+      if (match && (ALL_SYMBOLS as readonly string[]).includes(match[0])) {
+        const keyword = match[0];
+        return inner(i + 1 + keyword.length, [...acc, { type: "KEYWORD", value: keyword }]);
+      }
     }
     // Check for variables
     if (/[a-zA-Z_]/.test(input[i] ?? "")) {
@@ -568,15 +628,15 @@ function isExerciseType(value: string): value is ExerciseType {
 }
 
 export const operatorSymbol: Record<string, string> = {
-  mul: "×",
-  div: "/",
-  add: "+",
-  sub: "−",
+  mul: "\u00D7",
+  div: "\u00F7",
+  add: "\u002B",
+  sub: "\u2212",
   pow: "^",
   mod: "mod",
-  and: "∧",
-  or: "∨",
-  less: "<",
-  greater: ">",
-  equal: "=",
+  and: "\u2227",
+  or: "\u2228",
+  less: "\u003C",
+  greater: "\u003E",
+  equal: "\u003D",
 };
