@@ -89,9 +89,17 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
         </span>
       );
     case "var":
-      return <span onMouseDown={handleMouseDown}>{expr.name}</span>;
+      return (
+        <span onMouseDown={handleMouseDown}>
+          <ExprBlock item={expr} />
+        </span>
+      );
     case "role":
-      return <span onMouseDown={handleMouseDown}>{`{${expr.name}}`}</span>;
+      return (
+        <span onMouseDown={handleMouseDown}>
+          <ExprBlock item={expr} />
+        </span>
+      );
     case "placeholder":
       return <span onMouseDown={handleMouseDown}>{`$${expr.index}`}</span>;
     case "slot":

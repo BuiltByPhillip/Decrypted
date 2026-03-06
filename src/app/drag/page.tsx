@@ -1,6 +1,4 @@
-import type { Expr } from "~/app/hooks/parser";
-import SelectExercise from "~/app/_components/exercises/selectExercise/select";
-import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
+import DragAndDrop from "~/app/_components/exercises/construct/DragAndDrop";
 
 export default function OptionsPage() {
 

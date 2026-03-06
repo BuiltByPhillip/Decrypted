@@ -1,11 +1,12 @@
 import type { PaletteItem as Item } from "~/app/hooks/parser";
 import PaletteItem from "~/app/_components/exercises/construct/PaletteItem";
 import React from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Search } from "lucide-react";
 
 type ContainerProps = {
   category: "Operators" | "Values" | "Symbols"
-  paletteItems: Item[]
+  defaultItems: Item[]
+  searchFn: (query: string) => Item[]
   onStartDrag: (item: Item, x: number, y: number, offsetX: number, offsetY: number) => void;
 }
 
@@ -14,14 +15,21 @@ const EXPANDED_WIDTH_FALLBACK = 400; // fallback if measurement fails
 const CONTAINER_PADDING = 24; // px-2 + border
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
-export default function ExprContainer({ category, paletteItems, onStartDrag }: ContainerProps) {
+export default function ExprContainer({ category, defaultItems, searchFn, onStartDrag }: ContainerProps) {
   const [isExpanded, setExpanded] = React.useState(false);
   const [expandedWidth, setExpandedWidth] = React.useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Measure content width on mount
+  // Compute displayed items based on search query
+  const displayedItems = searchQuery.trim() === ""
+    ? defaultItems
+    : searchFn(searchQuery.trim());
+
+  // Measure content width when items change
   React.useEffect(() => {
-    if (!contentRef.current || expandedWidth !== null) return;
+    if (!contentRef.current) return;
 
     // Delay measurement to ensure DOM is fully rendered
     const measureContent = () => {
@@ -49,7 +57,17 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
     requestAnimationFrame(() => {
       requestAnimationFrame(measureContent);
     });
-  }, [paletteItems, expandedWidth]);
+  }, [displayedItems]);
+
+  // Focus input when expanded
+  React.useEffect(() => {
+    if (isExpanded && inputRef.current) {
+      inputRef.current.focus();
+    }
+    if (!isExpanded) {
+      setSearchQuery("");
+    }
+  }, [isExpanded]);
 
   const targetWidth = isExpanded ? (expandedWidth ?? EXPANDED_WIDTH_FALLBACK) : COLLAPSED_WIDTH;
 
@@ -99,6 +117,28 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
         }}
       >
         <div className="overflow-hidden">
+          {/* Search input */}
+          <div
+            className="px-2 pb-2"
+            style={{
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 300ms ease-out',
+              transitionDelay: isExpanded ? '200ms' : '0ms',
+            }}
+          >
+            <div className="relative">
+              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full bg-dark border border-muted rounded-lg pl-7 pr-2 py-1 text-sm text-soft-white placeholder:text-muted focus:outline-none focus:border-light"
+              />
+            </div>
+          </div>
+          {/* Items */}
           <div
             ref={contentRef}
             className="flex flex-wrap gap-1 px-2 pb-2"
@@ -109,9 +149,12 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
               transitionDelay: isExpanded ? '250ms' : '0ms',
             }}
           >
-            {paletteItems.map((item, index) => (
+            {displayedItems.map((item, index) => (
               <PaletteItem item={item} onStartDrag={onStartDrag} key={index} />
             ))}
+            {displayedItems.length === 0 && searchQuery.trim() !== "" && (
+              <span className="text-muted text-sm">No results</span>
+            )}
           </div>
         </div>
       </div>
