@@ -20,7 +20,8 @@ export default function DragAndDrop() {
     y: number;
     offsetX: number;
     offsetY: number;
-    replaceWithSlot?: () => void;
+    fromTree?: boolean;
+    restoreExpr?: () => void;
   } | null>(null);
 
   const registerSlot = (id: string, elem: HTMLDivElement | null, onFill: (item: Item) => void) => {
@@ -89,13 +90,23 @@ export default function DragAndDrop() {
   const onExprStartDrag = (expr: Expr, x: number, y: number, offsetX: number, offsetY: number, replaceWithSlot: () => void) => {
     const item = exprToPaletteItem(expr);
     if (!item) return;
+
+    // Store current expression so we can restore if dropped in invalid area
+    const currentExpr = expression;
+
+    // Immediately remove the element from the tree - it's now "in hand"
+    replaceWithSlot();
+
     setDragState({
       item,
       x,
       y,
       offsetX,
       offsetY,
-      replaceWithSlot,
+      fromTree: true,
+      restoreExpr: () => {
+        if (currentExpr) setExpression(currentExpr);
+      },
     });
   }
 
@@ -127,17 +138,27 @@ export default function DragAndDrop() {
           offsetY={dragState.offsetY}
           onDrop={(x, y) => {
             const slot = findSlotAt(x, y);
+            let handled = false;
+
             // Check if dropped in a slot
             if (slot && dragState) {
-              slot.onFill(dragState.item) // Fill the slot
+              slot.onFill(dragState.item);
+              handled = true;
             }
-            // Check if dropped in trash can
-            else if (checkTrash(x, y) && dragState.replaceWithSlot) {
-              dragState.replaceWithSlot();
+            // Check if dropped in trash can (only matters for tree items)
+            else if (checkTrash(x, y) && dragState.fromTree) {
+              // Element is already removed, nothing more to do
+              handled = true;
             }
             // Check if dropped on main canvas (only for palette items, not tree items)
-            else if (checkDrop(x, y) && dragState && !dragState.replaceWithSlot) {
+            else if (checkDrop(x, y) && dragState && !dragState.fromTree) {
               setExpression(paletteItemToExpr(dragState.item));
+              handled = true;
+            }
+
+            // If dropped in invalid area and came from tree, restore original
+            if (!handled && dragState.fromTree && dragState.restoreExpr) {
+              dragState.restoreExpr();
             }
 
             setDragState(null);
