@@ -61,8 +61,9 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
         <span
           className="absolute left-3 px-1 text-sm font-medium text-muted select-none whitespace-nowrap bg-[#121212]"
           style={{
-            top: isExpanded ? '-0.5rem' : '0.7rem',
-            transition: `top 400ms ${EASING}`,
+            top: isExpanded ? '-0.65rem' : '50%',
+            transform: isExpanded ? 'translateY(0)' : 'translateY(-50%)',
+            transition: `top 400ms ${EASING}, transform 400ms ${EASING}`,
           }}
         >
           {category}
@@ -77,8 +78,8 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
           className="bg-transparent border-none p-0 cursor-pointer flex items-center"
         >
           {isExpanded
-            ? <Minus size={16} strokeWidth={3} className="text-muted" />
-            : <Plus size={16} strokeWidth={3} className="text-muted" />
+            ? <div className="rounded-full bg-mac-yellow"><Minus size={14} strokeWidth={3} className="text-medium"/></div>
+            : <Plus size={14} strokeWidth={3} className="text-muted"/>
           }
         </button>
       </div>
