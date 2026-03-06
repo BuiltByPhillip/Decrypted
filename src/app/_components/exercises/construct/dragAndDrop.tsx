@@ -5,7 +5,10 @@ import Dropable from "~/app/_components/exercises/construct/Dropable";
 import ExprContainer from "~/app/_components/exercises/construct/ExprContainer";
 import {
   ALL_OPERATOR_PALETTE_ITEMS,
+  ALL_OPERATORS,
   ALL_SYMBOL_PALETTE_ITEMS,
+  type BinaryOp,
+  type BinarySymbol,
   type Expr,
   type PaletteItem as Item,
 } from "~/app/hooks/parser";
@@ -83,10 +86,18 @@ export default function DragAndDrop() {
         return { kind: "var", name: expr.name };
       case "role":
         return { kind: "role", name: expr.name };
-      case "binary":
-        // Can't drag a binary with null operator
+      case "constant":
+        return { kind: "constantSymbol", op: expr.symbol };
+      case "unary":
         if (expr.op === null) return null;
-        return { kind: "operator", op: expr.op };
+        return { kind: "unarySymbol", op: expr.op };
+      case "binary":
+        if (expr.op === null) return null;
+        // Check if it's a regular operator or a binary symbol
+        if ((ALL_OPERATORS as readonly string[]).includes(expr.op)) {
+          return { kind: "operator", op: expr.op as BinaryOp };
+        }
+        return { kind: "binarySymbol", op: expr.op as BinarySymbol };
       default:
         return null;
     }
@@ -139,6 +150,7 @@ export default function DragAndDrop() {
         paletteItems={[...ALL_SYMBOL_PALETTE_ITEMS]}
         onStartDrag={onStartDrag}
       />
+
       {dragState && (
         <DragGhost
           paletteItem={dragState.item}

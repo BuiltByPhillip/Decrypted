@@ -20,9 +20,11 @@ export default function ExprBlock({ item, className }: ExprBlockProps) {
       case "role":
         return <div>{item.name}</div>;
       case "operator":
-        return <div>{operatorSymbol[item.op]}</div>
-      case "symbol":
-        return <div>{symbolDisplay[item.op]}</div>
+        return <div>{operatorSymbol[item.op]}</div>;
+      case "constantSymbol":
+      case "unarySymbol":
+      case "binarySymbol":
+        return <div>{symbolDisplay[item.op]}</div>;
     }
   }
 

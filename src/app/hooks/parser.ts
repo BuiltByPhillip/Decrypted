@@ -36,7 +36,8 @@ export type LeafExpr =
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
   | { kind: "placeholder"; index: number } // Defined by user "fill in value here" ($1, $2)
-  | { kind: "slot" }; // Empty drop target in UI
+  | { kind: "slot" } // Empty drop target in UI
+  | { kind: "constant"; symbol: ConstantSymbol};
 
 // Binary operator types - single source of truth
 export const ALL_OPERATORS = [
@@ -52,10 +53,8 @@ export const ALL_OPERATORS = [
   "less", "greater", "equal"
 ] as const;
 
-export type BinaryOp = typeof ALL_OPERATORS[number];
-
-// Symbol types - for crypto protocols, set theory, etc.
-export const ALL_SYMBOLS = [
+// Binary symbols (two operands: left OP right)
+export const BINARY_SYMBOLS = [
   // Set theory / Relations
   "elem",           // ∈ element of
   "notelem",        // ∉ not element of
@@ -72,42 +71,66 @@ export const ALL_SYMBOLS = [
   "rightarrow",     // → sends/maps to
   "biarrow",        // ↔ bidirectional/iff
   "randomsample",   // ←$ random sampling
-  // Quantifiers
-  "forall",         // ∀ for all
-  "exists",         // ∃ exists
   // Number theory
   "divides",        // | divides
   "notdivides",     // ∤ does not divide
   // Other
-  "emptyset",       // ∅ empty set
   "lessequal",      // ≤ less than or equal
   "greaterequal",   // ≥ greater than or equal
 ] as const;
 
-export type Symbol = typeof ALL_SYMBOLS[number];
+// Unary symbols (one operand: OP expr)
+export const UNARY_SYMBOLS = [
+  "forall",         // ∀x
+  "exists",         // ∃x
+] as const;
+
+// Constant symbols (no operands)
+export const CONSTANT_SYMBOLS = [
+  "emptyset",       // ∅
+] as const;
+
+export type BinaryOp = typeof ALL_OPERATORS[number];
+export type BinarySymbol = typeof BINARY_SYMBOLS[number];
+export type UnarySymbol = typeof UNARY_SYMBOLS[number];
+export type ConstantSymbol = typeof CONSTANT_SYMBOLS[number];
+
+// Unary expression (one child)
+// op can be null when the operator has been removed (symbol slot)
+export type UnaryExpr = {
+  kind: "unary";
+  op: UnarySymbol | null;
+  operand: Expr;
+};
 
 // Binary expression (two children)
 // op can be null when the operator has been removed (operator slot)
 export type BinaryExpr = {
   kind: "binary";
-  op: BinaryOp | null;
+  op: BinaryOp | BinarySymbol | null;
   left: Expr;
   right: Expr;
 };
 
 // Combined expression type
-export type Expr = LeafExpr | BinaryExpr
+export type Expr = LeafExpr | UnaryExpr | BinaryExpr
 
 export type PaletteItem =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
   | { kind: "operator"; op: BinaryOp }
-  | { kind: "symbol"; op: Symbol };
+  | { kind: "binarySymbol"; op: BinarySymbol }
+  | { kind: "unarySymbol"; op: UnarySymbol }
+  | { kind: "constantSymbol"; op: ConstantSymbol }
 
 // All operators as palette items - for use with "palette: *"
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
-export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = ALL_SYMBOLS.map(op => ({ kind: "symbol", op}))
+export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
+  ...BINARY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
+  ...UNARY_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op })),
+  ...CONSTANT_SYMBOLS.map(op => ({ kind: "constantSymbol" as const, op })),
+];
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
 
@@ -161,7 +184,7 @@ export function tokenize(input: string): Token[] {
       if (!match) {
         throw new Error(`Expected command after: \\`);
       }
-      if ((ALL_SYMBOLS as readonly string[]).includes(match[0])) {
+      if (([...CONSTANT_SYMBOLS, ...UNARY_SYMBOLS, ...BINARY_SYMBOLS] as readonly string[]).includes(match[0])) {
         return inner(i + 1 + match[0].length, [...acc, { type: "KEYWORD", value: match[0] }]);
       }
       throw new Error(`Unknown command: \\${match[0]}`);
@@ -623,7 +646,7 @@ export const operatorSymbol: Record<string, string> = {
 };
 
 // Display mapping for symbols
-export const symbolDisplay: Record<Symbol, string> = {
+export const symbolDisplay: Record<string, string> = {
   elem: "\u2208",         // ∈
   notelem: "\u2209",      // ∉
   subset: "\u2286",       // ⊆

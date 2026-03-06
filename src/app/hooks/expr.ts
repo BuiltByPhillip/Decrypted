@@ -1,5 +1,5 @@
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import type { Expr, PaletteItem } from "~/app/hooks/parser";
+import { type Expr, type PaletteItem, symbolDisplay } from "~/app/hooks/parser";
 
 /* SubstituteRoles take an expressions containing role references ({generator}, {bob_secret}, etc) and replaces with actual user selected symbols */
 export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr {
@@ -12,7 +12,16 @@ export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr
     case "int":
     case "placeholder":
     case "slot":
+    case "constant":
       return e;
+
+    // Unary expression -  recursively substitute in child
+    case "unary":
+      return {
+        kind: "unary",
+        op: e.op,
+        operand: substituteRoles(e.operand, definitions),
+      };
 
     // Binary expression - recursively substitute in children
     case "binary":
@@ -43,7 +52,11 @@ export function exprEquals(a: Expr, b: Expr): boolean {
       return b.kind === "placeholder" && b.index === a.index;
     case "slot":
       return a.kind === "slot" && b.kind === "slot";
-
+    case "constant":
+      return b.kind === "constant" && a.symbol === b.symbol;
+    case "unary":
+      return b.kind === "unary" && a.op === b.op && exprEquals(a.operand,
+        b.operand);
     case "binary":
       if (b.kind !== "binary" || a.op !== b.op) return false;
 
@@ -87,9 +100,14 @@ export function exprToString(e: Expr): string {
       return `$${e.index}`;
     case "slot":
       return "_";
+    case "unary":
+      const unaryOpStr = e.op === null ? "_" : symbolDisplay[e.op];
+      return `${unaryOpStr}${exprToString(e.operand)}`;
     case "binary":
       const opStr = e.op === null ? " _ " : (OP_TO_STRING[e.op] ?? ` ${e.op} `);
       return `${exprToString(e.left)}${opStr}${exprToString(e.right)}`;
+    case "constant":
+      return e.symbol
   }
 }
 
@@ -109,8 +127,16 @@ export function normalizeExpr(e: Expr): Expr {
     case "role":
     case "placeholder":
     case "slot":
+    case "constant":
       return e;
 
+    case "unary":
+      const operand = normalizeExpr(e.operand)
+      if (e.op === null && operand.kind === "slot") {
+        return { kind: "slot" }
+      }
+
+      return { ...e, operand }
     case "binary":
       // First normalize children
       const left = normalizeExpr(e.left);
@@ -136,6 +162,17 @@ export function paletteItemToExpr(item: PaletteItem): Expr {
     case "int":
       return { kind: "int", value: item.value };
     case "operator":
+      return {
+        kind: "binary",
+        op: item.op,
+        left: { kind: "slot" },
+        right: { kind: "slot" },
+      };
+    case "constantSymbol":
+      return { kind: "constant", symbol: item.op };
+    case "unarySymbol":
+      return { kind: "unary", op: item.op, operand: { kind: "slot"} }
+    case "binarySymbol":
       return {
         kind: "binary",
         op: item.op,
