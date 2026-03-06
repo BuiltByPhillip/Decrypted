@@ -86,30 +86,6 @@ export const ALL_SYMBOLS = [
 
 export type Symbol = typeof ALL_SYMBOLS[number];
 
-// Display mapping for symbols
-export const symbolDisplay: Record<Symbol, string> = {
-  elem: "\u2208",         // ∈
-  notelem: "\u2209",      // ∉
-  subset: "\u2286",       // ⊆
-  union: "\u222A",        // ∪
-  intersection: "\u2229", // ∩
-  xor: "\u2295",          // ⊕
-  concat: "||",           // ||
-  congruent: "\u2261",    // ≡
-  notequal: "\u2260",     // ≠
-  leftarrow: "\u2190",    // ←
-  rightarrow: "\u2192",   // →
-  biarrow: "\u2194",      // ↔
-  randomsample: "\u2190$",// ←$
-  forall: "\u2200",       // ∀
-  exists: "\u2203",       // ∃
-  divides: "|",           // |
-  notdivides: "\u2224",   // ∤
-  emptyset: "\u2205",     // ∅
-  lessequal: "\u2264",    // ≤
-  greaterequal: "\u2265", // ≥
-};
-
 // Binary expression (two children)
 // op can be null when the operator has been removed (operator slot)
 export type BinaryExpr = {
@@ -126,10 +102,12 @@ export type PaletteItem =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
-  | { kind: "operator"; op: BinaryOp };
+  | { kind: "operator"; op: BinaryOp }
+  | { kind: "symbol"; op: Symbol };
 
 // All operators as palette items - for use with "palette: *"
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
+export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = ALL_SYMBOLS.map(op => ({ kind: "symbol", op}))
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
 
@@ -642,4 +620,28 @@ export const operatorSymbol: Record<string, string> = {
   less: "\u003C",
   greater: "\u003E",
   equal: "\u003D",
+};
+
+// Display mapping for symbols
+export const symbolDisplay: Record<Symbol, string> = {
+  elem: "\u2208",         // ∈
+  notelem: "\u2209",      // ∉
+  subset: "\u2286",       // ⊆
+  union: "\u222A",        // ∪
+  intersection: "\u2229", // ∩
+  xor: "\u2295",          // ⊕
+  concat: "||",           // ||
+  congruent: "\u2261",    // ≡
+  notequal: "\u2260",     // ≠
+  leftarrow: "\u2190",    // ←
+  rightarrow: "\u2192",   // →
+  biarrow: "\u2194",      // ↔
+  randomsample: "\u2190$",// ←$
+  forall: "\u2200",       // ∀
+  exists: "\u2203",       // ∃
+  divides: "|",           // |
+  notdivides: "\u2224",   // ∤
+  emptyset: "\u2205",     // ∅
+  lessequal: "\u2264",    // ≤
+  greaterequal: "\u2265", // ≥
 };

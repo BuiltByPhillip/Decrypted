@@ -1,4 +1,8 @@
-import { operatorSymbol, type PaletteItem } from "~/app/hooks/parser";
+import {
+  operatorSymbol,
+  type PaletteItem,
+  symbolDisplay,
+} from "~/app/hooks/parser";
 
 type ExprBlockProps = {
   item: PaletteItem;
@@ -17,6 +21,8 @@ export default function ExprBlock({ item, className }: ExprBlockProps) {
         return <div>{item.name}</div>;
       case "operator":
         return <div>{operatorSymbol[item.op]}</div>
+      case "symbol":
+        return <div>{symbolDisplay[item.op]}</div>
     }
   }
 

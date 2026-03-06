@@ -3,7 +3,12 @@
 import { useRef, useState } from "react";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
 import ExprContainer from "~/app/_components/exercises/construct/ExprContainer";
-import { ALL_OPERATOR_PALETTE_ITEMS, type Expr, type PaletteItem as Item } from "~/app/hooks/parser";
+import {
+  ALL_OPERATOR_PALETTE_ITEMS,
+  ALL_SYMBOL_PALETTE_ITEMS,
+  type Expr,
+  type PaletteItem as Item,
+} from "~/app/hooks/parser";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
 import ExprNode from "~/app/_components/exercises/construct/ExprNode";
 import { normalizeExpr, paletteItemToExpr } from "~/app/hooks/expr";
@@ -126,7 +131,12 @@ export default function DragAndDrop() {
     <div className="flex flex-col items-center">
       <ExprContainer
         category="Operators"
-        paletteItems={[...ALL_OPERATOR_PALETTE_ITEMS, {kind: "int", value: 7}]}
+        paletteItems={[...ALL_OPERATOR_PALETTE_ITEMS]}
+        onStartDrag={onStartDrag}
+      />
+      <ExprContainer
+        category="Symbols"
+        paletteItems={[...ALL_SYMBOL_PALETTE_ITEMS]}
         onStartDrag={onStartDrag}
       />
       {dragState && (
