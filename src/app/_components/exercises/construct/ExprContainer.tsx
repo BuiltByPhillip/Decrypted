@@ -10,6 +10,7 @@ type ContainerProps = {
 }
 
 const COLLAPSED_WIDTH = 128; // 8rem
+const EXPANDED_WIDTH_FALLBACK = 400; // fallback if measurement fails
 const CONTAINER_PADDING = 24; // px-2 + border
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -22,30 +23,35 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
   React.useEffect(() => {
     if (!contentRef.current || expandedWidth !== null) return;
 
-    const el = contentRef.current;
+    // Delay measurement to ensure DOM is fully rendered
+    const measureContent = () => {
+      const el = contentRef.current;
+      if (!el) return;
 
-    // Temporarily position absolute with fit-content to measure natural width
-    const prevStyles = {
-      visibility: el.style.visibility,
-      position: el.style.position,
-      width: el.style.width,
+      // Create a hidden clone to measure without layout constraints
+      const clone = el.cloneNode(true) as HTMLDivElement;
+      clone.style.visibility = 'hidden';
+      clone.style.position = 'absolute';
+      clone.style.width = 'fit-content';
+      clone.style.height = 'auto';
+      clone.style.overflow = 'visible';
+      document.body.appendChild(clone);
+
+      const measuredWidth = clone.offsetWidth + CONTAINER_PADDING;
+      document.body.removeChild(clone);
+
+      // Ensure minimum width is larger than collapsed
+      const finalWidth = Math.max(measuredWidth, COLLAPSED_WIDTH + 100);
+      setExpandedWidth(finalWidth);
     };
 
-    el.style.visibility = 'hidden';
-    el.style.position = 'absolute';
-    el.style.width = 'fit-content';
-
-    const measuredWidth = el.offsetWidth + CONTAINER_PADDING;
-
-    // Restore original styles
-    el.style.visibility = prevStyles.visibility;
-    el.style.position = prevStyles.position;
-    el.style.width = prevStyles.width;
-
-    setExpandedWidth(measuredWidth);
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      requestAnimationFrame(measureContent);
+    });
   }, [paletteItems, expandedWidth]);
 
-  const targetWidth = isExpanded ? (expandedWidth ?? COLLAPSED_WIDTH) : COLLAPSED_WIDTH;
+  const targetWidth = isExpanded ? (expandedWidth ?? EXPANDED_WIDTH_FALLBACK) : COLLAPSED_WIDTH;
 
   return (
     <div
