@@ -1,6 +1,6 @@
 import type { BinaryOp, Expr, PaletteItem } from "~/app/hooks/parser";
-import { operatorSymbol } from "~/app/hooks/parser";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
+import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
 import { paletteItemToExpr } from "~/app/hooks/expr";
 
 type ExprNodeProps = {
@@ -57,11 +57,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
   switch (expr.kind) {
     case "int":
       return (
-        <span
-          className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none"
-          onMouseDown={handleMouseDown}
-        >
-          {expr.value}
+        <span onMouseDown={handleMouseDown}>
+          <ExprBlock item={expr} />
         </span>
       );
     case "var":
@@ -95,11 +92,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             />
           ) : (
             // Operator present - render it and make it draggable
-            <span
-              className="flex bg-dark h-10 w-10 cursor-pointer rounded-2xl justify-center items-center text-muted text-2xl select-none"
-              onMouseDown={(e) => handleOperatorMouseDown(e, expr.op!)}
-            >
-              {operatorSymbol[expr.op]}
+            <span onMouseDown={(e) => handleOperatorMouseDown(e, expr.op!)}>
+              <ExprBlock item={{ kind: "operator", op: expr.op }} />
             </span>
           )}
           <ExprNode

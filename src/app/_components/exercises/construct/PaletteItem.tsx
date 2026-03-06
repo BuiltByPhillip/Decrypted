@@ -17,7 +17,7 @@ export default function PaletteItem({ item, onStartDrag, className }: PaletteIte
   };
 
   return (
-    <div className={`${className}`} onMouseDown={handleMouseDown}>
+    <div className={`w-fit ${className ?? ''}`} onMouseDown={handleMouseDown}>
       <ExprBlock item={item}/>
     </div>
   );
