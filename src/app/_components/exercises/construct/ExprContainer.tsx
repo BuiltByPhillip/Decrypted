@@ -18,25 +18,32 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
   const [expandedWidth, setExpandedWidth] = React.useState<number | null>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  // Measure content width on mount and when items change
+  // Measure content width on mount
   React.useEffect(() => {
-    if (!contentRef.current) return;
+    if (!contentRef.current || expandedWidth !== null) return;
 
     const el = contentRef.current;
-    const prevVisibility = el.style.visibility;
-    const prevPosition = el.style.position;
 
-    // Temporarily make visible to measure
+    // Temporarily position absolute with fit-content to measure natural width
+    const prevStyles = {
+      visibility: el.style.visibility,
+      position: el.style.position,
+      width: el.style.width,
+    };
+
     el.style.visibility = 'hidden';
     el.style.position = 'absolute';
     el.style.width = 'fit-content';
 
-    setExpandedWidth(el.offsetWidth + CONTAINER_PADDING);
+    const measuredWidth = el.offsetWidth + CONTAINER_PADDING;
 
-    el.style.visibility = prevVisibility;
-    el.style.position = prevPosition;
-    el.style.width = '';
-  }, [paletteItems]);
+    // Restore original styles
+    el.style.visibility = prevStyles.visibility;
+    el.style.position = prevStyles.position;
+    el.style.width = prevStyles.width;
+
+    setExpandedWidth(measuredWidth);
+  }, [paletteItems, expandedWidth]);
 
   const targetWidth = isExpanded ? (expandedWidth ?? COLLAPSED_WIDTH) : COLLAPSED_WIDTH;
 
