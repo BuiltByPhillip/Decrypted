@@ -180,10 +180,13 @@ export function tokenize(input: string): Token[] {
     // Check for keywords/symbols (e.g., \elem, \subset, \forall)
     if (input[i] === "\\") {
       const match = input.substring(i + 1).match(/^[a-z]+/);
-      if (match && (ALL_SYMBOLS as readonly string[]).includes(match[0])) {
-        const keyword = match[0];
-        return inner(i + 1 + keyword.length, [...acc, { type: "KEYWORD", value: keyword }]);
+      if (!match) {
+        throw new Error(`Expected command after: \\`);
       }
+      if (match && (ALL_SYMBOLS as readonly string[]).includes(match[0])) {
+        return inner(i + 1 + match[0].length, [...acc, { type: "KEYWORD", value: match[0] }]);
+      }
+      throw new Error(`Unknown command: \\${match[0]}`);
     }
     // Check for variables
     if (/[a-zA-Z_]/.test(input[i] ?? "")) {
