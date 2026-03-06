@@ -49,18 +49,32 @@ export default function ExprContainer({ category, paletteItems, onStartDrag }: C
 
   return (
     <div
-      className="bg-dark/70 border border-muted rounded-2xl overflow-hidden"
+      className="relative border border-muted rounded-2xl"
       style={{
         width: targetWidth,
         transition: `width 500ms ${EASING}`,
       }}
     >
       {/* Header row */}
-      <div className="flex items-center justify-between px-3 py-2">
-        <span className="text-sm font-medium text-muted select-none whitespace-nowrap">{category}</span>
+      <div className="flex items-center justify-between px-3 h-10">
+        {/* Floating label */}
+        <span
+          className="absolute left-3 px-1 text-sm font-medium text-muted select-none whitespace-nowrap bg-[#121212]"
+          style={{
+            top: isExpanded ? '-0.5rem' : '0.7rem',
+            transition: `top 400ms ${EASING}`,
+          }}
+        >
+          {category}
+        </span>
+
+        {/* Spacer to push button right */}
+        <div />
+
+        {/* Toggle button */}
         <button
           onClick={() => setExpanded(!isExpanded)}
-          className="bg-transparent border-none p-0 cursor-pointer flex items-center ml-2"
+          className="bg-transparent border-none p-0 cursor-pointer flex items-center"
         >
           {isExpanded
             ? <Minus size={16} strokeWidth={3} className="text-muted" />

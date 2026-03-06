@@ -38,6 +38,11 @@ html, body {
   --color-soft-white: #fafafa;
   --color-gray: #9ca3af;
   --color-danger: #ef4444;
+
+  /* macOS traffic light colors */
+  --color-mac-red: #FF5F57;
+  --color-mac-yellow: #FEBC2E;
+  --color-mac-green: #28C840;
 }
 
 .custom-scrollbar {
