@@ -22,6 +22,7 @@ import ExprNode from "~/app/_components/exercises/construct/ExprNode";
 import { normalizeExpr, paletteItemToExpr } from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
+import Button from "~/components/Button";
 
 // Default items for Values: 1-10 and a-j
 const DEFAULT_VALUE_ITEMS: Item[] = [
@@ -120,11 +121,32 @@ function searchValues(query: string): Item[] {
   return results;
 }
 
+const EXPRESSION_STORAGE_KEY = "drag-and-drop-expression";
+
+function loadExpression(): Expr | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(EXPRESSION_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveExpression(expr: Expr | null) {
+  if (typeof window === "undefined") return;
+  if (expr === null) {
+    localStorage.removeItem(EXPRESSION_STORAGE_KEY);
+  } else {
+    localStorage.setItem(EXPRESSION_STORAGE_KEY, JSON.stringify(expr));
+  }
+}
+
 export default function DragAndDrop() {
   const dropRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const slotsRef = useRef<Map<string, { element: HTMLDivElement; onFill: (item: Item) => void }>>(new Map());
-  const [expression, setExpression] = useState<Expr | null>(null);
+  const [expression, setExpression] = useState<Expr | null>(() => loadExpression());
   const [dragState, setDragState] = useState<{
     item: Item;
     x: number;
@@ -241,7 +263,10 @@ export default function DragAndDrop() {
       offsetY,
       fromTree: true,
       restoreExpr: () => {
-        if (currentExpr) setExpression(currentExpr);
+        if (currentExpr) {
+          setExpression(currentExpr);
+          saveExpression(currentExpr);
+        }
       },
     });
   }
@@ -253,10 +278,18 @@ export default function DragAndDrop() {
     // If the entire expression collapsed to a slot, clear it
     if (normalized.kind === "slot") {
       setExpression(null);
+      saveExpression(null);
     } else {
       setExpression(normalized);
+      saveExpression(normalized);
     }
   }
+
+  // Save expression whenever it changes directly
+  const setExpressionWithSave = (expr: Expr | null) => {
+    setExpression(expr);
+    saveExpression(expr);
+  };
 
   return (
     <div className="relative w-full h-full">
@@ -327,7 +360,7 @@ export default function DragAndDrop() {
             }
             // Check if dropped on main canvas (only for palette items, not tree items)
             else if (checkDrop(x, y) && dragState && !dragState.fromTree) {
-              setExpression(paletteItemToExpr(dragState.item));
+              setExpressionWithSave(paletteItemToExpr(dragState.item));
               handled = true;
             }
 
@@ -347,6 +380,7 @@ export default function DragAndDrop() {
         </Dropable>
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
+      <Button variant="submit" className="w-100 h-auto">Check answer</Button>
 
     </div>
 
