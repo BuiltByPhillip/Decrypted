@@ -1,4 +1,4 @@
-import DragAndDrop from "~/app/_components/exercises/construct/DragAndDrop";
+import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 
 export default function OptionsPage() {
 
