@@ -292,7 +292,7 @@ export default function DragAndDrop() {
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="flex flex-col relative w-full">
       <DraggableWindow
         id="operators"
         defaultPosition={{ x: 20, y: 20 }}
@@ -380,8 +380,9 @@ export default function DragAndDrop() {
         </Dropable>
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
-      <Button variant="submit" className="w-100 h-auto">Check answer</Button>
-
+      <div className="flex justify-center pt-20">
+        <Button variant="submit" className="w-100">Check answer</Button>
+      </div>
     </div>
 
 
