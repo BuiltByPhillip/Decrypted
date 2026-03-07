@@ -11,53 +11,18 @@ type ContainerProps = {
 }
 
 const COLLAPSED_WIDTH = 128; // 8rem
-const EXPANDED_WIDTH_FALLBACK = 400; // fallback if measurement fails
-const CONTAINER_PADDING = 24; // px-2 + border
+const EXPANDED_WIDTH = 550; // Fixed expanded width
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 export default function ExprContainer({ category, defaultItems, searchFn, onStartDrag }: ContainerProps) {
   const [isExpanded, setExpanded] = React.useState(false);
-  const [expandedWidth, setExpandedWidth] = React.useState<number | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const contentRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Compute displayed items based on search query
   const displayedItems = searchQuery.trim() === ""
     ? defaultItems
     : searchFn(searchQuery.trim());
-
-  // Measure content width when items change
-  React.useEffect(() => {
-    if (!contentRef.current) return;
-
-    // Delay measurement to ensure DOM is fully rendered
-    const measureContent = () => {
-      const el = contentRef.current;
-      if (!el) return;
-
-      // Create a hidden clone to measure without layout constraints
-      const clone = el.cloneNode(true) as HTMLDivElement;
-      clone.style.visibility = 'hidden';
-      clone.style.position = 'absolute';
-      clone.style.width = 'fit-content';
-      clone.style.height = 'auto';
-      clone.style.overflow = 'visible';
-      document.body.appendChild(clone);
-
-      const measuredWidth = clone.offsetWidth + CONTAINER_PADDING;
-      document.body.removeChild(clone);
-
-      // Ensure minimum width is larger than collapsed
-      const finalWidth = Math.max(measuredWidth, COLLAPSED_WIDTH + 100);
-      setExpandedWidth(finalWidth);
-    };
-
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      requestAnimationFrame(measureContent);
-    });
-  }, [displayedItems]);
 
   // Focus input when expanded, clear search after collapse animation
   React.useEffect(() => {
@@ -71,11 +36,12 @@ export default function ExprContainer({ category, defaultItems, searchFn, onStar
     }
   }, [isExpanded]);
 
-  const targetWidth = isExpanded ? (expandedWidth ?? EXPANDED_WIDTH_FALLBACK) : COLLAPSED_WIDTH;
+  const targetWidth = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
   return (
     <div
-      className="relative border border-muted rounded-2xl"
+      data-drag-handle
+      className="relative border border-muted rounded-2xl cursor-grab active:cursor-grabbing"
       style={{
         width: targetWidth,
         transition: `width 500ms ${EASING}`,
@@ -96,6 +62,7 @@ export default function ExprContainer({ category, defaultItems, searchFn, onStar
       {/* Toggle button - absolutely positioned */}
       <button
         onClick={() => setExpanded(!isExpanded)}
+        onMouseDown={(e) => e.stopPropagation()}
         className="absolute right-3 z-10 bg-transparent border-none p-0 cursor-pointer flex items-center"
         style={{
           top: isExpanded ? '0.75rem' : '1.75rem',
@@ -143,17 +110,16 @@ export default function ExprContainer({ category, defaultItems, searchFn, onStar
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onMouseDown={(e) => e.stopPropagation()}
                 placeholder="Search..."
-                className="w-auto rounded-lg pl-7 pr-2 pb-1 text-sm text-soft-white placeholder:text-muted focus:outline-none select-none"
+                className="w-auto rounded-lg pl-7 pr-2 pb-1 text-sm text-soft-white placeholder:text-muted focus:outline-none select-none cursor-text"
               />
             </div>
           </div>
           {/* Items */}
           <div
-            ref={contentRef}
             className="flex flex-wrap gap-1 px-2 pb-2"
             style={{
-              width: expandedWidth ? expandedWidth - CONTAINER_PADDING : 'auto',
               opacity: isExpanded ? 1 : 0,
               transition: 'opacity 300ms ease-out',
               transitionDelay: isExpanded ? '250ms' : '0ms',

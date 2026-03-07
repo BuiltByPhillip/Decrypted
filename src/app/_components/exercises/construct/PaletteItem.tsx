@@ -10,6 +10,7 @@ type PaletteItemProps = {
 export default function PaletteItem({ item, onStartDrag, className }: PaletteItemProps) {
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation(); // Prevent container drag
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;

@@ -21,6 +21,7 @@ import DragGhost from "~/app/_components/exercises/construct/DragGhost";
 import ExprNode from "~/app/_components/exercises/construct/ExprNode";
 import { normalizeExpr, paletteItemToExpr } from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
+import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 
 // Default items for Values: 1-10 and a-j
 const DEFAULT_VALUE_ITEMS: Item[] = [
@@ -241,25 +242,31 @@ export default function DragAndDrop() {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <ExprContainer
-        category="Operators"
-        defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
-        searchFn={searchOperators}
-        onStartDrag={onStartDrag}
-      />
-      <ExprContainer
-        category="Symbols"
-        defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
-        searchFn={searchSymbols}
-        onStartDrag={onStartDrag}
-      />
-      <ExprContainer
-        category="Values"
-        defaultItems={DEFAULT_VALUE_ITEMS}
-        searchFn={searchValues}
-        onStartDrag={onStartDrag}
-      />
+    <div className="relative w-full h-full">
+      <DraggableWindow id="operators" defaultPosition={{ x: 20, y: 20 }}>
+        <ExprContainer
+          category="Operators"
+          defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
+          searchFn={searchOperators}
+          onStartDrag={onStartDrag}
+        />
+      </DraggableWindow>
+      <DraggableWindow id="symbols" defaultPosition={{ x: 20, y: 120 }}>
+        <ExprContainer
+          category="Symbols"
+          defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
+          searchFn={searchSymbols}
+          onStartDrag={onStartDrag}
+        />
+      </DraggableWindow>
+      <DraggableWindow id="values" defaultPosition={{ x: 20, y: 220 }}>
+        <ExprContainer
+          category="Values"
+          defaultItems={DEFAULT_VALUE_ITEMS}
+          searchFn={searchValues}
+          onStartDrag={onStartDrag}
+        />
+      </DraggableWindow>
 
       {dragState && (
         <DragGhost
