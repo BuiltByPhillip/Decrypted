@@ -25,18 +25,23 @@ function savePositions(positions: Record<string, Position>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
 }
 
+function getInitialPosition(id: string, defaultPosition: Position): Position {
+  if (typeof window === "undefined") return defaultPosition;
+  const positions = loadPositions();
+  return positions[id] ?? defaultPosition;
+}
+
 export default function DraggableWindow({ id, defaultPosition, children }: DraggableWindowProps) {
+  const [isClient, setIsClient] = useState(false);
   const [position, setPosition] = useState<Position>(defaultPosition);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
 
-  // Load saved position on mount
+  // Load saved position on mount (client-side only)
   useEffect(() => {
-    const positions = loadPositions();
-    if (positions[id]) {
-      setPosition(positions[id]);
-    }
-  }, [id]);
+    setPosition(getInitialPosition(id, defaultPosition));
+    setIsClient(true);
+  }, [id, defaultPosition]);
 
   // Save position when it changes (debounced on drag end)
   const savePosition = (pos: Position) => {
@@ -84,6 +89,11 @@ export default function DraggableWindow({ id, defaultPosition, children }: Dragg
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
+
+  // Don't render until client-side position is loaded to prevent flicker
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div
