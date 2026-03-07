@@ -309,10 +309,10 @@ export default function DragAndDrop() {
           }}
         />
       )}
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end">
         <div></div>
         <Dropable ref={dropRef}>
-          {<span className="flex items-center justify-center select-none text-muted border-2 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span>Drop here</span>}</span>}
+          {<span className="flex items-center justify-center select-none text-muted border-1 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span>Drop here</span>}</span>}
         </Dropable>
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
