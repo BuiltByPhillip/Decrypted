@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
-import ExprContainer from "~/app/_components/exercises/construct/ExprContainer";
+import ExprPalette from "~/app/_components/exercises/construct/ExprPalette";
 import {
   ALL_OPERATOR_PALETTE_ITEMS,
   ALL_OPERATORS,
@@ -245,7 +245,7 @@ export default function DragAndDrop() {
   return (
     <div className="relative w-full h-full">
       <DraggableWindow id="operators" defaultPosition={{ x: 20, y: 20 }}>
-        <ExprContainer
+        <ExprPalette
           category="Operators"
           defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
           searchFn={searchOperators}
@@ -253,7 +253,7 @@ export default function DragAndDrop() {
         />
       </DraggableWindow>
       <DraggableWindow id="symbols" defaultPosition={{ x: 20, y: 120 }}>
-        <ExprContainer
+        <ExprPalette
           category="Symbols"
           defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
           searchFn={searchSymbols}
@@ -261,7 +261,7 @@ export default function DragAndDrop() {
         />
       </DraggableWindow>
       <DraggableWindow id="values" defaultPosition={{ x: 20, y: 220 }}>
-        <ExprContainer
+        <ExprPalette
           category="Values"
           defaultItems={DEFAULT_VALUE_ITEMS}
           searchFn={searchValues}

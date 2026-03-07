@@ -3,7 +3,7 @@ import PaletteItem from "~/app/_components/exercises/construct/PaletteItem";
 import React from "react";
 import { Plus, Minus, Search } from "lucide-react";
 
-type ContainerProps = {
+type PaletteProps = {
   category: "Operators" | "Values" | "Symbols"
   defaultItems: Item[]
   searchFn: (query: string) => Item[]
@@ -14,11 +14,11 @@ const COLLAPSED_WIDTH = 128; // 8rem
 const EXPANDED_WIDTH = 550; // Fixed expanded width
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
-export default function ExprContainer({ category, defaultItems, searchFn, onStartDrag }: ContainerProps) {
+export default function ExprPalette({ category, defaultItems, searchFn, onStartDrag }: PaletteProps) {
   // Load expanded state from localStorage
   const [isExpanded, setExpanded] = React.useState(() => {
     if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem(`exprContainer-${category}-expanded`);
+    const saved = localStorage.getItem(`exprPalette-${category}-expanded`);
     return saved === 'true';
   });
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -26,7 +26,7 @@ export default function ExprContainer({ category, defaultItems, searchFn, onStar
 
   // Save expanded state to localStorage whenever it changes
   React.useEffect(() => {
-    localStorage.setItem(`exprContainer-${category}-expanded`, String(isExpanded));
+    localStorage.setItem(`exprPalette-${category}-expanded`, String(isExpanded));
   }, [isExpanded, category]);
 
   // Compute displayed items based on search query
