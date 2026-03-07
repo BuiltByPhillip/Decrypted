@@ -6,6 +6,8 @@ type DraggableWindowProps = {
   id: string;
   defaultPosition: Position;
   children: React.ReactNode;
+  zIndex?: number;
+  onBringToFront?: () => void;
 };
 
 const STORAGE_KEY = "draggable-window-positions";
@@ -31,7 +33,7 @@ function getInitialPosition(id: string, defaultPosition: Position): Position {
   return positions[id] ?? defaultPosition;
 }
 
-export default function DraggableWindow({ id, defaultPosition, children }: DraggableWindowProps) {
+export default function DraggableWindow({ id, defaultPosition, children, zIndex = 0, onBringToFront }: DraggableWindowProps) {
   const [isClient, setIsClient] = useState(false);
   const [position, setPosition] = useState<Position>(defaultPosition);
   const [isDragging, setIsDragging] = useState(false);
@@ -51,6 +53,9 @@ export default function DraggableWindow({ id, defaultPosition, children }: Dragg
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Bring to front when clicked
+    onBringToFront?.();
+
     // Only start drag if clicking on the drag handle (data attribute)
     const target = e.target as HTMLElement;
     if (!target.closest("[data-drag-handle]")) return;
@@ -103,6 +108,7 @@ export default function DraggableWindow({ id, defaultPosition, children }: Dragg
         left: position.x,
         top: position.y,
         cursor: isDragging ? "grabbing" : "default",
+        zIndex: zIndex,
       }}
     >
       {children}

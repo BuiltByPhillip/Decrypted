@@ -136,6 +136,22 @@ export default function DragAndDrop() {
   } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
 
+  // Track z-index stacking order (most recent at end)
+  const [stackOrder, setStackOrder] = useState<string[]>(["operators", "symbols", "values"]);
+
+  const bringToFront = (id: string) => {
+    setStackOrder(prev => {
+      // Remove id from current position and add to end (top)
+      const filtered = prev.filter(item => item !== id);
+      return [...filtered, id];
+    });
+  };
+
+  const getZIndex = (id: string) => {
+    const index = stackOrder.indexOf(id);
+    return index >= 0 ? index + 10 : 10; // Base z-index of 10
+  };
+
   const registerSlot = (id: string, elem: HTMLDivElement | null, onFill: (item: Item) => void) => {
     elem ? slotsRef.current.set(id, {element: elem, onFill}) : slotsRef.current.delete(id)
   }
@@ -244,7 +260,12 @@ export default function DragAndDrop() {
 
   return (
     <div className="relative w-full h-full">
-      <DraggableWindow id="operators" defaultPosition={{ x: 20, y: 20 }}>
+      <DraggableWindow
+        id="operators"
+        defaultPosition={{ x: 20, y: 20 }}
+        zIndex={getZIndex("operators")}
+        onBringToFront={() => bringToFront("operators")}
+      >
         <ExprPalette
           category="Operators"
           defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
@@ -252,7 +273,12 @@ export default function DragAndDrop() {
           onStartDrag={onStartDrag}
         />
       </DraggableWindow>
-      <DraggableWindow id="symbols" defaultPosition={{ x: 20, y: 120 }}>
+      <DraggableWindow
+        id="symbols"
+        defaultPosition={{ x: 20, y: 120 }}
+        zIndex={getZIndex("symbols")}
+        onBringToFront={() => bringToFront("symbols")}
+      >
         <ExprPalette
           category="Symbols"
           defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
@@ -260,7 +286,12 @@ export default function DragAndDrop() {
           onStartDrag={onStartDrag}
         />
       </DraggableWindow>
-      <DraggableWindow id="values" defaultPosition={{ x: 20, y: 220 }}>
+      <DraggableWindow
+        id="values"
+        defaultPosition={{ x: 20, y: 220 }}
+        zIndex={getZIndex("values")}
+        onBringToFront={() => bringToFront("values")}
+      >
         <ExprPalette
           category="Values"
           defaultItems={DEFAULT_VALUE_ITEMS}
