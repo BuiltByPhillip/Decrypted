@@ -10,12 +10,13 @@ type DragGhostProps = {
   offsetX: number;
   offsetY: number;
   onDrop: (x: number, y: number) => void;
+  onMove?: (x: number, y: number) => void;
 };
 
-export default function DragGhost({ paletteItem, onDrop, startX, startY, offsetX, offsetY }: DragGhostProps) {
+export default function DragGhost({ paletteItem, onDrop, onMove, startX, startY, offsetX, offsetY }: DragGhostProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  useDraggable({ ref, startX, startY, offsetX, offsetY, onDrop });
+  useDraggable({ ref, startX, startY, offsetX, offsetY, onDrop, onMove });
 
   return (
     <div ref={ref} className="fixed">

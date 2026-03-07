@@ -134,6 +134,7 @@ export default function DragAndDrop() {
     fromTree?: boolean;
     restoreExpr?: () => void;
   } | null>(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
 
   const registerSlot = (id: string, elem: HTMLDivElement | null, onFill: (item: Item) => void) => {
     elem ? slotsRef.current.set(id, {element: elem, onFill}) : slotsRef.current.delete(id)
@@ -275,7 +276,11 @@ export default function DragAndDrop() {
           startY={dragState.y}
           offsetX={dragState.offsetX}
           offsetY={dragState.offsetY}
+          onMove={(x, y) => {
+            setIsOverTrash(!!checkTrash(x, y));
+          }}
           onDrop={(x, y) => {
+            setIsOverTrash(false);
             const slot = findSlotAt(x, y);
             let handled = false;
 
@@ -309,7 +314,7 @@ export default function DragAndDrop() {
         <Dropable ref={dropRef}>
           {<span className="flex items-center justify-center select-none text-muted border-2 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span>Drop here</span>}</span>}
         </Dropable>
-        <TrashContainer ref={trashRef} isDragging={!!dragState} className="ml-50"/>
+        <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
 
     </div>

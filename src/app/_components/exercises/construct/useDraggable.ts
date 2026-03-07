@@ -7,6 +7,7 @@ type UseDraggableOptions = {
   offsetX: number;
   offsetY: number;
   onDrop: (x: number, y: number) => void;
+  onMove?: (x: number, y: number) => void;
 };
 
 export default function useDraggable({
@@ -16,9 +17,11 @@ export default function useDraggable({
   offsetX,
   offsetY,
   onDrop,
+  onMove,
 }: UseDraggableOptions) {
   const posRef = useRef({ startX, startY });
   const onDropRef = useRef(onDrop);
+  const onMoveRef = useRef(onMove);
 
   useEffect(() => {
     const element = ref.current;
@@ -37,6 +40,8 @@ export default function useDraggable({
 
       element.style.top = element.offsetTop - deltaY + "px";
       element.style.left = element.offsetLeft - deltaX + "px";
+
+      onMoveRef.current?.(event.clientX, event.clientY);
     };
 
     const mouseup = (event: MouseEvent) => {
