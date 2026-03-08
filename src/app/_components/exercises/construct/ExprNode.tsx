@@ -11,9 +11,11 @@ type ExprNodeProps = {
   onSlotFill?: (newExpr: Expr) => void;
   registerSlot?: (id: string, elem: HTMLDivElement | null, onFill: (item: PaletteItem) => void) => void; // Register slot with the parent
   onStartDrag?: (expr: Expr, x: number, y: number, offsetX: number, offsetY: number, replaceWithSlot: () => void) => void;
+  isDragging?: boolean;
+  hoveredSlotId?: string | null;
 }
 
-export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, onSlotFill, registerSlot }: ExprNodeProps) {
+export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, onSlotFill, registerSlot, isDragging, hoveredSlotId }: ExprNodeProps) {
 
   function onFill(paletteItem: PaletteItem) {
     if (onSlotFill) {
@@ -103,9 +105,13 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
     case "placeholder":
       return <span onMouseDown={handleMouseDown}>{`$${expr.index}`}</span>;
     case "slot":
-      return <Dropable ref={(elem) => {
-        registerSlot?.(slotIdPrefix ?? "", elem, onFill);
-      }}/>
+      return <Dropable
+        ref={(elem) => {
+          registerSlot?.(slotIdPrefix ?? "", elem, onFill);
+        }}
+        isDragging={isDragging}
+        isHovered={hoveredSlotId === (slotIdPrefix ?? "")}
+      />
     case "constant":
       return (
         <span onMouseDown={handleMouseDown}>
@@ -121,6 +127,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
                 registerSlot?.((slotIdPrefix ?? "") + "UOP", elem, onUnaryOperatorFill);
               }}
               className="h-10 w-10"
+              isDragging={isDragging}
+              isHovered={hoveredSlotId === (slotIdPrefix ?? "") + "UOP"}
             />
           ) : (
             <span onMouseDown={(e) => handleUnaryOperatorMouseDown(e, expr.op!)}>
@@ -134,6 +142,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             onSlotFill={(newExpr) => onSlotFill?.({ ...expr, operand: newExpr })}
             slotIdPrefix={(slotIdPrefix ?? "") + "U"}
             registerSlot={registerSlot}
+            isDragging={isDragging}
+            hoveredSlotId={hoveredSlotId}
           />
         </div>
       );
@@ -147,6 +157,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             onSlotFill={(newExpr) => onSlotFill?.({...expr, left: newExpr})}
             slotIdPrefix={(slotIdPrefix + "") + "L"}
             registerSlot={registerSlot}
+            isDragging={isDragging}
+            hoveredSlotId={hoveredSlotId}
           />
           {expr.op === null ? (
             // Operator slot - render a Dropable for dropping a new operator
@@ -155,6 +167,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
                 registerSlot?.((slotIdPrefix ?? "") + "OP", elem, onOperatorFill);
               }}
               className="h-10 w-10"
+              isDragging={isDragging}
+              isHovered={hoveredSlotId === (slotIdPrefix ?? "") + "OP"}
             />
           ) : (
             // Operator present - render it and make it draggable
@@ -173,6 +187,8 @@ export default function ExprNode({ expr, className, slotIdPrefix, onStartDrag, o
             onSlotFill={(newExpr) => onSlotFill?.({...expr, right: newExpr})}
             slotIdPrefix={(slotIdPrefix + "") + "R"}
             registerSlot={registerSlot}
+            isDragging={isDragging}
+            hoveredSlotId={hoveredSlotId}
           />
         </div>
       );

@@ -3,7 +3,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { twMerge } from "tailwind-merge";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "option" | "submit" | "definition" | "category";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "ghostMuted" | "option" | "submit" | "definition" | "category";
 type ButtonSize = "none" | "sm" | "md" | "lg";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -17,6 +17,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   secondary: "bg-medium text-white hover:brightness-125",
   outline: "bg-transparent border-2 border-cream text-cream hover:bg-cream/20",
   ghost: "bg-transparent text-cream hover:bg-white/10",
+  ghostMuted: "bg-transparent text-muted hover:underline",
   option: "hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-103",
   submit: "bg-green text-green-foreground transition ease-in-out delay-100 duration-300 hover:scale-105",
   definition: "bg-dark hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105",

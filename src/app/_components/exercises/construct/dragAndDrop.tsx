@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Dropable from "~/app/_components/exercises/construct/Dropable";
 import ExprPalette from "~/app/_components/exercises/construct/ExprPalette";
 import {
@@ -146,7 +146,13 @@ export default function DragAndDrop() {
   const dropRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const slotsRef = useRef<Map<string, { element: HTMLDivElement; onFill: (item: Item) => void }>>(new Map());
-  const [expression, setExpression] = useState<Expr | null>(() => loadExpression());
+  const [expression, setExpression] = useState<Expr | null>(null);
+
+  // Load expression from localStorage after hydration to avoid SSR mismatch
+  useEffect(() => {
+    const saved = loadExpression();
+    if (saved) setExpression(saved);
+  }, []);
   const [dragState, setDragState] = useState<{
     item: Item;
     x: number;
@@ -157,6 +163,7 @@ export default function DragAndDrop() {
     restoreExpr?: () => void;
   } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
+  const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
 
   // Track z-index stacking order (most recent at end)
   const [stackOrder, setStackOrder] = useState<string[]>(["operators", "symbols", "values"]);
@@ -192,6 +199,14 @@ export default function DragAndDrop() {
       const bounds = slot.element.getBoundingClientRect();
 
       if (isInside(x, y, bounds)) return slot;
+    }
+    return null;
+  }
+
+  const findSlotIdAt = (x: number, y: number): string | null => {
+    for (const [id, slot] of slotsRef.current.entries()) {
+      const bounds = slot.element.getBoundingClientRect();
+      if (isInside(x, y, bounds)) return id;
     }
     return null;
   }
@@ -342,9 +357,11 @@ export default function DragAndDrop() {
           offsetY={dragState.offsetY}
           onMove={(x, y) => {
             setIsOverTrash(!!checkTrash(x, y));
+            setHoveredSlotId(findSlotIdAt(x, y));
           }}
           onDrop={(x, y) => {
             setIsOverTrash(false);
+            setHoveredSlotId(null);
             const slot = findSlotAt(x, y);
             let handled = false;
 
@@ -374,10 +391,23 @@ export default function DragAndDrop() {
         />
       )}
       <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end">
-        <div></div>
-        <Dropable ref={dropRef}>
-          {<span className="flex items-center justify-center select-none text-muted border-1 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} /> : <span>Drop here</span>}</span>}
-        </Dropable>
+        <div></div> {/* Empty div */}
+        <div className="flex flex-col">
+          <Button
+            variant="ghostMuted"
+            className="flex justify-end pr-13 select-none"
+            size="none"
+            onClick={() => {
+              setExpression(null)
+            }}
+          >
+            Clear expression
+          </Button>
+          <Dropable ref={dropRef} isDragging={!!dragState}>
+            {<span className="flex items-center justify-center select-none text-muted border-1 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} isDragging={!!dragState} hoveredSlotId={hoveredSlotId} /> : <span>Drop here</span>}</span>}
+          </Dropable>
+        </div>
+
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
       <div className="flex justify-center pt-20">
