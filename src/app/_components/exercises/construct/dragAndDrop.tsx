@@ -67,6 +67,7 @@ export default function DragAndDrop() {
     restoreExpr?: () => void;
   } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
+  const [isOverDrop, setIsOverDrop] = useState(false);
   const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
 
   // Track z-index stacking order (most recent at end)
@@ -261,10 +262,12 @@ export default function DragAndDrop() {
           offsetY={dragState.offsetY}
           onMove={(x, y) => {
             setIsOverTrash(!!checkTrash(x, y));
+            setIsOverDrop(!!checkDrop(x, y));
             setHoveredSlotId(findSlotIdAt(x, y));
           }}
           onDrop={(x, y) => {
             setIsOverTrash(false);
+            setIsOverDrop(false);
             setHoveredSlotId(null);
             const slot = findSlotAt(x, y);
             let handled = false;
@@ -299,7 +302,7 @@ export default function DragAndDrop() {
         <div className="flex flex-col">
           <Button
             variant="ghostMuted"
-            className="flex justify-end pr-13 select-none"
+            className="flex justify-end pr-3 select-none"
             size="none"
             onClick={() => {
               setExpression(null)
@@ -307,7 +310,7 @@ export default function DragAndDrop() {
           >
             Clear expression
           </Button>
-          <Dropable ref={dropRef} isDragging={!!dragState}>
+          <Dropable ref={dropRef} isDragging={!!dragState} isHovered={isOverDrop && !expression}>
             {<span className="flex items-center justify-center select-none text-muted border-1 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} isDragging={!!dragState} hoveredSlotId={hoveredSlotId} /> : <span>Drop here</span>}</span>}
           </Dropable>
         </div>
