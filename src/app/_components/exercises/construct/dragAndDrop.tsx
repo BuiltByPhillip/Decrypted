@@ -224,6 +224,7 @@ export default function DragAndDrop() {
           defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
           searchFn={searchOperators}
           onStartDrag={onStartDrag}
+          searchPlaceholder="Search..."
         />
       </DraggableWindow>
       <DraggableWindow
@@ -237,6 +238,7 @@ export default function DragAndDrop() {
           defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
           searchFn={searchSymbols}
           onStartDrag={onStartDrag}
+          searchPlaceholder="Search..."
         />
       </DraggableWindow>
       <DraggableWindow
@@ -250,6 +252,7 @@ export default function DragAndDrop() {
           defaultItems={DEFAULT_VALUE_ITEMS}
           searchFn={searchValues}
           onStartDrag={onStartDrag}
+          searchPlaceholder="Create any variable or integer"
         />
       </DraggableWindow>
 

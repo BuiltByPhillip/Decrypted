@@ -8,13 +8,14 @@ type PaletteProps = {
   defaultItems: Item[]
   searchFn: (query: string) => Item[]
   onStartDrag: (item: Item, x: number, y: number, offsetX: number, offsetY: number) => void;
+  searchPlaceholder: string;
 }
 
 const COLLAPSED_WIDTH = 128; // 8rem
 const EXPANDED_WIDTH = 550; // Fixed expanded width
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
-export default function ExprPalette({ category, defaultItems, searchFn, onStartDrag }: PaletteProps) {
+export default function ExprPalette({ category, defaultItems, searchFn, onStartDrag, searchPlaceholder }: PaletteProps) {
   // Load expanded state from localStorage
   const [isExpanded, setExpanded] = React.useState(() => {
     if (typeof window === 'undefined') return false;
@@ -121,8 +122,9 @@ export default function ExprPalette({ category, defaultItems, searchFn, onStartD
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onMouseDown={(e) => e.stopPropagation()}
-                placeholder="Search..."
-                className="w-auto rounded-lg pl-7 pr-2 pb-1 text-sm text-soft-white placeholder:text-muted focus:outline-none select-none cursor-text"
+                placeholder={searchPlaceholder}
+                size={Math.max(1, Math.floor(searchPlaceholder.length * 0.8))}
+                className="rounded-lg pl-7 pr-2 pb-1 text-sm text-soft-white placeholder:text-muted focus:outline-none select-none cursor-text"
               />
             </div>
           </div>
