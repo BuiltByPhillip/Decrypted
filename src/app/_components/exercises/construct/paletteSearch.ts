@@ -70,9 +70,9 @@ export function searchValues(query: string): Item[] {
     seen.add(`int:${value}`);
   }
 
-  // If query matches variable pattern (a-z with optional prime)
-  if (/^[a-z]'?$/.test(q)) {
-    results.push({ kind: "var", name: q });
+  // If query matches variable pattern (letters with optional prime)
+  if (/^[a-zA-Z]+'?$/.test(query.trim())) {
+    results.push({ kind: "var", name: query.trim() });
     seen.add(`var:${q}`);
   }
 
