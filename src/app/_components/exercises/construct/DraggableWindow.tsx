@@ -38,6 +38,7 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
   const [position, setPosition] = useState<Position>(defaultPosition);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Load saved position on mount (client-side only)
   useEffect(() => {
@@ -74,10 +75,14 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
     let currentPos = position;
 
     const handleMouseMove = (e: MouseEvent) => {
-      currentPos = {
-        x: e.clientX - dragOffset.current.x,
-        y: e.clientY - dragOffset.current.y,
-      };
+      const rect = containerRef.current?.getBoundingClientRect();
+      const width = rect?.width ?? 0;
+      const height = rect?.height ?? 0;
+
+      const x = Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - width));
+      const y = Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - height));
+
+      currentPos = { x, y };
       setPosition(currentPos);
     };
 
@@ -102,9 +107,10 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
 
   return (
     <div
+      ref={containerRef}
       onMouseDown={handleMouseDown}
       style={{
-        position: "absolute",
+        position: "fixed",
         left: position.x,
         top: position.y,
         cursor: isDragging ? "grabbing" : "default",
