@@ -290,7 +290,7 @@ export default function DragAndDrop() {
               handled = true;
             }
             // Check if dropped on main canvas (only for palette items, not tree items)
-            else if (checkDrop(x, y) && dragState && !dragState.fromTree) {
+            else if (checkDrop(x, y) && dragState && !dragState.fromTree && !expression) {
               setExpressionWithSave(paletteItemToExpr(dragState.item));
               handled = true;
             }
