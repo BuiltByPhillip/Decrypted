@@ -300,7 +300,7 @@ export default function DragAndDrop() {
           }}
         />
       )}
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end">
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end pt-50">
         <div></div> {/* Empty div */}
         <div className="flex flex-col">
           <Button
@@ -320,7 +320,7 @@ export default function DragAndDrop() {
 
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
       </div>
-      <div className="flex justify-center pt-20">
+      <div className="flex justify-center pt-10">
         <Button variant="submit" className="w-100">Check answer</Button>
       </div>
     </div>
