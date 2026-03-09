@@ -318,7 +318,7 @@ export default function DragAndDrop() {
           </Dropable>
         </div>
 
-        <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-50"/>
+        <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-70"/>
       </div>
       <div className="flex justify-center pt-10">
         <Button variant="submit" className="w-100">Check answer</Button>

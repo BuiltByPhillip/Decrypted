@@ -19,10 +19,10 @@ export default forwardRef<HTMLDivElement, TrashContainerProps>(function TrashCon
       return 'text-danger border-danger scale-103 shadow-[0_0_15px_var(--color-danger)]';
     } else if (isDragging) {
       // Dragging but not hovering: muted glow
-      return 'text-muted border-muted shadow-[0_0_15px_var(--color-muted)]';
+      return 'text-danger border-danger shadow-[0_0_15px_var(--color-danger)]';
     } else {
       // Not dragging: no glow
-      return 'text-muted border-muted';
+      return 'text-danger border-danger';
     }
   };
 
