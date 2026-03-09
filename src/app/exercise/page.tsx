@@ -6,6 +6,8 @@ import SelectExercise from "~/app/_components/exercises/selectExercise/select";
 import Button from "~/components/Button";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useLenis } from "~/components/SmoothScroll";
+import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
+import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -91,7 +93,9 @@ export default function ExercisePage() {
   // Pre-filter exercises for cleaner rendering
   const exercises = code.step
     .map((step, stepIndex) => ({ step, stepIndex }))
-    .filter(({ step }) => step.exercise?.type === "select" && step.exercise.options);
+    .filter(({ step }) =>
+      (step.exercise?.type === "select" && step.exercise.options) ||
+      (step.exercise?.type === "construct" && step.exercise.palette));
 
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
@@ -131,13 +135,28 @@ export default function ExercisePage() {
             ref={(el) => setExerciseRef(exerciseIndex, el)}
             className="flex min-h-screen flex-col items-center justify-center gap-8 w-full"
           >
-            <SelectExercise
-              options={step.exercise!.options!}
-              description={step.description}
-              prompt={step.exercise!.prompt}
-              definitions={definitions}
-              answers={step.exercise!.answer}
-            />
+            {step.exercise?.type === "select" ? (
+              <SelectExercise
+                options={step.exercise!.options!}
+                description={step.description}
+                prompt={step.exercise!.prompt}
+                definitions={definitions}
+                answers={step.exercise!.answer}
+              />
+            ) : step.exercise?.type === "construct" ? (
+              <ConstructExercise
+                palette={step.exercise!.palette!}
+                answers={step.exercise.answer}
+                description={step.description}
+                prompt={step.exercise.prompt}
+                definitions={definitions}
+              />
+            ) : step.exercise?.type === "fill" ? (
+              <div>Empty placeholder</div>
+            ) : step.exercise?.type === "calculate" ? (
+              <div>Empty placeholder</div>
+            ) : <div>Something went wrong while rendering</div>}
+
             <Button
               variant="submit"
               className="w-50"

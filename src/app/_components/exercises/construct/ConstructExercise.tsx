@@ -1,0 +1,18 @@
+import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
+import type { Expr, PaletteItem } from "~/app/hooks/parser";
+import type { SelectedDefinitions } from "~/app/exercise/page";
+
+type ConstructExerciseProps = {
+  palette: PaletteItem[];
+  description: string;
+  prompt: string;
+  hint?: string;
+  definitions?: SelectedDefinitions;
+  answers: Expr[];
+}
+
+export default function ConstructExercise({}: ConstructExerciseProps) {
+  return (
+    <DragAndDrop/>
+  );
+}

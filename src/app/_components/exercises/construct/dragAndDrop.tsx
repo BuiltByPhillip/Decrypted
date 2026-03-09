@@ -47,6 +47,7 @@ function saveExpression(expr: Expr | null) {
 }
 
 export default function DragAndDrop() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const slotsRef = useRef<Map<string, { element: HTMLDivElement; onFill: (item: Item) => void }>>(new Map());
@@ -212,12 +213,13 @@ export default function DragAndDrop() {
   };
 
   return (
-    <div className="flex flex-col relative w-full">
+    <div ref={containerRef} className="flex flex-col relative w-full">
       <DraggableWindow
         id="operators"
         defaultPosition={{ x: 20, y: 20 }}
         zIndex={getZIndex("operators")}
         onBringToFront={() => bringToFront("operators")}
+        containerRef={containerRef}
       >
         <ExprPalette
           category="Operators"
@@ -232,6 +234,7 @@ export default function DragAndDrop() {
         defaultPosition={{ x: 20, y: 120 }}
         zIndex={getZIndex("symbols")}
         onBringToFront={() => bringToFront("symbols")}
+        containerRef={containerRef}
       >
         <ExprPalette
           category="Symbols"
@@ -246,6 +249,7 @@ export default function DragAndDrop() {
         defaultPosition={{ x: 20, y: 220 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}
+        containerRef={containerRef}
       >
         <ExprPalette
           category="Values"

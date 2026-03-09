@@ -8,6 +8,7 @@ type DraggableWindowProps = {
   children: React.ReactNode;
   zIndex?: number;
   onBringToFront?: () => void;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 const STORAGE_KEY = "draggable-window-positions";
@@ -33,12 +34,12 @@ function getInitialPosition(id: string, defaultPosition: Position): Position {
   return positions[id] ?? defaultPosition;
 }
 
-export default function DraggableWindow({ id, defaultPosition, children, zIndex = 0, onBringToFront }: DraggableWindowProps) {
+export default function DraggableWindow({ id, defaultPosition, children, zIndex = 0, onBringToFront, containerRef }: DraggableWindowProps) {
   const [isClient, setIsClient] = useState(false);
   const [position, setPosition] = useState<Position>(defaultPosition);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   // Load saved position on mount (client-side only)
   useEffect(() => {
@@ -63,9 +64,12 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
 
     e.preventDefault();
     setIsDragging(true);
+    const parentRect = containerRef?.current?.getBoundingClientRect();
+    const offsetX = parentRect?.left ?? 0;
+    const offsetY = parentRect?.top ?? 0;
     dragOffset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+      x: e.clientX - offsetX - position.x,
+      y: e.clientY - offsetY - position.y,
     };
   };
 
@@ -75,12 +79,18 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
     let currentPos = position;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = containerRef.current?.getBoundingClientRect();
+      const rect = windowRef.current?.getBoundingClientRect();
       const width = rect?.width ?? 0;
       const height = rect?.height ?? 0;
 
-      const x = Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - width));
-      const y = Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - height));
+      const parentRect = containerRef?.current?.getBoundingClientRect();
+      const offsetX = parentRect?.left ?? 0;
+      const offsetY = parentRect?.top ?? 0;
+      const parentWidth = parentRect?.width ?? window.innerWidth;
+      const parentHeight = parentRect?.height ?? window.innerHeight;
+
+      const x = Math.max(0, Math.min(e.clientX - dragOffset.current.x - offsetX, parentWidth - width));
+      const y = Math.max(0, Math.min(e.clientY - dragOffset.current.y - offsetY, parentHeight - height));
 
       currentPos = { x, y };
       setPosition(currentPos);
@@ -107,10 +117,10 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
 
   return (
     <div
-      ref={containerRef}
+      ref={windowRef}
       onMouseDown={handleMouseDown}
       style={{
-        position: "fixed",
+        position: "absolute",
         left: position.x,
         top: position.y,
         cursor: isDragging ? "grabbing" : "default",
