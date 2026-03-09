@@ -20,10 +20,17 @@ import {
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
 import ExprNode from "~/app/_components/exercises/construct/ExprNode";
-import { normalizeExpr, paletteItemToExpr } from "~/app/hooks/expr";
+import { normalizeExpr, paletteItemToExpr, substituteRoles, exprEquals, exprToString } from "~/app/hooks/expr";
+import { parseExpression } from "~/app/hooks/parser";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
+import type { SelectedDefinitions } from "~/app/exercise/page";
+
+type DragAndDropProps = {
+  answers?: Expr[];
+  definitions?: SelectedDefinitions;
+};
 
 const EXPRESSION_STORAGE_KEY = "drag-and-drop-expression";
 
@@ -46,7 +53,7 @@ function saveExpression(expr: Expr | null) {
   }
 }
 
-export default function DragAndDrop() {
+export default function DragAndDrop({ answers, definitions }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
@@ -212,6 +219,29 @@ export default function DragAndDrop() {
     saveExpression(expr);
   };
 
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  const checkAnswer = () => {
+    if (!expression || !answers || answers.length === 0) {
+      setIsCorrect(false);
+      return;
+    }
+
+    try {
+      const userString = exprToString(expression);
+      const reparsed = parseExpression(userString);
+
+      const isMatch = answers.some(answer => {
+        const resolved = definitions ? substituteRoles(answer, definitions) : answer;
+        return exprEquals(reparsed, resolved);
+      });
+
+      setIsCorrect(isMatch);
+    } catch {
+      setIsCorrect(false);
+    }
+  };
+
   return (
     <div ref={containerRef} className="flex flex-col relative w-full">
       <DraggableWindow
@@ -324,8 +354,10 @@ export default function DragAndDrop() {
 
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-70"/>
       </div>
-      <div className="flex justify-center pt-10">
-        <Button variant="submit" className="w-100">Check answer</Button>
+      <div className="flex flex-col items-center pt-10 gap-2">
+        <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
+        {isCorrect === true && <span className="text-green-500">Correct!</span>}
+        {isCorrect === false && <span className="text-red-500">Incorrect, try again.</span>}
       </div>
     </div>
 

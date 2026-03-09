@@ -269,6 +269,12 @@ export function tokenize(input: string): Token[] {
   return inner(0, [])
 }
 
+export function parseExpression(input: string): Expr {
+  const tokens = tokenize(input);
+  const parser = new ExpressionParser(tokens);
+  return parser.parse();
+}
+
 class ExpressionParser {
   private readonly tokens: Token[];
   private current: number = 0;
