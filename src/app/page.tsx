@@ -1,11 +1,11 @@
 "use client";
 
 import CodeMirror from "@uiw/react-codemirror";
-import { EditorView } from "@codemirror/view";
 import { useState } from "react";
 import { parse } from "~/app/hooks/parser"
 import { useRouter } from "next/navigation";
 import Button from "~/components/Button";
+import { darkTheme } from "~/app/codeMirrorTheme";
 
 export default function Home() {
   const router = useRouter();
@@ -19,89 +19,6 @@ export default function Home() {
     // Navigate to /exercise
     router.push("/exercise");
   }
-  const darkTheme = EditorView.theme({
-    "&": {
-      backgroundColor: "rgba(34, 40, 49, 0.7) !important",
-      color: "#94a3b8 !important",
-      fontSize: "13px",
-    },
-    ".cm-content": {
-      padding: "16px",
-      paddingLeft: "0",
-      caretColor: "#60a5fa",
-      color: "#94a3b8 !important",
-    },
-    ".cm-cursor": {
-      borderLeftColor: "#60a5fa",
-      borderLeftWidth: "2px",
-    },
-    ".cm-focused": {
-      outline: "none",
-    },
-    ".cm-editor": {
-      borderRadius: "1rem",
-    },
-    ".cm-scroller": {
-      fontFamily: "ui-monospace, SFMono-Regular, monospace",
-      scrollbarWidth: "thin",
-      scrollbarColor: "#393E46 transparent",
-    },
-    ".cm-scroller::-webkit-scrollbar": {
-      width: "10px",
-      height: "10px",
-    },
-    ".cm-scroller::-webkit-scrollbar-track": {
-      backgroundColor: "transparent",
-    },
-    ".cm-scroller::-webkit-scrollbar-thumb": {
-      backgroundColor: "#393E46",
-      borderRadius: "5px",
-    },
-    ".cm-scroller::-webkit-scrollbar-thumb:hover": {
-      backgroundColor: "#94a3b8",
-    },
-    ".cm-scroller::-webkit-scrollbar-corner": {
-      backgroundColor: "transparent",
-    },
-    ".cm-placeholder": {
-      color: "#94a3b8",
-    },
-    // Line numbers / gutter
-    ".cm-gutters": {
-      backgroundColor: "transparent",
-      color: "#94a3b8",
-      border: "none",
-    },
-    ".cm-lineNumbers .cm-gutterElement": {
-      color: "#94a3b8",
-      paddingRight: "8px",
-    },
-    ".cm-activeLineGutter": {
-      backgroundColor: "rgba(57, 62, 70, 0.3)",
-      boxShadow: "12px 0 0 rgba(57, 62, 70, 0.3)",
-    },
-    ".cm-activeLine": {
-      backgroundColor: "rgba(57, 62, 70, 0.3)",
-    },
-    // Text / syntax highlighting
-    ".cm-line": {
-      color: "#94a3b8 !important",
-    },
-    ".cm-string": { color: "#22c55e" },
-    ".cm-number": { color: "#f59e0b" },
-    ".cm-atom": { color: "#f59e0b" },
-    ".cm-keyword": { color: "#94a3b8", fontWeight: "bold" },
-    ".cm-property": { color: "#94a3b8" },
-    ".cm-punctuation": { color: "#948979" },
-    // Error styling
-    ".cm-diagnostic": {
-      textDecoration: "underline wavy red",
-    },
-    ".cm-lintRange-error": {
-      backgroundColor: "rgba(255, 0, 0, 0.1)",
-    },
-  });
-
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-pattern text-cream">
       <div className="flex flex-col items-center">
@@ -116,13 +33,76 @@ export default function Home() {
             className="h-full"
           />
         </div>
-        <Button
-          className="bg-dark rounded-xl text-soft-white hover:shadow-[0_0_10px_theme(colors.muted)] px-3 py-1 transition duration-300 opacity-70 hover:cursor-pointer mt-10 border-2 border-medium hover:border-muted"
-          size="lg"
-          onClick={() => handleClick()}
-        >
-          Generate code
-        </Button>
+        <div>
+          <Button
+            className="bg-dark rounded-xl text-soft-white hover:shadow-[0_0_10px_theme(colors.muted)] px-3 py-1 transition duration-300 opacity-70 hover:cursor-pointer mt-10 border-2 border-medium hover:border-muted"
+            size="lg"
+            onClick={() => handleClick()}
+          >
+            Generate code
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setCode(`protocol: Diffie-Hellman
+participants: Alice, Bob
+define:
+      generator \\elem  {g, x, a, b}
+      prime \\elem {p, n, m, q}
+      alice_secret \\elem  {a, s, x}
+      bob_secret \\elem  {b, t, y}
+
+step 1:
+    description: Alice chooses secret {alice_secret}
+    exercise:
+        type: fill
+        prompt: Choose Alice's secret exponent {alice_secret}
+        hint: Choose a random integer in the range [2, {prime}-2]
+        answer: 2 < $1 and $1 < {prime}-2
+step 2:
+    description: Alice computes her public key A
+    exercise:
+        type: construct
+        prompt: Construct the expression for Alice to calculate her public key A
+        hint: Bob uses the same expression to calculate B
+        palette: {generator}, {alice_secret}, {prime}, ^, mod, *
+        answer: {generator} ^ {alice_secret} mod {prime}
+step 3:
+    description: Alice sends A to Bob
+step 4:
+    description: Bob chooses secret {bob_secret}
+    exercise:
+        type: fill
+        prompt: Choose Bob's secret exponent {bob_secret}
+        hint: Choose a random integer in the range [2, {prime}-2]
+        answer: 2 < $1 < {prime}-2
+step 5:
+    description: Bob computes his public key B
+    exercise:
+        type: select
+        prompt: Which expression does Bob use to calculate his public key B
+        hint: Alice uses the same expression to calculate A
+        options:
+            - {bob_secret}^{generator} mod {prime}
+            - {prime}^{bob_secret} mod {generator}
+            - {generator}^{bob_secret} mod {prime}
+        answer: {generator}^{bob_secret} mod {prime}
+step 6:
+    description: Bob sends B to Alice
+step 7:
+    description: Alice computes shared key
+    exercise:
+        type: calculate
+        prompt: Compute the shared key for Alice and Bob, when {alice_secret} = 4, {bob_secret} = 5, {prime} = 23, {generator} = 5
+        hint: The formula is A ^ {bob_secret} mod {prime} and B ^ {alice_secret} mod {prime}
+        answer: 12`);
+            }}
+          >
+            (Temporary) Insert code
+          </Button>
+        </div>
+
       </div>
     </main>
   );
