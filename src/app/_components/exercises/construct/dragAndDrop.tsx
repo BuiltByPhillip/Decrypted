@@ -7,6 +7,7 @@ import {
   ALL_OPERATOR_PALETTE_ITEMS,
   ALL_OPERATORS,
   ALL_SYMBOL_PALETTE_ITEMS,
+  ALL_SET_PALETTE_ITEMS,
   type BinaryOp,
   type BinarySymbol,
   type Expr,
@@ -15,6 +16,7 @@ import {
 import {
   DEFAULT_VALUE_ITEMS,
   searchOperators,
+  searchSets,
   searchSymbols,
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
@@ -79,7 +81,7 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
   const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
 
   // Track z-index stacking order (most recent at end)
-  const [stackOrder, setStackOrder] = useState<string[]>(["operators", "symbols", "values"]);
+  const [stackOrder, setStackOrder] = useState<string[]>(["operators", "symbols", "sets", "values"]);
 
   const bringToFront = (id: string) => {
     setStackOrder(prev => {
@@ -275,8 +277,23 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
         />
       </DraggableWindow>
       <DraggableWindow
-        id="values"
+        id="sets"
         defaultPosition={{ x: 20, y: 220 }}
+        zIndex={getZIndex("sets")}
+        onBringToFront={() => bringToFront("sets")}
+        containerRef={containerRef}
+      >
+        <ExprPalette
+          category="Sets"
+          defaultItems={ALL_SET_PALETTE_ITEMS}
+          searchFn={searchSets}
+          onStartDrag={onStartDrag}
+          searchPlaceholder="Search..."
+        />
+      </DraggableWindow>
+      <DraggableWindow
+        id="values"
+        defaultPosition={{ x: 20, y: 320 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}
         containerRef={containerRef}

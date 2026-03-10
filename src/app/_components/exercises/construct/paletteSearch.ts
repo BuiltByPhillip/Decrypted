@@ -3,10 +3,13 @@ import {
   BINARY_SYMBOLS,
   UNARY_SYMBOLS,
   CONSTANT_SYMBOLS,
+  SET_BINARY_SYMBOLS,
   operatorSymbol,
   symbolDisplay,
   type PaletteItem as Item,
 } from "~/app/hooks/parser";
+
+const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
 
 // Default items for Values: 1-10 and a-j
 export const DEFAULT_VALUE_ITEMS: Item[] = [
@@ -28,14 +31,14 @@ export function searchOperators(query: string): Item[] {
   });
 }
 
-// Search function for symbols
+// Search function for symbols (excludes set-theory items)
 export function searchSymbols(query: string): Item[] {
   const q = query.toLowerCase();
   const results: Item[] = [];
 
-  // Search binary symbols
+  // Search binary symbols (non-set-theory only)
   BINARY_SYMBOLS.forEach(op => {
-    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
+    if (!SET_BINARY_SET.has(op) && (op.includes(q) || symbolDisplay[op]?.includes(q))) {
       results.push({ kind: "binarySymbol", op });
     }
   });
@@ -47,7 +50,22 @@ export function searchSymbols(query: string): Item[] {
     }
   });
 
-  // Search constant symbols
+  return results;
+}
+
+// Search function for sets
+export function searchSets(query: string): Item[] {
+  const q = query.toLowerCase();
+  const results: Item[] = [];
+
+  // Search set-theory binary symbols
+  SET_BINARY_SYMBOLS.forEach(op => {
+    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
+      results.push({ kind: "binarySymbol", op });
+    }
+  });
+
+  // Search constant symbols (number sets + emptyset)
   CONSTANT_SYMBOLS.forEach(op => {
     if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
       results.push({ kind: "constantSymbol", op });

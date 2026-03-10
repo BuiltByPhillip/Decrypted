@@ -88,6 +88,13 @@ export const UNARY_SYMBOLS = [
 // Constant symbols (no operands)
 export const CONSTANT_SYMBOLS = [
   "emptyset",       // ∅
+  "reals",          // ℝ
+  "naturals",       // ℕ
+  "integers",       // ℤ
+  "rationals",      // ℚ
+  "complex",        // ℂ
+  "powerset",       // ℙ
+  "universal",      // 𝕌
 ] as const;
 
 export type BinaryOp = typeof ALL_OPERATORS[number];
@@ -124,12 +131,23 @@ export type PaletteItem =
   | { kind: "unarySymbol"; op: UnarySymbol }
   | { kind: "constantSymbol"; op: ConstantSymbol }
 
+// Binary symbols that belong to the Sets palette
+export const SET_BINARY_SYMBOLS = ["elem", "notelem", "subset", "union", "intersection"] as const;
+
 // All operators as palette items - for use with "palette: *"
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
-export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
-  ...BINARY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
-  ...UNARY_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op })),
+
+// Sets palette: set-theory binary ops + all number-set constants
+export const ALL_SET_PALETTE_ITEMS: PaletteItem[] = [
+  ...SET_BINARY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
   ...CONSTANT_SYMBOLS.map(op => ({ kind: "constantSymbol" as const, op })),
+];
+
+// Symbols palette: everything that isn't set-theory
+const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
+export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
+  ...BINARY_SYMBOLS.filter(op => !SET_BINARY_SET.has(op)).map(op => ({ kind: "binarySymbol" as const, op })),
+  ...UNARY_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op })),
 ];
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
@@ -671,6 +689,13 @@ export const symbolDisplay: Record<string, string> = {
   divides: "|",           // |
   notdivides: "\u2224",   // ∤
   emptyset: "\u2205",     // ∅
+  reals: "\u211D",        // ℝ
+  naturals: "\u2115",     // ℕ
+  integers: "\u2124",     // ℤ
+  rationals: "\u211A",    // ℚ
+  complex: "\u2102",      // ℂ
+  powerset: "\u2119",     // ℙ
+  universal: "\uD835\uDD4C", // 𝕌
   lessequal: "\u2264",    // ≤
   greaterequal: "\u2265", // ≥
 };
