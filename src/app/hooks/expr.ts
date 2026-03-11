@@ -179,5 +179,8 @@ export function paletteItemToExpr(item: PaletteItem): Expr {
         left: { kind: "slot" },
         right: { kind: "slot" },
       };
+    case "LPAR":
+    case "RPAR":
+      return { kind: "slot" }; // parens are structural tokens, not standalone expressions
   }
 }

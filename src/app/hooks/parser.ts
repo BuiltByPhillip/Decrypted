@@ -130,9 +130,17 @@ export type PaletteItem =
   | { kind: "binarySymbol"; op: BinarySymbol }
   | { kind: "unarySymbol"; op: UnarySymbol }
   | { kind: "constantSymbol"; op: ConstantSymbol }
+  | { kind: "LPAR" }
+  | { kind: "RPAR" }
 
 // Binary symbols that belong to the Sets palette
 export const SET_BINARY_SYMBOLS = ["elem", "notelem", "subset", "union", "intersection"] as const;
+
+// Parenthesis palette items
+export const PAREN_PALETTE_ITEMS: PaletteItem[] = [
+  { kind: "LPAR" },
+  { kind: "RPAR" },
+];
 
 // All operators as palette items - for use with "palette: *"
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));

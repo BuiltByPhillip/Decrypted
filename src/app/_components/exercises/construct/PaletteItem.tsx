@@ -19,6 +19,8 @@ function getTooltip(item: PaletteItem): string | null {
     case "int":
     case "var":
     case "role":
+    case "LPAR":
+    case "RPAR":
       return null;
   }
 }

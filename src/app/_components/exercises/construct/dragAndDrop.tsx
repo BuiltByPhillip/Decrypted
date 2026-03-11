@@ -8,6 +8,7 @@ import {
   ALL_OPERATORS,
   ALL_SYMBOL_PALETTE_ITEMS,
   ALL_SET_PALETTE_ITEMS,
+  PAREN_PALETTE_ITEMS,
   type BinaryOp,
   type BinarySymbol,
   type Expr,
@@ -256,7 +257,7 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
       >
         <ExprPalette
           category="Operators"
-          defaultItems={ALL_OPERATOR_PALETTE_ITEMS}
+          defaultItems={[...PAREN_PALETTE_ITEMS, ...ALL_OPERATOR_PALETTE_ITEMS]}
           searchFn={searchOperators}
           onStartDrag={onStartDrag}
           searchPlaceholder="Search..."

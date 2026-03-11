@@ -25,6 +25,10 @@ export default function ExprBlock({ item, className }: ExprBlockProps) {
       case "unarySymbol":
       case "binarySymbol":
         return <div>{symbolDisplay[item.op]}</div>;
+      case "LPAR":
+        return <div>(</div>;
+      case "RPAR":
+        return <div>)</div>;
     }
   }
 
