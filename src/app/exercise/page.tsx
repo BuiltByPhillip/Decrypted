@@ -133,6 +133,8 @@ export default function ExercisePage() {
       {/* Exercise sections */}
       {showExercises && exercises.map(({ step, stepIndex }, exerciseIndex) => {
         const isLastExercise = exerciseIndex === exercises.length - 1;
+        const isUnlocked = exerciseIndex === 0 || results[exerciseIndex - 1] === true;
+        if (!isUnlocked) return null;
 
         return (
           <div
