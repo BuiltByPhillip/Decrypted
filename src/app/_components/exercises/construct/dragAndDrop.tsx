@@ -8,7 +8,7 @@ import {
   ALL_SET_PALETTE_ITEMS,
   PAREN_PALETTE_ITEMS,
   type Expr,
-  type PaletteItem,
+  type PaletteItem, parseExpression,
 } from "~/app/hooks/parser";
 import {
   DEFAULT_VALUE_ITEMS,
@@ -18,7 +18,7 @@ import {
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
-import { substituteRoles, exprEquals, paletteItemsToExpr } from "~/app/hooks/expr";
+import {substituteRoles, exprEquals, paletteItemToString} from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
@@ -112,7 +112,7 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
       return;
     }
     try {
-      const userExpr = paletteItemsToExpr(tokens);
+      const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
       const isMatch = answers.some(answer => {
         const resolved = definitions ? substituteRoles(answer, definitions) : answer;
         return exprEquals(userExpr, resolved);

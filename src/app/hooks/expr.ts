@@ -185,58 +185,23 @@ export function paletteItemToExpr(item: PaletteItem): Expr {
   }
 }
 
-/* Converts a flat list of palette tokens into an expression tree, respecting operator precedence. */
-export function paletteItemsToExpr(items: PaletteItem[]): Expr {
-  let pos = 0;
-
-  function precedence(item: PaletteItem): number {
-    if (item.kind === "binarySymbol") return 1;
-    if (item.kind !== "operator") return -1;
-    switch (item.op) {
-      case "and": case "or":                          return 0;
-      case "less": case "greater": case "equal":      return 1;
-      case "add": case "sub":                         return 2;
-      case "mul": case "div": case "mod":             return 3;
-      case "pow":                                     return 4;
-    }
+export function paletteItemToString(item: PaletteItem): string {
+  switch (item.kind) {
+    case "var":
+      return item.name;
+    case "role":
+      return item.name;
+    case "int":
+      return String(item.value);
+    case "operator":
+      return OP_TO_STRING[item.op] ?? item.op
+    case "constantSymbol":
+    case "unarySymbol":
+    case "binarySymbol":
+      return "\\" + item.op // Parser expects e.g. "\elem", "\natural", etc.
+    case "LPAR":
+      return "(";
+    case "RPAR":
+      return ")";
   }
-
-  function parsePrimary(): Expr {
-    if (pos >= items.length) throw new Error("Unexpected end of expression");
-    const item = items[pos++]!;
-    switch (item.kind) {
-      case "var":           return { kind: "var", name: item.name };
-      case "int":           return { kind: "int", value: item.value };
-      case "role":          return { kind: "role", name: item.name };
-      case "constantSymbol": return { kind: "constant", symbol: item.op };
-      case "unarySymbol": {
-        const operand = parsePrimary();
-        return { kind: "unary", op: item.op, operand };
-      }
-      case "LPAR": {
-        const inner = parseExpr(0);
-        if (pos < items.length && items[pos]?.kind === "RPAR") pos++;
-        return inner;
-      }
-      default:
-        throw new Error(`Unexpected token: ${item.kind}`);
-    }
-  }
-
-  function parseExpr(minPrec: number): Expr {
-    let left = parsePrimary();
-    while (pos < items.length) {
-      const op = items[pos]!;
-      const prec = precedence(op);
-      if (prec < 0 || prec < minPrec) break;
-      pos++;
-      const right = parseExpr(prec + 1);
-      if (op.kind === "operator" || op.kind === "binarySymbol") {
-        left = { kind: "binary", op: op.op, left, right };
-      }
-    }
-    return left;
-  }
-
-  return parseExpr(0);
 }

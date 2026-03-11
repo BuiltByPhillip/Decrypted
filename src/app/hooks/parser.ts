@@ -326,6 +326,9 @@ class ExpressionParser {
     return 0;
   }
 
+  /*  Base case of the parser. It parses the smallest unit of an expression.
+   *  That is, a single thing that cannot be broken down further
+  */
   private parsePrimary(): Expr {
     const token: Token = this.advance();
 
@@ -346,6 +349,16 @@ class ExpressionParser {
         }
         this.advance();
         return expr;
+      case "KEYWORD":
+        if ((CONSTANT_SYMBOLS as readonly string[]).includes(token.value))
+          return { kind: "constant", symbol: token.value as ConstantSymbol}
+        else if ((UNARY_SYMBOLS as readonly string[]).includes(token.value)) {
+          const operand = this.parsePrimary()
+          return { kind: "unary", op: token.value as UnarySymbol, operand: operand}
+        }
+        else {
+          throw new Error(`Unexpected token: ${token.type} '${token.value}'`)
+        }
       default:
         throw new Error(`Unexpected token: ${token.type} '${token.value}'`);
     }
