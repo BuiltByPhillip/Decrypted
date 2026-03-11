@@ -13,6 +13,7 @@ type TokenContainerProps = {
   onTokenStartDrag: (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => void;
 }
 
+/* Props for gap */
 type GapProps = {
   active: boolean;
   isDragging: boolean;
