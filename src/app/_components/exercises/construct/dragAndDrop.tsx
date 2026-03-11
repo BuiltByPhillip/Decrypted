@@ -30,6 +30,7 @@ type DragAndDropProps = {
   definitions?: SelectedDefinitions;
   prompt?: string;
   description?: string;
+  onAnswer?: (isCorrect: boolean) => void;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -53,7 +54,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ answers, definitions, description, prompt }: DragAndDropProps) {
+export default function DragAndDrop({ answers, definitions, description, prompt, onAnswer }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -111,6 +112,7 @@ export default function DragAndDrop({ answers, definitions, description, prompt 
   const checkAnswer = () => {
     if (tokens.length === 0 || !answers || answers.length === 0) {
       setIsCorrect(false);
+      onAnswer?.(false);
       return;
     }
     try {
@@ -120,8 +122,10 @@ export default function DragAndDrop({ answers, definitions, description, prompt 
         return exprEquals(userExpr, resolved);
       });
       setIsCorrect(isMatch);
+      onAnswer?.(isMatch);
     } catch {
       setIsCorrect(false);
+      onAnswer?.(false);
     }
   };
 

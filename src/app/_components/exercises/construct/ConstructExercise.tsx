@@ -9,10 +9,11 @@ type ConstructExerciseProps = {
   hint?: string;
   definitions?: SelectedDefinitions;
   answers: Expr[];
+  onAnswer?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answers, definitions, prompt, description }: ConstructExerciseProps) {
+export default function ConstructExercise({ answers, definitions, prompt, description, onAnswer }: ConstructExerciseProps) {
   return (
-    <DragAndDrop answers={answers} definitions={definitions} prompt={prompt} description={description}/>
+    <DragAndDrop answers={answers} definitions={definitions} prompt={prompt} description={description} onAnswer={onAnswer}/>
   );
 }

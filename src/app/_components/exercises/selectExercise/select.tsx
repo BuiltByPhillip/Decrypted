@@ -15,16 +15,16 @@ type SelectExerciseProps = {
   hint?: string;
   definitions?: SelectedDefinitions;
   answers: Expr[];
+  onAnswer?: (isCorrect: boolean) => void;
 }
 
-export default function SelectExercise({options, description, prompt, hint, definitions, answers}: SelectExerciseProps) {
+export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswer}: SelectExerciseProps) {
   const [selected, setSelected] = useState<number[]>([]);
 
   const checkAnswer = () => {
     const selectedExprs: Expr[] = selected.map(i => options[i] as Expr);
-
-    selectedExprs.every(expr => exprListContains(expr, answers))
-
+    const isCorrect = selectedExprs.length > 0 && selectedExprs.every(expr => exprListContains(expr, answers));
+    onAnswer?.(isCorrect);
   }
 
   const handleSelect = (index: number) => {

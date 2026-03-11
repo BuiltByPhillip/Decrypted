@@ -16,6 +16,7 @@ export default function ExercisePage() {
   const [code, setCode] = useState<Code | null>(null);
   const [showExercises, setShowExercises] = useState(false);
   const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
+  const [results, setResults] = useState<Record<number, boolean>>({});
 
   const lenis = useLenis();
   const exerciseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -62,9 +63,13 @@ export default function ExercisePage() {
     });
   }, [showExercises, lenis, scrollToExercise]);
 
+  const onAnswer = useCallback((exerciseIndex: number, isCorrect: boolean) => {
+    setResults(prev => ({ ...prev, [exerciseIndex]: isCorrect }));
+  }, []);
+
   const handleFinish = () => {
     // TODO: Navigate to results page or handle completion
-    console.log("Exercises completed!");
+    console.log("Exercises completed!", results);
   };
 
   const setExerciseRef = useCallback((index: number, el: HTMLDivElement | null) => {
@@ -142,6 +147,7 @@ export default function ExercisePage() {
                 prompt={step.exercise!.prompt}
                 definitions={definitions}
                 answers={step.exercise!.answer}
+                onAnswer={(isCorrect) => onAnswer(exerciseIndex, isCorrect)}
               />
             ) : step.exercise?.type === "construct" ? (
               <ConstructExercise
@@ -150,6 +156,7 @@ export default function ExercisePage() {
                 description={step.description}
                 prompt={step.exercise.prompt}
                 definitions={definitions}
+                onAnswer={(isCorrect) => onAnswer(exerciseIndex, isCorrect)}
               />
             ) : step.exercise?.type === "fill" ? (
               <div>Empty placeholder</div>
@@ -159,7 +166,7 @@ export default function ExercisePage() {
 
             <Button
               variant="submit"
-              className="w-50"
+              className={`w-50 transition delay-150 ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
               onClick={() => {
                 if (isLastExercise) {
                   handleFinish();
