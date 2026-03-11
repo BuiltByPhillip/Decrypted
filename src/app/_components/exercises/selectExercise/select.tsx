@@ -15,16 +15,16 @@ type SelectExerciseProps = {
   hint?: string;
   definitions?: SelectedDefinitions;
   answers: Expr[];
-  onAnswer?: (isCorrect: boolean) => void;
+  onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswer}: SelectExerciseProps) {
+export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction}: SelectExerciseProps) {
   const [selected, setSelected] = useState<number[]>([]);
 
   const checkAnswer = () => {
     const selectedExprs: Expr[] = selected.map(i => options[i] as Expr);
     const isCorrect = selectedExprs.length > 0 && selectedExprs.every(expr => exprListContains(expr, answers));
-    onAnswer?.(isCorrect);
+    onAnswerAction?.(isCorrect);
   }
 
   const handleSelect = (index: number) => {
@@ -62,7 +62,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
         {/* Answer button */}
         <Button
           variant="submit"
-          className="w-100 py-3"
+          className={"w-100 py-3"}
           onClick={() => checkAnswer()}
         >
           Answer

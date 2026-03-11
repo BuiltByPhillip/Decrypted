@@ -63,7 +63,7 @@ export default function ExercisePage() {
     });
   }, [showExercises, lenis, scrollToExercise]);
 
-  const onAnswer = useCallback((exerciseIndex: number, isCorrect: boolean) => {
+  const onAnswerAction = useCallback((exerciseIndex: number, isCorrect: boolean) => {
     setResults(prev => ({ ...prev, [exerciseIndex]: isCorrect }));
   }, []);
 
@@ -116,7 +116,7 @@ export default function ExercisePage() {
         />
         <Button
           variant="submit"
-          className={`m-10 w-50 transition delay-150 ${!isFullyDefined() ? "pointer-events-none opacity-50" : "opacity-100"}`}
+          className={`m-10 w-50 transition delay-150 select-none ${!isFullyDefined() ? "pointer-events-none opacity-50" : "opacity-100"}`}
           onClick={() => {
             if (showExercises) {
               scrollToExercise(0);
@@ -147,7 +147,7 @@ export default function ExercisePage() {
                 prompt={step.exercise!.prompt}
                 definitions={definitions}
                 answers={step.exercise!.answer}
-                onAnswer={(isCorrect) => onAnswer(exerciseIndex, isCorrect)}
+                onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
               />
             ) : step.exercise?.type === "construct" ? (
               <ConstructExercise
@@ -156,7 +156,7 @@ export default function ExercisePage() {
                 description={step.description}
                 prompt={step.exercise.prompt}
                 definitions={definitions}
-                onAnswer={(isCorrect) => onAnswer(exerciseIndex, isCorrect)}
+                onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
               />
             ) : step.exercise?.type === "fill" ? (
               <div>Empty placeholder</div>
@@ -166,7 +166,7 @@ export default function ExercisePage() {
 
             <Button
               variant="submit"
-              className={`w-50 transition delay-150 ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
+              className={`w-50 transition delay-150 select-none ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
               onClick={() => {
                 if (isLastExercise) {
                   handleFinish();
