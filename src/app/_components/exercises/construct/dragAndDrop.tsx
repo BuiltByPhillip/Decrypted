@@ -1,18 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react";
-import Dropable from "~/app/_components/exercises/construct/Dropable";
 import ExprPalette from "~/app/_components/exercises/construct/ExprPalette";
 import {
   ALL_OPERATOR_PALETTE_ITEMS,
-  ALL_OPERATORS,
   ALL_SYMBOL_PALETTE_ITEMS,
   ALL_SET_PALETTE_ITEMS,
   PAREN_PALETTE_ITEMS,
-  type BinaryOp,
-  type BinarySymbol,
   type Expr,
-  type PaletteItem as Item,
+  type PaletteItem,
 } from "~/app/hooks/parser";
 import {
   DEFAULT_VALUE_ITEMS,
@@ -22,224 +18,105 @@ import {
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
-import ExprNode from "~/app/_components/exercises/construct/ExprNode";
-import { normalizeExpr, paletteItemToExpr, substituteRoles, exprEquals, exprToString } from "~/app/hooks/expr";
-import { parseExpression } from "~/app/hooks/parser";
+import { substituteRoles, exprEquals, paletteItemsToExpr } from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
 import type { SelectedDefinitions } from "~/app/exercise/page";
+import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
 
 type DragAndDropProps = {
   answers?: Expr[];
   definitions?: SelectedDefinitions;
 };
 
-const EXPRESSION_STORAGE_KEY = "drag-and-drop-expression";
+const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
 
-function loadExpression(): Expr | null {
+function loadTokens(): PaletteItem[] | null {
   if (typeof window === "undefined") return null;
   try {
-    const stored = localStorage.getItem(EXPRESSION_STORAGE_KEY);
+    const stored = localStorage.getItem(TOKENS_STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
   } catch {
     return null;
   }
 }
 
-function saveExpression(expr: Expr | null) {
+function saveTokens(tokens: PaletteItem[] | null) {
   if (typeof window === "undefined") return;
-  if (expr === null) {
-    localStorage.removeItem(EXPRESSION_STORAGE_KEY);
+  if (tokens === null || tokens.length === 0) {
+    localStorage.removeItem(TOKENS_STORAGE_KEY);
   } else {
-    localStorage.setItem(EXPRESSION_STORAGE_KEY, JSON.stringify(expr));
+    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(tokens));
   }
 }
 
 export default function DragAndDrop({ answers, definitions }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
-  const slotsRef = useRef<Map<string, { element: HTMLDivElement; onFill: (item: Item) => void }>>(new Map());
-  const [expression, setExpression] = useState<Expr | null>(null);
+  const hoveredGapRef = useRef<number | null>(null);
 
-  // Load expression from localStorage after hydration to avoid SSR mismatch
-  useEffect(() => {
-    const saved = loadExpression();
-    if (saved) setExpression(saved);
-  }, []);
+  const [tokens, setTokens] = useState<PaletteItem[]>([]);
+  const [dragCursorPos, setDragCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [isOverTrash, setIsOverTrash] = useState(false);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
   const [dragState, setDragState] = useState<{
-    item: Item;
+    item: PaletteItem;
     x: number;
     y: number;
     offsetX: number;
     offsetY: number;
-    fromTree?: boolean;
-    restoreExpr?: () => void;
+    tokenIndex?: number; // set when dragging an existing token
   } | null>(null);
-  const [isOverTrash, setIsOverTrash] = useState(false);
-  const [isOverDrop, setIsOverDrop] = useState(false);
-  const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = loadTokens();
+    if (saved) setTokens(saved);
+  }, []);
 
   type PaletteId = "operators" | "symbols" | "sets" | "values";
-  // Track z-index stacking order (most recent at end)
   const [stackOrder, setStackOrder] = useState<PaletteId[]>(["operators", "symbols", "sets", "values"]);
 
   const bringToFront = (id: PaletteId) => {
-    setStackOrder(prev => {
-      // Remove id from current position and add to end (top)
-      const filtered = prev.filter(item => item !== id);
-      return [...filtered, id];
-    });
+    setStackOrder(prev => [...prev.filter(item => item !== id), id]);
   };
 
   const getZIndex = (id: PaletteId) => {
     const index = stackOrder.indexOf(id);
-    return index >= 0 ? index + 10 : 10; // Base z-index of 10
+    return index >= 0 ? index + 10 : 10;
   };
 
-  const registerSlot = (id: string, elem: HTMLDivElement | null, onFill: (item: Item) => void) => {
-    elem ? slotsRef.current.set(id, {element: elem, onFill}) : slotsRef.current.delete(id)
-  }
+  const isInside = (x: number, y: number, bounds: DOMRect): boolean =>
+    x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
 
-  const isInside = (x: number, y: number, bounds: DOMRect): boolean => {
-    return (
-      x >= bounds.left &&
-      x <= bounds.right &&
-      y <= bounds.bottom &&
-      y >= bounds.top
-    )
-  }
-
-  const findSlotAt = (x: number, y: number) => {
-    for (const slot of slotsRef.current.values()) {
-      const bounds = slot.element.getBoundingClientRect();
-
-      if (isInside(x, y, bounds)) return slot;
-    }
-    return null;
-  }
-
-  const findSlotIdAt = (x: number, y: number): string | null => {
-    for (const [id, slot] of slotsRef.current.entries()) {
-      const bounds = slot.element.getBoundingClientRect();
-      if (isInside(x, y, bounds)) return id;
-    }
-    return null;
-  }
-
-  const checkDrop = (x:number, y:number) :  DOMRect | null => {
-    const bounds = dropRef.current?.getBoundingClientRect();
-    if (!bounds) return null;
-
-    return isInside(x, y, bounds) ? bounds : null;
-  }
-
-  const checkTrash = (x:number, y:number) => {
+  const checkTrash = (x: number, y: number) => {
     const bounds = trashRef.current?.getBoundingClientRect();
     if (!bounds) return null;
-
     return isInside(x, y, bounds) ? bounds : null;
-  }
-
-  const onStartDrag = (item: Item, x: number, y: number, offsetX: number, offsetY: number) => {
-    setDragState({
-      item: item,
-      x: x,
-      y: y,
-      offsetX: offsetX,
-      offsetY: offsetY,
-    })
-  }
-
-  const exprToPaletteItem = (expr: Expr): Item | null => {
-    switch (expr.kind) {
-      case "int":
-        return { kind: "int", value: expr.value };
-      case "var":
-        return { kind: "var", name: expr.name };
-      case "role":
-        return { kind: "role", name: expr.name };
-      case "constant":
-        return { kind: "constantSymbol", op: expr.symbol };
-      case "unary":
-        if (expr.op === null) return null;
-        return { kind: "unarySymbol", op: expr.op };
-      case "binary":
-        if (expr.op === null) return null;
-        // Check if it's a regular operator or a binary symbol
-        if ((ALL_OPERATORS as readonly string[]).includes(expr.op)) {
-          return { kind: "operator", op: expr.op as BinaryOp };
-        }
-        return { kind: "binarySymbol", op: expr.op as BinarySymbol };
-      default:
-        return null;
-    }
   };
 
-  const onExprStartDrag = (expr: Expr, x: number, y: number, offsetX: number, offsetY: number, replaceWithSlot: () => void) => {
-    const item = exprToPaletteItem(expr);
-    if (!item) return;
-
-    // Store current expression so we can restore if dropped in invalid area
-    const currentExpr = expression;
-
-    // Immediately remove the element from the tree - it's now "in hand"
-    replaceWithSlot();
-
-    setDragState({
-      item,
-      x,
-      y,
-      offsetX,
-      offsetY,
-      fromTree: true,
-      restoreExpr: () => {
-        if (currentExpr) {
-          setExpression(currentExpr);
-          saveExpression(currentExpr);
-        }
-      },
-    });
-  }
-
-  // Wrapper that normalizes the expression before setting it
-  // This collapses empty binary structures (op: null, left: slot, right: slot) to a single slot
-  const setNormalizedExpression = (expr: Expr) => {
-    const normalized = normalizeExpr(expr);
-    // If the entire expression collapsed to a slot, clear it
-    if (normalized.kind === "slot") {
-      setExpression(null);
-      saveExpression(null);
-    } else {
-      setExpression(normalized);
-      saveExpression(normalized);
-    }
-  }
-
-  // Save expression whenever it changes directly
-  const setExpressionWithSave = (expr: Expr | null) => {
-    setExpression(expr);
-    saveExpression(expr);
+  const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
+    setDragState({ item, x, y, offsetX, offsetY });
   };
 
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
+    // Don't remove the token yet — keep it as an invisible placeholder so the
+    // layout doesn't collapse. Removal and insertion both happen on drop.
+    setDragState({ item, x, y, offsetX, offsetY, tokenIndex: index });
+  };
 
   const checkAnswer = () => {
-    if (!expression || !answers || answers.length === 0) {
+    if (tokens.length === 0 || !answers || answers.length === 0) {
       setIsCorrect(false);
       return;
     }
-
     try {
-      const userString = exprToString(expression);
-      const reparsed = parseExpression(userString);
-
+      const userExpr = paletteItemsToExpr(tokens);
       const isMatch = answers.some(answer => {
         const resolved = definitions ? substituteRoles(answer, definitions) : answer;
-        return exprEquals(reparsed, resolved);
+        return exprEquals(userExpr, resolved);
       });
-
       setIsCorrect(isMatch);
     } catch {
       setIsCorrect(false);
@@ -318,68 +195,74 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
           offsetY={dragState.offsetY}
           onMove={(x, y) => {
             setIsOverTrash(!!checkTrash(x, y));
-            setIsOverDrop(!!checkDrop(x, y));
-            setHoveredSlotId(findSlotIdAt(x, y));
+            setDragCursorPos({ x, y });
           }}
           onDrop={(x, y) => {
             setIsOverTrash(false);
-            setIsOverDrop(false);
-            setHoveredSlotId(null);
-            const slot = findSlotAt(x, y);
-            let handled = false;
+            setDragCursorPos(null);
+            const gapIndex = hoveredGapRef.current;
+            const inTrash = !!checkTrash(x, y);
+            const srcIndex = dragState.tokenIndex;
 
-            // Check if dropped in a slot
-            if (slot && dragState) {
-              slot.onFill(dragState.item);
-              handled = true;
+            if (inTrash) {
+              if (srcIndex !== undefined) {
+                // Remove the placeholder from the list
+                const next = tokens.filter((_, i) => i !== srcIndex);
+                setTokens(next);
+                saveTokens(next);
+              }
+              // Palette items dropped on trash are discarded — nothing to do
+            } else if (gapIndex !== null) {
+              let next = [...tokens];
+              if (srcIndex !== undefined) {
+                // Remove placeholder first, then adjust gap index for the shift
+                next = next.filter((_, i) => i !== srcIndex);
+                const insertAt = gapIndex > srcIndex ? gapIndex - 1 : gapIndex;
+                next.splice(insertAt, 0, dragState.item);
+              } else {
+                next.splice(gapIndex, 0, dragState.item);
+              }
+              setTokens(next);
+              saveTokens(next);
             }
-            // Check if dropped in trash can (only matters for tree items)
-            else if (checkTrash(x, y) && dragState.fromTree) {
-              // Element is already removed, nothing more to do
-              handled = true;
-            }
-            // Check if dropped on main canvas (only for palette items, not tree items)
-            else if (checkDrop(x, y) && dragState && !dragState.fromTree && !expression) {
-              setExpressionWithSave(paletteItemToExpr(dragState.item));
-              handled = true;
-            }
-
-            // If dropped in invalid area and came from tree, restore original
-            if (!handled && dragState.fromTree && dragState.restoreExpr) {
-              dragState.restoreExpr();
-            }
+            // Dropped nowhere valid: if from token list, placeholder is still in
+            // the list and becomes visible again when dragState clears. No restore needed.
 
             setDragState(null);
           }}
         />
       )}
+
       <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end pt-50">
-        <div></div> {/* Empty div */}
+        <div></div>
         <div className="flex flex-col">
           <Button
             variant="ghostMuted"
             className="flex justify-end pr-3 select-none"
             size="none"
-            onClick={() => {
-              setExpression(null)
-            }}
+            onClick={() => { setTokens([]); saveTokens(null); }}
           >
             Clear expression
           </Button>
-          <Dropable ref={dropRef} isDragging={!!dragState} isHovered={isOverDrop && !expression}>
-            {<span className="flex items-center justify-center select-none text-muted border-1 border-muted w-150 h-30 rounded-2xl text-2xl">{expression ? <ExprNode expr={expression} registerSlot={registerSlot} onSlotFill={setNormalizedExpression} onStartDrag={onExprStartDrag} isDragging={!!dragState} hoveredSlotId={hoveredSlotId} /> : <span>Drop here</span>}</span>}
-          </Dropable>
+          <div className="flex items-center justify-center select-none border-1 border-muted w-150 h-30 rounded-2xl overflow-hidden px-3">
+            <TokenContainer
+              tokens={tokens}
+              isDragging={!!dragState}
+              dragPos={dragCursorPos}
+              draggingTokenIndex={dragState?.tokenIndex}
+              onGapHover={(index) => { hoveredGapRef.current = index; }}
+              onTokenStartDrag={onTokenStartDrag}
+            />
+          </div>
         </div>
-
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-70"/>
       </div>
+
       <div className="flex flex-col items-center pt-10 gap-2">
         <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
         {isCorrect === true && <span className="text-green-500">Correct!</span>}
         {isCorrect === false && <span className="text-red-500">Incorrect, try again.</span>}
       </div>
     </div>
-
-
   );
 }
