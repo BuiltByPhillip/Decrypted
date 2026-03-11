@@ -9,7 +9,7 @@ type DefinitionListProps = {
 // Wrapper component that establishes the shared grid
 export function DefinitionList({children}: DefinitionListProps) {
   return (
-    <div className="grid grid-cols-[auto_auto_1fr] items-center gap-y-4">
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-y-4 gap-x-0">
       {children}
     </div>
   );
@@ -29,12 +29,9 @@ export default function Definition({ choices, name, onChange, selected }: Defini
 
   return (
     <div className="contents">
-      {/* Column 1: name, right-aligned */}
-      <span className="text-xl font-bold text-left pr-2 text-gray">{name}</span>
-      {/* Column 2: element-of sign */}
-      <span className="text-xl font-bold pr-4 text-gray">{elementOf}</span>
-      {/* Column 3: buttons */}
-      <div className="flex items-center">
+
+      {/* Column 1: buttons, right-aligned so they sit flush against ∈ */}
+      <div className="flex items-center justify-end">
         {choices.map(choice => {
           if (choice.kind === "var") {
             const isSelected: boolean = selectedName === choice.name;
@@ -55,6 +52,10 @@ export default function Definition({ choices, name, onChange, selected }: Defini
           return null;
         })}
       </div>
+      {/* Column 2: element-of sign */}
+      <span className="text-xl font-bold px-4 text-gray">{elementOf}</span>
+      {/* Column 3: role name */}
+      <span className="text-xl font-bold pr-2 text-gray">{name}</span>
     </div>
   );
 }
