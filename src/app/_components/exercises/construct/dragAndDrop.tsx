@@ -28,6 +28,8 @@ import TokenContainer from "~/app/_components/exercises/construct/TokenContainer
 type DragAndDropProps = {
   answers?: Expr[];
   definitions?: SelectedDefinitions;
+  prompt?: string;
+  description?: string;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -51,7 +53,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ answers, definitions }: DragAndDropProps) {
+export default function DragAndDrop({ answers, definitions, description, prompt }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -125,6 +127,12 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
 
   return (
     <div ref={containerRef} className="flex flex-col relative w-full">
+      {(description ?? prompt) && (
+        <div className="flex flex-col items-center p-8 gap-3">
+          {description && <span className="text-4xl font-bold text-gray">{description}</span>}
+          {prompt && <span className="text-xl text-gray/70">{prompt}</span>}
+        </div>
+      )}
       <DraggableWindow
         id="operators"
         defaultPosition={{ x: 20, y: 20 }}

@@ -11,8 +11,8 @@ type ConstructExerciseProps = {
   answers: Expr[];
 }
 
-export default function ConstructExercise({ answers, definitions }: ConstructExerciseProps) {
+export default function ConstructExercise({ answers, definitions, prompt, description }: ConstructExerciseProps) {
   return (
-    <DragAndDrop answers={answers} definitions={definitions}/>
+    <DragAndDrop answers={answers} definitions={definitions} prompt={prompt} description={description}/>
   );
 }
