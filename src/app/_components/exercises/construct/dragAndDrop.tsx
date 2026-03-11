@@ -6,7 +6,7 @@ import {
   ALL_OPERATOR_PALETTE_ITEMS,
   ALL_SYMBOL_PALETTE_ITEMS,
   ALL_SET_PALETTE_ITEMS,
-  PAREN_PALETTE_ITEMS,
+  PAR_PALETTE_ITEMS,
   type Expr,
   type PaletteItem, parseExpression,
 } from "~/app/hooks/parser";
@@ -134,7 +134,7 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
       >
         <ExprPalette
           category="Operators"
-          defaultItems={[...PAREN_PALETTE_ITEMS, ...ALL_OPERATOR_PALETTE_ITEMS]}
+          defaultItems={[...PAR_PALETTE_ITEMS, ...ALL_OPERATOR_PALETTE_ITEMS]}
           searchFn={searchOperators}
           onStartDrag={onStartDrag}
           searchPlaceholder="Search..."

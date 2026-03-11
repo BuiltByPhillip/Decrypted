@@ -137,7 +137,7 @@ export type PaletteItem =
 export const SET_BINARY_SYMBOLS = ["elem", "notelem", "subset", "union", "intersection"] as const;
 
 // Parenthesis palette items
-export const PAREN_PALETTE_ITEMS: PaletteItem[] = [
+export const PAR_PALETTE_ITEMS: PaletteItem[] = [
   { kind: "LPAR" },
   { kind: "RPAR" },
 ];
