@@ -80,10 +80,11 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
   const [isOverDrop, setIsOverDrop] = useState(false);
   const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
 
+  type PaletteId = "operators" | "symbols" | "sets" | "values";
   // Track z-index stacking order (most recent at end)
-  const [stackOrder, setStackOrder] = useState<string[]>(["operators", "symbols", "sets", "values"]);
+  const [stackOrder, setStackOrder] = useState<PaletteId[]>(["operators", "symbols", "sets", "values"]);
 
-  const bringToFront = (id: string) => {
+  const bringToFront = (id: PaletteId) => {
     setStackOrder(prev => {
       // Remove id from current position and add to end (top)
       const filtered = prev.filter(item => item !== id);
@@ -91,7 +92,7 @@ export default function DragAndDrop({ answers, definitions }: DragAndDropProps) 
     });
   };
 
-  const getZIndex = (id: string) => {
+  const getZIndex = (id: PaletteId) => {
     const index = stackOrder.indexOf(id);
     return index >= 0 ? index + 10 : 10; // Base z-index of 10
   };

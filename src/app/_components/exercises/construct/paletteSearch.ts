@@ -9,7 +9,15 @@ import {
   type PaletteItem as Item,
 } from "~/app/hooks/parser";
 
-const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
+function matchSymbols<K extends "binarySymbol" | "unarySymbol" | "constantSymbol">(
+  ops: readonly string[], kind: K, q: string, results: Item[]
+) {
+  ops.forEach(op => {
+    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
+      results.push({ kind, op } as Item);
+    }
+  });
+}
 
 // Default items for Values: 1-10 and a-j
 export const DEFAULT_VALUE_ITEMS: Item[] = [
@@ -35,21 +43,9 @@ export function searchOperators(query: string): Item[] {
 export function searchSymbols(query: string): Item[] {
   const q = query.toLowerCase();
   const results: Item[] = [];
-
-  // Search binary symbols (non-set-theory only)
-  BINARY_SYMBOLS.forEach(op => {
-    if (!SET_BINARY_SET.has(op) && (op.includes(q) || symbolDisplay[op]?.includes(q))) {
-      results.push({ kind: "binarySymbol", op });
-    }
-  });
-
-  // Search unary symbols
-  UNARY_SYMBOLS.forEach(op => {
-    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
-      results.push({ kind: "unarySymbol", op });
-    }
-  });
-
+  const nonSetBinary = BINARY_SYMBOLS.filter(op => !(SET_BINARY_SYMBOLS as readonly string[]).includes(op));
+  matchSymbols(nonSetBinary, "binarySymbol", q, results);
+  matchSymbols(UNARY_SYMBOLS, "unarySymbol", q, results);
   return results;
 }
 
@@ -57,21 +53,8 @@ export function searchSymbols(query: string): Item[] {
 export function searchSets(query: string): Item[] {
   const q = query.toLowerCase();
   const results: Item[] = [];
-
-  // Search set-theory binary symbols
-  SET_BINARY_SYMBOLS.forEach(op => {
-    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
-      results.push({ kind: "binarySymbol", op });
-    }
-  });
-
-  // Search constant symbols (number sets + emptyset)
-  CONSTANT_SYMBOLS.forEach(op => {
-    if (op.includes(q) || symbolDisplay[op]?.includes(q)) {
-      results.push({ kind: "constantSymbol", op });
-    }
-  });
-
+  matchSymbols(SET_BINARY_SYMBOLS, "binarySymbol", q, results);
+  matchSymbols(CONSTANT_SYMBOLS, "constantSymbol", q, results);
   return results;
 }
 

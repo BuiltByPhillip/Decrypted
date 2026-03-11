@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { type PaletteItem } from "~/app/hooks/parser";
 import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
@@ -29,14 +29,13 @@ export default function PaletteItem({ item, onStartDrag, className }: PaletteIte
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
   const handleMouseEnter = () => {
-    if (!tooltip) return;
-    timerRef.current = setTimeout(() => {
-      if (itemRef.current) {
-        const rect = itemRef.current.getBoundingClientRect();
-        setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
-      }
-    }, 700);
+    if (!tooltip || !itemRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const pos = { x: rect.left + rect.width / 2, y: rect.top };
+    timerRef.current = setTimeout(() => setTooltipPos(pos), 700);
   };
 
   const handleMouseLeave = () => {
