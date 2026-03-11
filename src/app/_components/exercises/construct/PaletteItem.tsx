@@ -16,11 +16,13 @@ function getTooltip(item: PaletteItem): string | null {
     case "unarySymbol":
     case "constantSymbol":
       return item.op;
+    case "LPAR":
+      return "left parenthesis";
+    case "RPAR":
+      return "right parenthesis";
     case "int":
     case "var":
     case "role":
-    case "LPAR":
-    case "RPAR":
       return null;
   }
 }

@@ -25,18 +25,28 @@ export const DEFAULT_VALUE_ITEMS: Item[] = [
   ...Array.from({ length: 10 }, (_, i) => ({ kind: "var" as const, name: String.fromCharCode(97 + i) })),
 ];
 
+const PAREN_SEARCH_TERMS: { item: Item; terms: string[] }[] = [
+  { item: { kind: "LPAR" }, terms: ["(", "left", "paren", "parenthesis"] },
+  { item: { kind: "RPAR" }, terms: [")", "right", "paren", "parenthesis"] },
+];
+
 // Search function for operators
 export function searchOperators(query: string): Item[] {
   const q = query.toLowerCase();
-  return ALL_OPERATOR_PALETTE_ITEMS.filter(item => {
-    if (item.kind !== "operator") return false;
-    // Match by operator name (e.g., "add", "mul")
-    if (item.op.includes(q)) return true;
-    // Match by display symbol (e.g., "+", "×")
+  const results: Item[] = [];
+
+  ALL_OPERATOR_PALETTE_ITEMS.forEach(item => {
+    if (item.kind !== "operator") return;
+    if (item.op.includes(q)) { results.push(item); return; }
     const symbol = operatorSymbol[item.op];
-    if (symbol && symbol.includes(q)) return true;
-    return false;
+    if (symbol && symbol.includes(q)) results.push(item);
   });
+
+  PAREN_SEARCH_TERMS.forEach(({ item, terms }) => {
+    if (terms.some(t => t.includes(q))) results.push(item);
+  });
+
+  return results;
 }
 
 // Search function for symbols (excludes set-theory items)
