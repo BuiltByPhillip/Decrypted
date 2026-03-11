@@ -1,0 +1,448 @@
+import { describe, it, expect } from "vitest";
+import {
+  exprEquals,
+  exprToString,
+  normalizeExpr,
+  paletteItemToExpr,
+  paletteItemToString,
+  substituteRoles,
+} from "../app/hooks/expr";
+import { parseExpression } from "../app/hooks/parser";
+import type { Expr, PaletteItem } from "../app/hooks/parser";
+
+// ─── exprEquals ──────────────────────────────────────────────────────────────
+
+describe("exprEquals", () => {
+  it("two identical vars are equal", () => {
+    expect(exprEquals({ kind: "var", name: "x" }, { kind: "var", name: "x" })).toBe(true);
+  });
+
+  it("vars with different names are not equal", () => {
+    expect(exprEquals({ kind: "var", name: "x" }, { kind: "var", name: "y" })).toBe(false);
+  });
+
+  it("var and int are not equal", () => {
+    expect(exprEquals({ kind: "var", name: "x" }, { kind: "int", value: 1 })).toBe(false);
+  });
+
+  it("identical ints are equal", () => {
+    expect(exprEquals({ kind: "int", value: 42 }, { kind: "int", value: 42 })).toBe(true);
+  });
+
+  it("different ints are not equal", () => {
+    expect(exprEquals({ kind: "int", value: 1 }, { kind: "int", value: 2 })).toBe(false);
+  });
+
+  it("identical role refs are equal", () => {
+    expect(exprEquals({ kind: "role", name: "generator" }, { kind: "role", name: "generator" })).toBe(true);
+  });
+
+  it("different role refs are not equal", () => {
+    expect(exprEquals({ kind: "role", name: "alice" }, { kind: "role", name: "bob" })).toBe(false);
+  });
+
+  it("identical placeholders are equal", () => {
+    expect(exprEquals({ kind: "placeholder", index: 1 }, { kind: "placeholder", index: 1 })).toBe(true);
+  });
+
+  it("different placeholders are not equal", () => {
+    expect(exprEquals({ kind: "placeholder", index: 1 }, { kind: "placeholder", index: 2 })).toBe(false);
+  });
+
+  it("two slots are equal", () => {
+    expect(exprEquals({ kind: "slot" }, { kind: "slot" })).toBe(true);
+  });
+
+  it("identical constants are equal", () => {
+    expect(exprEquals({ kind: "constant", symbol: "naturals" }, { kind: "constant", symbol: "naturals" })).toBe(true);
+  });
+
+  it("different constants are not equal", () => {
+    expect(exprEquals({ kind: "constant", symbol: "reals" }, { kind: "constant", symbol: "naturals" })).toBe(false);
+  });
+
+  it("identical unary expressions are equal", () => {
+    const a: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    expect(exprEquals(a, b)).toBe(true);
+  });
+
+  it("unary expressions with different ops are not equal", () => {
+    const a: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "exists", operand: { kind: "var", name: "x" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("unary expressions with different operands are not equal", () => {
+    const a: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "y" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("identical binary expressions are equal", () => {
+    const a: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprEquals(a, b)).toBe(true);
+  });
+
+  it("binary expressions with different ops are not equal", () => {
+    const a: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "sub", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  // Commutativity
+  it("add is commutative: a + b === b + a", () => {
+    const ab: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(true);
+  });
+
+  it("mul is commutative: a * b === b * a", () => {
+    const ab: Expr = { kind: "binary", op: "mul", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "mul", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(true);
+  });
+
+  it("equal is commutative: a = b === b = a", () => {
+    const ab: Expr = { kind: "binary", op: "equal", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "equal", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(true);
+  });
+
+  it("sub is NOT commutative: a - b !== b - a", () => {
+    const ab: Expr = { kind: "binary", op: "sub", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "sub", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(false);
+  });
+
+  it("div is NOT commutative: a / b !== b / a", () => {
+    const ab: Expr = { kind: "binary", op: "div", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "div", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(false);
+  });
+});
+
+// ─── exprToString ─────────────────────────────────────────────────────────────
+
+describe("exprToString", () => {
+  it("var", () => {
+    expect(exprToString({ kind: "var", name: "x" })).toBe("x");
+  });
+
+  it("int", () => {
+    expect(exprToString({ kind: "int", value: 7 })).toBe("7");
+  });
+
+  it("role ref", () => {
+    expect(exprToString({ kind: "role", name: "generator" })).toBe("{generator}");
+  });
+
+  it("placeholder", () => {
+    expect(exprToString({ kind: "placeholder", index: 3 })).toBe("$3");
+  });
+
+  it("slot", () => {
+    expect(exprToString({ kind: "slot" })).toBe("_");
+  });
+
+  it("constant", () => {
+    expect(exprToString({ kind: "constant", symbol: "naturals" })).toBe("naturals");
+  });
+
+  it("unary forall", () => {
+    const e: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    // symbolDisplay["forall"] = "∀"
+    expect(exprToString(e)).toBe("\u2200x");
+  });
+
+  it("binary add", () => {
+    const e: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprToString(e)).toBe("a + b");
+  });
+
+  it("binary sub", () => {
+    const e: Expr = { kind: "binary", op: "sub", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprToString(e)).toBe("a - b");
+  });
+
+  it("binary pow", () => {
+    const e: Expr = { kind: "binary", op: "pow", left: { kind: "var", name: "a" }, right: { kind: "int", value: 2 } };
+    expect(exprToString(e)).toBe("a^2");
+  });
+});
+
+// ─── normalizeExpr ───────────────────────────────────────────────────────────
+
+describe("normalizeExpr", () => {
+  it("leaves a var unchanged", () => {
+    const e: Expr = { kind: "var", name: "x" };
+    expect(normalizeExpr(e)).toEqual(e);
+  });
+
+  it("leaves a slot unchanged", () => {
+    expect(normalizeExpr({ kind: "slot" })).toEqual({ kind: "slot" });
+  });
+
+  it("collapses null-op binary with two slots to a slot", () => {
+    const e: Expr = { kind: "binary", op: null, left: { kind: "slot" }, right: { kind: "slot" } };
+    expect(normalizeExpr(e)).toEqual({ kind: "slot" });
+  });
+
+  it("does NOT collapse null-op binary when one child is non-slot", () => {
+    const e: Expr = { kind: "binary", op: null, left: { kind: "var", name: "x" }, right: { kind: "slot" } };
+    expect(normalizeExpr(e)).toEqual(e);
+  });
+
+  it("collapses null-op unary with slot operand to a slot", () => {
+    const e: Expr = { kind: "unary", op: null, operand: { kind: "slot" } };
+    expect(normalizeExpr(e)).toEqual({ kind: "slot" });
+  });
+
+  it("does NOT collapse null-op unary with non-slot operand", () => {
+    const e: Expr = { kind: "unary", op: null, operand: { kind: "var", name: "x" } };
+    expect(normalizeExpr(e)).toEqual(e);
+  });
+
+  it("recursively normalizes binary children", () => {
+    const e: Expr = {
+      kind: "binary",
+      op: "add",
+      left: { kind: "binary", op: null, left: { kind: "slot" }, right: { kind: "slot" } },
+      right: { kind: "var", name: "x" },
+    };
+    expect(normalizeExpr(e)).toEqual({
+      kind: "binary",
+      op: "add",
+      left: { kind: "slot" },
+      right: { kind: "var", name: "x" },
+    });
+  });
+});
+
+// ─── paletteItemToExpr ───────────────────────────────────────────────────────
+
+describe("paletteItemToExpr", () => {
+  it("var → var", () => {
+    const item: PaletteItem = { kind: "var", name: "x" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "var", name: "x" });
+  });
+
+  it("int → int", () => {
+    const item: PaletteItem = { kind: "int", value: 5 };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "int", value: 5 });
+  });
+
+  it("role → role", () => {
+    const item: PaletteItem = { kind: "role", name: "generator" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "role", name: "generator" });
+  });
+
+  it("operator → binary with two slots", () => {
+    const item: PaletteItem = { kind: "operator", op: "add" };
+    expect(paletteItemToExpr(item)).toEqual({
+      kind: "binary", op: "add",
+      left: { kind: "slot" }, right: { kind: "slot" },
+    });
+  });
+
+  it("constantSymbol → constant", () => {
+    const item: PaletteItem = { kind: "constantSymbol", op: "naturals" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "constant", symbol: "naturals" });
+  });
+
+  it("unarySymbol → unary with slot operand", () => {
+    const item: PaletteItem = { kind: "unarySymbol", op: "forall" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "unary", op: "forall", operand: { kind: "slot" } });
+  });
+
+  it("binarySymbol → binary with two slots", () => {
+    const item: PaletteItem = { kind: "binarySymbol", op: "elem" };
+    expect(paletteItemToExpr(item)).toEqual({
+      kind: "binary", op: "elem",
+      left: { kind: "slot" }, right: { kind: "slot" },
+    });
+  });
+
+  it("LPAR → slot", () => {
+    const item: PaletteItem = { kind: "LPAR" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "slot" });
+  });
+
+  it("RPAR → slot", () => {
+    const item: PaletteItem = { kind: "RPAR" };
+    expect(paletteItemToExpr(item)).toEqual({ kind: "slot" });
+  });
+});
+
+// ─── paletteItemToString ─────────────────────────────────────────────────────
+
+describe("paletteItemToString", () => {
+  it("var", () => {
+    expect(paletteItemToString({ kind: "var", name: "x" })).toBe("x");
+  });
+
+  it("int", () => {
+    expect(paletteItemToString({ kind: "int", value: 42 })).toBe("42");
+  });
+
+  it("role", () => {
+    // roles are serialized as bare names (not {name}) — roundtrip goes through VAR token
+    expect(paletteItemToString({ kind: "role", name: "generator" })).toBe("generator");
+  });
+
+  it("operator add → ' + '", () => {
+    expect(paletteItemToString({ kind: "operator", op: "add" })).toBe(" + ");
+  });
+
+  it("operator pow → '^'", () => {
+    expect(paletteItemToString({ kind: "operator", op: "pow" })).toBe("^");
+  });
+
+  it("constantSymbol → \\symbol", () => {
+    expect(paletteItemToString({ kind: "constantSymbol", op: "naturals" })).toBe("\\naturals");
+  });
+
+  it("unarySymbol → \\symbol", () => {
+    expect(paletteItemToString({ kind: "unarySymbol", op: "forall" })).toBe("\\forall");
+  });
+
+  it("binarySymbol → \\symbol", () => {
+    expect(paletteItemToString({ kind: "binarySymbol", op: "elem" })).toBe("\\elem");
+  });
+
+  it("LPAR → '('", () => {
+    expect(paletteItemToString({ kind: "LPAR" })).toBe("(");
+  });
+
+  it("RPAR → ')'", () => {
+    expect(paletteItemToString({ kind: "RPAR" })).toBe(")");
+  });
+});
+
+// ─── substituteRoles ─────────────────────────────────────────────────────────
+
+describe("substituteRoles", () => {
+  const defs = {
+    generator: { kind: "var" as const, name: "g" },
+    prime: { kind: "var" as const, name: "p" },
+  };
+
+  it("replaces a role with the selected value", () => {
+    const e: Expr = { kind: "role", name: "generator" };
+    expect(substituteRoles(e, defs)).toEqual({ kind: "var", name: "g" });
+  });
+
+  it("leaves a role unchanged if not in definitions", () => {
+    const e: Expr = { kind: "role", name: "unknown" };
+    expect(substituteRoles(e, defs)).toEqual(e);
+  });
+
+  it("leaves a var unchanged", () => {
+    const e: Expr = { kind: "var", name: "x" };
+    expect(substituteRoles(e, defs)).toEqual(e);
+  });
+
+  it("recursively substitutes in unary operand", () => {
+    const e: Expr = { kind: "unary", op: "forall", operand: { kind: "role", name: "generator" } };
+    expect(substituteRoles(e, defs)).toEqual({
+      kind: "unary", op: "forall", operand: { kind: "var", name: "g" },
+    });
+  });
+
+  it("recursively substitutes in binary children", () => {
+    const e: Expr = {
+      kind: "binary", op: "add",
+      left: { kind: "role", name: "generator" },
+      right: { kind: "role", name: "prime" },
+    };
+    expect(substituteRoles(e, defs)).toEqual({
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "g" },
+      right: { kind: "var", name: "p" },
+    });
+  });
+
+  it("leaves non-role leaf kinds unchanged", () => {
+    const constant: Expr = { kind: "constant", symbol: "naturals" };
+    expect(substituteRoles(constant, defs)).toEqual(constant);
+    const slot: Expr = { kind: "slot" };
+    expect(substituteRoles(slot, defs)).toEqual(slot);
+  });
+});
+
+// ─── Round-trip tests ─────────────────────────────────────────────────────────
+// These verify that paletteItemToString produces strings that parseExpression
+// can round-trip correctly. This is the critical integration between the two.
+
+describe("round-trip: token list → string → parseExpression", () => {
+  it("simple addition: [a, +, b]", () => {
+    const tokens: PaletteItem[] = [
+      { kind: "var", name: "a" },
+      { kind: "operator", op: "add" },
+      { kind: "var", name: "b" },
+    ];
+    const str = tokens.map(paletteItemToString).join(" ");
+    const expr = parseExpression(str);
+    expect(expr).toMatchObject({ kind: "binary", op: "add" });
+  });
+
+  it("parenthesised expression: [(, a, +, b, ), *, c]", () => {
+    const tokens: PaletteItem[] = [
+      { kind: "LPAR" },
+      { kind: "var", name: "a" },
+      { kind: "operator", op: "add" },
+      { kind: "var", name: "b" },
+      { kind: "RPAR" },
+      { kind: "operator", op: "mul" },
+      { kind: "var", name: "c" },
+    ];
+    const str = tokens.map(paletteItemToString).join("");
+    const expr = parseExpression(str);
+    expect(expr).toMatchObject({
+      kind: "binary", op: "mul",
+      left: { kind: "binary", op: "add" },
+    });
+  });
+
+  it("constant: [\\naturals]", () => {
+    const tokens: PaletteItem[] = [{ kind: "constantSymbol", op: "naturals" }];
+    const str = tokens.map(paletteItemToString).join(" ");
+    expect(parseExpression(str)).toEqual({ kind: "constant", symbol: "naturals" });
+  });
+
+  it("unary: [\\forall, x]", () => {
+    const tokens: PaletteItem[] = [
+      { kind: "unarySymbol", op: "forall" },
+      { kind: "var", name: "x" },
+    ];
+    const str = tokens.map(paletteItemToString).join(" ");
+    expect(parseExpression(str)).toMatchObject({ kind: "unary", op: "forall" });
+  });
+
+  it("binary symbol infix: [a, \\elem, \\naturals]", () => {
+    const tokens: PaletteItem[] = [
+      { kind: "var", name: "a" },
+      { kind: "binarySymbol", op: "elem" },
+      { kind: "constantSymbol", op: "naturals" },
+    ];
+    const str = tokens.map(paletteItemToString).join(" ");
+    expect(parseExpression(str)).toEqual({
+      kind: "binary", op: "elem",
+      left: { kind: "var", name: "a" },
+      right: { kind: "constant", symbol: "naturals" },
+    });
+  });
+
+  it("answer equivalence: student b + a matches professor answer a + b", () => {
+    const professorExpr = parseExpression("a + b");
+    const studentExpr = parseExpression("b + a");
+    expect(exprEquals(studentExpr, professorExpr)).toBe(true);
+  });
+
+  it("answer non-equivalence: a - b does not match b - a", () => {
+    const professorExpr = parseExpression("a - b");
+    const studentExpr = parseExpression("b - a");
+    expect(exprEquals(studentExpr, professorExpr)).toBe(false);
+  });
+});

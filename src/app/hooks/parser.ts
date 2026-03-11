@@ -320,6 +320,7 @@ class ExpressionParser {
   private precedence(op: string): number {
     if (op === "and" || op === "or") return 0; // weakest
     if (op === "<" || op === ">" || op === "=") return 1;
+    if ((BINARY_SYMBOLS as readonly string[]).includes(op)) return 1; // same level as comparisons
     if (op === "+" || op === "-") return 2;
     if (op === "*" || op === "mod" || op === "/") return 3;
     if (op === "^") return 4;  // strongest
@@ -367,11 +368,20 @@ class ExpressionParser {
   private parseExpression(minPrecedence: number): Expr {
     let left = this.parsePrimary();
 
-    while (!this.isAtEnd() && this.peek().type === "OPERATOR" && this.precedence(this.peek().value) >= minPrecedence) {
-      const op: string = this.advance().value;
-      const prec: number = this.precedence(op);
-      const right: Expr = this.parseExpression(prec + 1);
-      left = this.makeNode(op, left, right);
+    while (!this.isAtEnd()) {
+      const next = this.peek();
+      if (next.type === "OPERATOR" && this.precedence(next.value) >= minPrecedence) {
+        const op: string = this.advance().value;
+        const prec: number = this.precedence(op);
+        const right: Expr = this.parseExpression(prec + 1);
+        left = this.makeNode(op, left, right);
+      } else if (next.type === "KEYWORD" && (BINARY_SYMBOLS as readonly string[]).includes(next.value) && this.precedence(next.value) >= minPrecedence) {
+        const op = this.advance().value as BinarySymbol;
+        const right: Expr = this.parseExpression(this.precedence(op) + 1);
+        left = { kind: "binary", op, left, right };
+      } else {
+        break;
+      }
     }
     return left;
   }

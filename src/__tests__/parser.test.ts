@@ -1,0 +1,302 @@
+import { describe, it, expect } from "vitest";
+import { tokenize, parseExpression } from "../app/hooks/parser";
+
+// ─── tokenize ────────────────────────────────────────────────────────────────
+
+describe("tokenize", () => {
+  it("tokenizes a number", () => {
+    const tokens = tokenize("42");
+    expect(tokens[0]).toEqual({ type: "NUMBER", value: "42" });
+  });
+
+  it("tokenizes a variable", () => {
+    const tokens = tokenize("x");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "x" });
+  });
+
+  it("tokenizes a multi-char variable", () => {
+    const tokens = tokenize("alice");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "alice" });
+  });
+
+  it("tokenizes single-char operators", () => {
+    const ops = ["+", "-", "*", "/", "^", "<", ">", "="];
+    for (const op of ops) {
+      const tokens = tokenize(op);
+      expect(tokens[0]).toEqual({ type: "OPERATOR", value: op });
+    }
+  });
+
+  it("tokenizes multi-char operators: mod, and, or", () => {
+    expect(tokenize("mod")[0]).toEqual({ type: "OPERATOR", value: "mod" });
+    expect(tokenize("and")[0]).toEqual({ type: "OPERATOR", value: "and" });
+    expect(tokenize("or")[0]).toEqual({ type: "OPERATOR", value: "or" });
+  });
+
+  it("tokenizes parentheses", () => {
+    expect(tokenize("(")[0]).toEqual({ type: "LPAR", value: "(" });
+    expect(tokenize(")")[0]).toEqual({ type: "RPAR", value: ")" });
+  });
+
+  it("tokenizes keyword symbols with backslash prefix", () => {
+    expect(tokenize("\\elem")[0]).toEqual({ type: "KEYWORD", value: "elem" });
+    expect(tokenize("\\forall")[0]).toEqual({ type: "KEYWORD", value: "forall" });
+    expect(tokenize("\\reals")[0]).toEqual({ type: "KEYWORD", value: "reals" });
+    expect(tokenize("\\naturals")[0]).toEqual({ type: "KEYWORD", value: "naturals" });
+  });
+
+  it("tokenizes role references", () => {
+    expect(tokenize("{generator}")[0]).toEqual({ type: "ROLE_REF", value: "generator" });
+  });
+
+  it("tokenizes placeholders", () => {
+    expect(tokenize("$1")[0]).toEqual({ type: "PLACEHOLDER", value: "$1" });
+    expect(tokenize("$42")[0]).toEqual({ type: "PLACEHOLDER", value: "$42" });
+  });
+
+  it("skips whitespace", () => {
+    const tokens = tokenize("  x  ");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "x" });
+    expect(tokens[1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("always ends with EOF", () => {
+    const tokens = tokenize("x + y");
+    expect(tokens[tokens.length - 1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("throws on unknown characters", () => {
+    expect(() => tokenize("@")).toThrow();
+  });
+
+  it("throws on unknown backslash command", () => {
+    expect(() => tokenize("\\unknown")).toThrow();
+  });
+});
+
+// ─── parseExpression ─────────────────────────────────────────────────────────
+
+describe("parseExpression", () => {
+  // --- Leaf nodes ---
+
+  it("parses a variable", () => {
+    expect(parseExpression("x")).toEqual({ kind: "var", name: "x" });
+  });
+
+  it("parses an integer", () => {
+    expect(parseExpression("42")).toEqual({ kind: "int", value: 42 });
+  });
+
+  it("parses a role reference", () => {
+    expect(parseExpression("{generator}")).toEqual({ kind: "role", name: "generator" });
+  });
+
+  it("parses a placeholder", () => {
+    expect(parseExpression("$1")).toEqual({ kind: "placeholder", index: 1 });
+  });
+
+  // --- Constants ---
+
+  it("parses \\reals as a constant", () => {
+    expect(parseExpression("\\reals")).toEqual({ kind: "constant", symbol: "reals" });
+  });
+
+  it("parses \\naturals as a constant", () => {
+    expect(parseExpression("\\naturals")).toEqual({ kind: "constant", symbol: "naturals" });
+  });
+
+  it("parses \\emptyset as a constant", () => {
+    expect(parseExpression("\\emptyset")).toEqual({ kind: "constant", symbol: "emptyset" });
+  });
+
+  it("parses all constant symbols without throwing", () => {
+    const constants = ["emptyset", "reals", "naturals", "integers", "rationals", "complex", "powerset", "universal"];
+    for (const c of constants) {
+      expect(() => parseExpression(`\\${c}`)).not.toThrow();
+    }
+  });
+
+  // --- Unary ---
+
+  it("parses \\forall with an operand", () => {
+    expect(parseExpression("\\forall x")).toEqual({
+      kind: "unary",
+      op: "forall",
+      operand: { kind: "var", name: "x" },
+    });
+  });
+
+  it("parses \\exists with an operand", () => {
+    expect(parseExpression("\\exists n")).toEqual({
+      kind: "unary",
+      op: "exists",
+      operand: { kind: "var", name: "n" },
+    });
+  });
+
+  // --- Binary arithmetic ---
+
+  it("parses addition", () => {
+    expect(parseExpression("a + b")).toEqual({
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses subtraction", () => {
+    expect(parseExpression("a - b")).toEqual({
+      kind: "binary", op: "sub",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses multiplication", () => {
+    expect(parseExpression("a * b")).toEqual({
+      kind: "binary", op: "mul",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses division", () => {
+    expect(parseExpression("a / b")).toEqual({
+      kind: "binary", op: "div",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses power", () => {
+    expect(parseExpression("a ^ b")).toEqual({
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses mod", () => {
+    expect(parseExpression("a mod b")).toEqual({
+      kind: "binary", op: "mod",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses logical and", () => {
+    expect(parseExpression("a and b")).toEqual({
+      kind: "binary", op: "and",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses logical or", () => {
+    expect(parseExpression("a or b")).toEqual({
+      kind: "binary", op: "or",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses comparison operators", () => {
+    expect(parseExpression("a < b")).toMatchObject({ kind: "binary", op: "less" });
+    expect(parseExpression("a > b")).toMatchObject({ kind: "binary", op: "greater" });
+    expect(parseExpression("a = b")).toMatchObject({ kind: "binary", op: "equal" });
+  });
+
+  // --- Precedence ---
+
+  it("* binds tighter than +: a + b * c → add(a, mul(b, c))", () => {
+    const result = parseExpression("a + b * c");
+    expect(result).toEqual({
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: {
+        kind: "binary", op: "mul",
+        left: { kind: "var", name: "b" },
+        right: { kind: "var", name: "c" },
+      },
+    });
+  });
+
+  it("* binds tighter than +: a * b + c → add(mul(a, b), c)", () => {
+    const result = parseExpression("a * b + c");
+    expect(result).toEqual({
+      kind: "binary", op: "add",
+      left: {
+        kind: "binary", op: "mul",
+        left: { kind: "var", name: "a" },
+        right: { kind: "var", name: "b" },
+      },
+      right: { kind: "var", name: "c" },
+    });
+  });
+
+  it("^ binds tighter than *", () => {
+    const result = parseExpression("a * b ^ c");
+    expect(result).toMatchObject({
+      kind: "binary", op: "mul",
+      right: { kind: "binary", op: "pow" },
+    });
+  });
+
+  it("and/or are weaker than comparisons", () => {
+    const result = parseExpression("a < b and c > d");
+    expect(result).toMatchObject({
+      kind: "binary", op: "and",
+      left: { kind: "binary", op: "less" },
+      right: { kind: "binary", op: "greater" },
+    });
+  });
+
+  // --- Parentheses ---
+
+  it("parentheses override precedence: (a + b) * c → mul(add(a,b), c)", () => {
+    const result = parseExpression("(a + b) * c");
+    expect(result).toEqual({
+      kind: "binary", op: "mul",
+      left: {
+        kind: "binary", op: "add",
+        left: { kind: "var", name: "a" },
+        right: { kind: "var", name: "b" },
+      },
+      right: { kind: "var", name: "c" },
+    });
+  });
+
+  it("throws on unclosed parenthesis", () => {
+    expect(() => parseExpression("(a + b")).toThrow();
+  });
+
+  // --- Binary symbols (via keyword infix) ---
+  // These require the while loop in parseExpression to handle KEYWORD tokens.
+  // If these tests fail, extend parseExpression to accept KEYWORD as infix operators.
+
+  it("parses \\elem as a binary infix operator", () => {
+    const result = parseExpression("a \\elem \\naturals");
+    expect(result).toEqual({
+      kind: "binary", op: "elem",
+      left: { kind: "var", name: "a" },
+      right: { kind: "constant", symbol: "naturals" },
+    });
+  });
+
+  it("parses \\subset as a binary infix operator", () => {
+    const result = parseExpression("A \\subset B");
+    expect(result).toEqual({
+      kind: "binary", op: "subset",
+      left: { kind: "var", name: "A" },
+      right: { kind: "var", name: "B" },
+    });
+  });
+
+  it("parses \\union as a binary infix operator", () => {
+    expect(parseExpression("A \\union B")).toMatchObject({ kind: "binary", op: "union" });
+  });
+
+  it("parses \\rightarrow as a binary infix operator", () => {
+    expect(parseExpression("a \\rightarrow b")).toMatchObject({ kind: "binary", op: "rightarrow" });
+  });
+});
