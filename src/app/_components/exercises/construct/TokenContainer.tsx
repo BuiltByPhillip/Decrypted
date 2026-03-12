@@ -92,15 +92,26 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragPos, isDragging, tokens]);
 
+  const shakeDelay = errorRange ? errorRange.start * 80 : 0;
+
   return (
-    <div ref={containerRef} className="flex items-center">
+    <div
+      ref={containerRef}
+      className="flex items-center"
+      style={isCorrect === false ? { animation: `shake 0.5s ease-in-out`, animationDelay: `${shakeDelay}ms`, animationFillMode: "both" } : undefined}
+    >
       <Gap active={activeGap === 0} isDragging={isDragging} isEmpty={tokens.length === 0} />
-      {tokens.map((token, i) => (
+      {tokens.map((token, i) => {
+        const isTokenCorrect = isCorrect === true || (isCorrect === false && errorRange !== null && errorRange !== undefined && i < errorRange.start);
+        const tokenRippleDelay = i * 80;
+        const tokenColorDelay = isTokenCorrect ? tokenRippleDelay : shakeDelay;
+
+        return (
         <Fragment key={i}>
           <div
             ref={el => { tokenRefs.current[i] = el; }}
             className={draggingTokenIndex === i ? "opacity-0 pointer-events-none" : undefined}
-            style={isCorrect === true ? { animation: `token-ripple 0.4s ease-in-out`, animationDelay: `${i * 80}ms`, animationFillMode: "both" } : undefined}
+            style={isTokenCorrect ? { animation: `token-ripple 0.4s ease-in-out`, animationDelay: `${tokenRippleDelay}ms`, animationFillMode: "both" } : undefined}
             onMouseDown={(e) => {
               e.stopPropagation();
               const rect = e.currentTarget.getBoundingClientRect();
@@ -115,12 +126,13 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
                 errorRange && i < errorRange.start ? "bg-emerald-900 text-emerald-300 border-2 border-emerald-500 rounded-2xl" :
                 undefined
               }
-              style={isCorrect === true ? { transitionDelay: `${i * 80}ms` } : undefined}
+              style={{ transitionDelay: `${tokenColorDelay}ms` }}
             />
           </div>
           <Gap active={activeGap === i + 1} isDragging={isDragging} isEmpty={false} />
         </Fragment>
-      ))}
+        );
+      })}
     </div>
   );
 }
