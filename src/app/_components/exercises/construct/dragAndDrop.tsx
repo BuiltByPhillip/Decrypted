@@ -8,7 +8,7 @@ import {
   ALL_SET_PALETTE_ITEMS,
   PAR_PALETTE_ITEMS,
   type Expr,
-  type PaletteItem, parseExpression,
+  type PaletteItem, parseExpression, type TokenRange,
 } from "~/app/hooks/parser";
 import {
   DEFAULT_VALUE_ITEMS,
@@ -29,6 +29,7 @@ type DragAndDropProps = {
   prompt?: string;
   description?: string;
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
+  errorRange?: TokenRange | null;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -52,7 +53,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ description, prompt, onTokensChangeAction }: DragAndDropProps) {
+export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -245,6 +246,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction 
               draggingTokenIndex={dragState?.tokenIndex}
               onGapHover={(index) => { hoveredGapRef.current = index; }}
               onTokenStartDrag={onTokenStartDrag}
+              errorRange={errorRange}
             />
           </div>
         </div>

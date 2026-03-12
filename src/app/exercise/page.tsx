@@ -154,7 +154,7 @@ export default function ExercisePage() {
             ) : step.exercise?.type === "construct" ? (
               <ConstructExercise
                 palette={step.exercise!.palette!}
-                answers={step.exercise.answer}
+                answer={step.exercise.answer[0]!}
                 description={step.description}
                 prompt={step.exercise.prompt}
                 definitions={definitions}

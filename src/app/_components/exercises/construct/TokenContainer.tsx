@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { PaletteItem } from "~/app/hooks/parser";
+import type {PaletteItem, TokenRange} from "~/app/hooks/parser";
 import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
 
 type TokenContainerProps = {
@@ -11,6 +11,7 @@ type TokenContainerProps = {
   draggingTokenIndex?: number;
   onGapHover: (index: number | null) => void;
   onTokenStartDrag: (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => void;
+  errorRange?: TokenRange | null;
 }
 
 /* Props for gap */
@@ -40,7 +41,7 @@ function Gap({ active, isDragging, isEmpty }: GapProps) {
   );
 }
 
-export default function TokenContainer({ tokens, isDragging, dragPos, draggingTokenIndex, onGapHover, onTokenStartDrag }: TokenContainerProps) {
+export default function TokenContainer({ tokens, isDragging, dragPos, draggingTokenIndex, onGapHover, onTokenStartDrag, errorRange }: TokenContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeGap, setActiveGap] = useState<number | null>(null);
@@ -97,7 +98,10 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
         <Fragment key={i}>
           <div
             ref={el => { tokenRefs.current[i] = el; }}
-            className={draggingTokenIndex === i ? "opacity-0 pointer-events-none" : undefined}
+            className={[
+              draggingTokenIndex === i ? "opacity-0 pointer-events-none" : "",
+              errorRange && i >= errorRange.start && i < errorRange.end ? "border-2 border-red-500 rounded-lg" : ""
+            ].join(" ").trim() || undefined}
             onMouseDown={(e) => {
               e.stopPropagation();
               const rect = e.currentTarget.getBoundingClientRect();

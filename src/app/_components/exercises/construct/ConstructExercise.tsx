@@ -51,7 +51,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
 
   return (
       <div>
-        <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={setTokens}/>
+        <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={setTokens} errorRange={errorRange}/>
         <div className="flex flex-col items-center pt-10 gap-2">
           <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
           {isCorrect === true && <span className="text-green-500">Correct!</span>}
