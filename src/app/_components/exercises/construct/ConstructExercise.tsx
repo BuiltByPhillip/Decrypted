@@ -5,7 +5,7 @@ import {type Expr, type PaletteItem, parseExpression} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import Button from "~/components/Button";
 import {useState} from "react";
-import {exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
+import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
 
 type ConstructExerciseProps = {
   palette: PaletteItem[];
@@ -13,31 +13,36 @@ type ConstructExerciseProps = {
   prompt: string;
   hint?: string;
   definitions?: SelectedDefinitions;
-  answers: Expr[];
+  answer: Expr;
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answers, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
 
+  function handleAnswer(isMatch: boolean) {
+    setIsCorrect(isMatch);
+    onAnswerAction?.(isMatch);
+  }
+
   const checkAnswer = () => {
-    if (tokens.length === 0 || !answers || answers.length === 0) {
-      setIsCorrect(false);
-      onAnswerAction?.(false);
+    if (tokens.length === 0) {
+      handleAnswer(false);
       return;
     }
     try {
       const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
-      const isMatch = answers.some(answer => {
-        const resolved = definitions ? substituteRoles(answer, definitions) : answer;
-        return exprEquals(userExpr, resolved);
-      });
-      setIsCorrect(isMatch);
-      onAnswerAction?.(isMatch);
+      const resolved = definitions ? substituteRoles(answer, definitions) : answer;
+      const isMatch = exprEquals(userExpr, resolved);
+      if (isMatch) {
+        handleAnswer(true);
+      } else {
+        const diff = exprDiff(userExpr, resolved);
+        handleAnswer(false);
+      }
     } catch {
-      setIsCorrect(false);
-      onAnswerAction?.(false);
+      handleAnswer(false);
     }
   };
 

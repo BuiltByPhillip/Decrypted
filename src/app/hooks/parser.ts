@@ -30,14 +30,16 @@ type Exercise = {
   answer: Expr[];
 }
 
+export type TokenRange = { start: number; end: number}
+
 // Leaf expressions (no children)
 export type LeafExpr =
-  | { kind: "var"; name: string }
-  | { kind: "role"; name: string }
-  | { kind: "int"; value: number }
-  | { kind: "placeholder"; index: number } // Defined by user "fill in value here" ($1, $2)
-  | { kind: "slot" } // Empty drop target in UI
-  | { kind: "constant"; symbol: ConstantSymbol};
+  | { kind: "var"; name: string, tokenRange?: TokenRange }
+  | { kind: "role"; name: string, tokenRange?: TokenRange }
+  | { kind: "int"; value: number, tokenRange?: TokenRange }
+  | { kind: "placeholder"; index: number, tokenRange?: TokenRange } // Defined by user "fill in value here" ($1, $2)
+  | { kind: "slot", tokenRange?: TokenRange } // Empty drop target in UI
+  | { kind: "constant"; symbol: ConstantSymbol, tokenRange?: TokenRange };
 
 // Binary operator types - single source of truth
 export const ALL_OPERATORS = [
@@ -108,6 +110,7 @@ export type UnaryExpr = {
   kind: "unary";
   op: UnarySymbol | null;
   operand: Expr;
+  tokenRange?: TokenRange
 };
 
 // Binary expression (two children)
@@ -117,6 +120,7 @@ export type BinaryExpr = {
   op: BinaryOp | BinarySymbol | null;
   left: Expr;
   right: Expr;
+  tokenRange?: TokenRange
 };
 
 // Combined expression type
@@ -331,31 +335,32 @@ class ExpressionParser {
    *  That is, a single thing that cannot be broken down further
   */
   private parsePrimary(): Expr {
+    const start = this.current;
     const token: Token = this.advance();
 
     switch (token.type) {
       case "NUMBER":
-        return { kind: "int", value: Number(token.value) }
+        return { kind: "int", value: Number(token.value), tokenRange: { start, end: this.current} }
       case "VAR":
-        return { kind: "var", name: token.value }
+        return { kind: "var", name: token.value, tokenRange: { start, end: this.current} }
       case "PLACEHOLDER":
         // token.value is $1, $2, etc. - therefore we remove $
-        return { kind: "placeholder", index: Number(token.value.slice(1)) }
+        return { kind: "placeholder", index: Number(token.value.slice(1)), tokenRange: { start, end: this.current} }
       case "ROLE_REF":
-        return { kind: "role", name: token.value };
+        return { kind: "role", name: token.value, tokenRange: { start, end: this.current} };
       case "LPAR":
         const expr = this.parseExpression(0);
         if (this.peek().type !== "RPAR") {
           throw new Error("Expected closing parenthesis")
         }
         this.advance();
-        return expr;
+        return { ...expr, tokenRange: { start, end: this.current}}
       case "KEYWORD":
         if ((CONSTANT_SYMBOLS as readonly string[]).includes(token.value))
-          return { kind: "constant", symbol: token.value as ConstantSymbol}
+          return { kind: "constant", symbol: token.value as ConstantSymbol, tokenRange: { start, end: this.current}}
         else if ((UNARY_SYMBOLS as readonly string[]).includes(token.value)) {
           const operand = this.parsePrimary()
-          return { kind: "unary", op: token.value as UnarySymbol, operand: operand}
+          return { kind: "unary", op: token.value as UnarySymbol, operand: operand, tokenRange: { start, end: this.current}}
         }
         else {
           throw new Error(`Unexpected token: ${token.type} '${token.value}'`)
@@ -370,16 +375,20 @@ class ExpressionParser {
 
     while (!this.isAtEnd()) {
       const next = this.peek();
+
       if (next.type === "OPERATOR" && this.precedence(next.value) >= minPrecedence) {
         const op: string = this.advance().value;
         const prec: number = this.precedence(op);
         const right: Expr = this.parseExpression(prec + 1);
         left = this.makeNode(op, left, right);
-      } else if (next.type === "KEYWORD" && (BINARY_SYMBOLS as readonly string[]).includes(next.value) && this.precedence(next.value) >= minPrecedence) {
+        left.tokenRange = { start: left.left.tokenRange!.start, end: this.current }
+      }
+      else if (next.type === "KEYWORD" && (BINARY_SYMBOLS as readonly string[]).includes(next.value) && this.precedence(next.value) >= minPrecedence) {
         const op = this.advance().value as BinarySymbol;
         const right: Expr = this.parseExpression(this.precedence(op) + 1);
-        left = { kind: "binary", op, left, right };
-      } else {
+        left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current } };
+      }
+      else {
         break;
       }
     }

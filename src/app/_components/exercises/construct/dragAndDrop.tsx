@@ -24,7 +24,6 @@ import DraggableWindow from "~/app/_components/exercises/construct/DraggableWind
 import Button from "~/components/Button";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
-import {save} from "effect/TestClock";
 
 type DragAndDropProps = {
   prompt?: string;
