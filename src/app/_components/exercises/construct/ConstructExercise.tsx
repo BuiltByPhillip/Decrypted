@@ -1,7 +1,7 @@
 "use client"
 
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
-import {type Expr, type PaletteItem, parseExpression} from "~/app/hooks/parser";
+import {type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import Button from "~/components/Button";
 import {useState} from "react";
@@ -20,6 +20,7 @@ type ConstructExerciseProps = {
 export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
+  const [errorRange, setErrorRange] = useState<TokenRange | null>(null)
 
   function handleAnswer(isMatch: boolean) {
     setIsCorrect(isMatch);
@@ -37,8 +38,10 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       const isMatch = exprEquals(userExpr, resolved);
       if (isMatch) {
         handleAnswer(true);
-      } else {
+      }
+      else {
         const diff = exprDiff(userExpr, resolved);
+        setErrorRange(diff?.tokenRange ?? null)
         handleAnswer(false);
       }
     } catch {
