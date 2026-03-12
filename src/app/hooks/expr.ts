@@ -1,7 +1,13 @@
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import { type Expr, type PaletteItem, symbolDisplay } from "~/app/hooks/parser";
 
-/* SubstituteRoles take an expressions containing role references ({generator}, {bob_secret}, etc) and replaces with actual user selected symbols */
+/**
+ * Replaces role references (e.g. `{generator}`, `{bob_secret}`) in an expression with the
+ * actual symbols selected by the user.
+ * @param e - The expression potentially containing role references
+ * @param definitions - The user's selected symbol definitions
+ * @returns A new expression with all role references substituted
+ */
 export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr {
   switch (e.kind) {
     case "role":
@@ -34,10 +40,16 @@ export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr
   }
 }
 
-// Operators where order doesn't matter: a + b === b + a
+/** Operators where order doesn't matter: a + b === b + a */
 const COMMUTATIVE_OPS = new Set(["equal", "add", "mul", "and", "or"]);
 
-/* Checks if two expressions are structurally and mathematically equal */
+/**
+ * Checks if two expressions are structurally and mathematically equal.
+ * Commutative operators (e.g. `+`, `*`) are considered equal regardless of operand order.
+ * @param a - The first expression
+ * @param b - The second expression
+ * @returns `true` if the expressions are equal, `false` otherwise
+ */
 export function exprEquals(a: Expr, b: Expr): boolean {
   if (a.kind !== b.kind) return false;
 
@@ -73,7 +85,39 @@ export function exprEquals(a: Expr, b: Expr): boolean {
   }
 }
 
-// Operator symbols for string representation
+/**
+ * Returns the first mismatching sub-expression from the user's tree.
+ * @param user - The expression built by the user
+ * @param answer - The expected expression
+ * @returns The deepest mismatching sub-expression, or `null` if they are equal
+ */
+export function exprDiff(user: Expr, answer: Expr): Expr | null {
+  if (exprEquals(user, answer)) return null
+
+  // Recurse deeper to find the mismatch
+  if (user.kind === "unary" && answer.kind === "unary" && user.op === answer.op) {
+    return exprDiff(user.operand, answer.operand)
+  }
+
+  // Recurse deeper to find the mismatch
+  if (user.kind === "binary" && answer.kind === "binary" && user.op === answer.op) {
+    if (COMMUTATIVE_OPS.has(user.op ?? "")) {
+      // Standard order: if left matches, then mismatch must be on the right
+      if (exprEquals(user.left, answer.left)) {
+        return exprDiff(user.right, answer.right);
+      }
+      // Swapped order: if left matches right, then mismatch must be on the left
+      if (exprEquals(user.left, answer.right)) {
+        return exprDiff(user.right, answer.left);
+      }
+    }
+    // Non-commutative: just recurse left first, then right
+    return exprDiff(user.left, answer.left) ?? exprDiff(user.right, answer.right) ?? user;
+  }
+  return user; // Structural mismatch (different kind or operator)
+}
+
+/** Maps operator names to their display symbols for string serialization */
 const OP_TO_STRING: Record<string, string> = {
   pow: "^",
   mod: " mod ",
@@ -88,6 +132,11 @@ const OP_TO_STRING: Record<string, string> = {
   or: " or ",
 };
 
+/**
+ * Converts an expression into a string.
+ * @param e - The expression that should be converted into a string
+ * @returns The string equal to the expression `e`
+ */
 export function exprToString(e: Expr): string {
   switch (e.kind) {
     case "var":
@@ -111,6 +160,12 @@ export function exprToString(e: Expr): string {
   }
 }
 
+/**
+ * Checks if an expression is contained in a list of expressions.
+ * @param expr - The expression to search for
+ * @param list - The list of expressions to search in
+ * @returns `true` if the list contains an expression equal to `expr`
+ */
 export function exprListContains(expr: Expr, list: Expr[]): boolean {
   for (let i = 0; i < list.length; i++) {
     if (exprEquals(expr, list[i]!)) return true;
@@ -118,8 +173,13 @@ export function exprListContains(expr: Expr, list: Expr[]): boolean {
   return false;
 }
 
-/* Normalizes an expression by collapsing empty binary structures to slots.
-   A binary is "empty" when op is null and both children are slots. */
+/**
+ * Normalizes an expression by collapsing empty structures to slots.
+ * A binary node is considered empty when its `op` is `null` and both children are slots.
+ * A unary node is considered empty when its `op` is `null` and its operand is a slot.
+ * @param e - The expression to normalize
+ * @returns A new normalized expression
+ */
 export function normalizeExpr(e: Expr): Expr {
   switch (e.kind) {
     case "var":
@@ -152,7 +212,12 @@ export function normalizeExpr(e: Expr): Expr {
   }
 }
 
-/* Converts a palette item to an expression. Operators become binary expressions with empty slots. */
+/**
+ * Converts a palette item to an expression.
+ * Operator items become binary expressions with empty slots as placeholders for their operands.
+ * @param item - The palette item to convert
+ * @returns The corresponding expression
+ */
 export function paletteItemToExpr(item: PaletteItem): Expr {
   switch (item.kind) {
     case "var":
@@ -185,6 +250,11 @@ export function paletteItemToExpr(item: PaletteItem): Expr {
   }
 }
 
+/**
+ * Converts a palette item to its string representation as expected by the parser.
+ * @param item - The palette item to convert
+ * @returns The string representation of the item
+ */
 export function paletteItemToString(item: PaletteItem): string {
   switch (item.kind) {
     case "var":
