@@ -90,6 +90,22 @@ html, body {
   animation: shimmer 25s linear infinite;
 }
 
+@keyframes fragment-fly {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); }
+}
+
+@keyframes particle-disintegrate {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.1) rotate(var(--rot)); }
+}
+
+@keyframes token-disintegrate {
+  0%   { opacity: 1; filter: blur(0px);  transform: scale(1); }
+  40%  { opacity: 0.6; filter: blur(1px); transform: scale(1.04); }
+  100% { opacity: 0; filter: blur(6px);  transform: scale(0.75); }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   15%       { transform: translateX(-7px); }

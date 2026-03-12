@@ -62,6 +62,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [dragCursorPos, setDragCursorPos] = useState<{ x: number; y: number } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
+  const [isDragDisintegrating, setIsDragDisintegrating] = useState(false);
 
   function updateTokens(next: PaletteItem[]) {
     setTokens(next);
@@ -106,6 +107,16 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
   const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
     setDragState({ item, x, y, offsetX, offsetY });
+  };
+
+  const handleDragDisintegrateComplete = () => {
+    const srcIndex = dragState?.tokenIndex;
+    setIsDragDisintegrating(false);
+    setDragState(null);
+    if (srcIndex !== undefined) {
+      const next = tokens.filter((_, i) => i !== srcIndex);
+      updateTokens(next);
+    }
   };
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
@@ -194,6 +205,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
             setIsOverTrash(!!checkTrash(x, y));
             setDragCursorPos({ x, y });
           }}
+          disintegrating={isDragDisintegrating}
+          onDisintegrateCompleteAction={handleDragDisintegrateComplete}
           onDrop={(x, y) => {
             setIsOverTrash(false);
             setDragCursorPos(null);
@@ -203,9 +216,9 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
             if (inTrash) {
               if (srcIndex !== undefined) {
-                // Remove the placeholder from the list
-                const next = tokens.filter((_, i) => i !== srcIndex);
-                updateTokens(next)
+                // Keep dragState alive so the ghost stays visible for the disintegration
+                setIsDragDisintegrating(true);
+                return; // skip setDragState(null) below
               }
               // Palette items dropped on trash are discarded — nothing to do
             } else if (gapIndex !== null) {
