@@ -24,13 +24,12 @@ import DraggableWindow from "~/app/_components/exercises/construct/DraggableWind
 import Button from "~/components/Button";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
+import {save} from "effect/TestClock";
 
 type DragAndDropProps = {
-  answers?: Expr[];
-  definitions?: SelectedDefinitions;
   prompt?: string;
   description?: string;
-  onAnswerAction?: (isCorrect: boolean) => void;
+  onTokensChangeAction?: (tokens: PaletteItem[]) => void;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -54,7 +53,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ answers, definitions, description, prompt, onAnswerAction }: DragAndDropProps) {
+export default function DragAndDrop({ description, prompt, onTokensChangeAction }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -62,7 +61,12 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [dragCursorPos, setDragCursorPos] = useState<{ x: number; y: number } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  function updateTokens(next: PaletteItem[]) {
+    setTokens(next);
+    saveTokens(next);
+    onTokensChangeAction?.(next)
+  }
 
   const [dragState, setDragState] = useState<{
     item: PaletteItem;
@@ -75,7 +79,7 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
 
   useEffect(() => {
     const saved = loadTokens();
-    if (saved) setTokens(saved);
+    if (saved) updateTokens(saved);
   }, []);
 
   type PaletteId = "operators" | "symbols" | "sets" | "values";
@@ -107,26 +111,6 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
     // Don't remove the token yet — keep it as an invisible placeholder so the
     // layout doesn't collapse. Removal and insertion both happen on drop.
     setDragState({ item, x, y, offsetX, offsetY, tokenIndex: index });
-  };
-
-  const checkAnswer = () => {
-    if (tokens.length === 0 || !answers || answers.length === 0) {
-      setIsCorrect(false);
-      onAnswerAction?.(false);
-      return;
-    }
-    try {
-      const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
-      const isMatch = answers.some(answer => {
-        const resolved = definitions ? substituteRoles(answer, definitions) : answer;
-        return exprEquals(userExpr, resolved);
-      });
-      setIsCorrect(isMatch);
-      onAnswerAction?.(isMatch);
-    } catch {
-      setIsCorrect(false);
-      onAnswerAction?.(false);
-    }
   };
 
   return (
@@ -220,8 +204,7 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
               if (srcIndex !== undefined) {
                 // Remove the placeholder from the list
                 const next = tokens.filter((_, i) => i !== srcIndex);
-                setTokens(next);
-                saveTokens(next);
+                updateTokens(next)
               }
               // Palette items dropped on trash are discarded — nothing to do
             } else if (gapIndex !== null) {
@@ -234,8 +217,7 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
               } else {
                 next.splice(gapIndex, 0, dragState.item);
               }
-              setTokens(next);
-              saveTokens(next);
+              updateTokens(next)
             }
             // Dropped nowhere valid: if from token list, placeholder is still in
             // the list and becomes visible again when dragState clears. No restore needed.
@@ -252,7 +234,7 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
             variant="ghostMuted"
             className="flex justify-end pr-3 select-none"
             size="none"
-            onClick={() => { setTokens([]); saveTokens(null); }}
+            onClick={() => { updateTokens([]) }}
           >
             Clear expression
           </Button>
@@ -268,12 +250,6 @@ export default function DragAndDrop({ answers, definitions, description, prompt,
           </div>
         </div>
         <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-70"/>
-      </div>
-
-      <div className="flex flex-col items-center pt-10 gap-2">
-        <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
-        {isCorrect === true && <span className="text-green-500">Correct!</span>}
-        {isCorrect === false && <span className="text-red-500">Incorrect, try again.</span>}
       </div>
     </div>
   );
