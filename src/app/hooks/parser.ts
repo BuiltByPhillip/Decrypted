@@ -120,7 +120,8 @@ export type BinaryExpr = {
   op: BinaryOp | BinarySymbol | null;
   left: Expr;
   right: Expr;
-  tokenRange?: TokenRange
+  tokenRange?: TokenRange;
+  opTokenIndex?: number;
 };
 
 // Combined expression type
@@ -223,7 +224,7 @@ export function tokenize(input: string): Token[] {
     if (/[a-zA-Z_]/.test(input[i] ?? "")) {
       let str: string = ""
       let j: number = i
-      while (j < input.length && /[a-zA-Z_]/.test(input[j] ?? "")) {
+      while (j < input.length && /[a-zA-Z_']/.test(input[j] ?? "")) {
         str += input[j];
         j++
       }
@@ -377,16 +378,19 @@ class ExpressionParser {
       const next = this.peek();
 
       if (next.type === "OPERATOR" && this.precedence(next.value) >= minPrecedence) {
+        const opTokenIndex = this.current;
         const op: string = this.advance().value;
         const prec: number = this.precedence(op);
         const right: Expr = this.parseExpression(prec + 1);
         left = this.makeNode(op, left, right);
-        left.tokenRange = { start: left.left.tokenRange!.start, end: this.current }
+        left.tokenRange = { start: left.left.tokenRange!.start, end: this.current };
+        left.opTokenIndex = opTokenIndex;
       }
       else if (next.type === "KEYWORD" && (BINARY_SYMBOLS as readonly string[]).includes(next.value) && this.precedence(next.value) >= minPrecedence) {
+        const opTokenIndex = this.current;
         const op = this.advance().value as BinarySymbol;
         const right: Expr = this.parseExpression(this.precedence(op) + 1);
-        left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current } };
+        left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current }, opTokenIndex };
       }
       else {
         break;

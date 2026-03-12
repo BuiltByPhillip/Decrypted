@@ -20,10 +20,17 @@ type ConstructExerciseProps = {
 export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
-  const [errorRange, setErrorRange] = useState<TokenRange | null>(null)
+  const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
+
+  const handleTokensChange = (newTokens: PaletteItem[]) => {
+    setTokens(newTokens);
+    setErrorRange(null);
+    setIsCorrect(null);
+  };
 
   function handleAnswer(isMatch: boolean) {
     setIsCorrect(isMatch);
+    if (isMatch) setErrorRange(null);
     onAnswerAction?.(isMatch);
   }
 
@@ -51,7 +58,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
 
   return (
       <div>
-        <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={setTokens} errorRange={errorRange}/>
+        <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
           <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
           {isCorrect === true && <span className="text-green-500">Correct!</span>}

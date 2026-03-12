@@ -34,7 +34,7 @@ export default function ExprBlock({ item, className }: ExprBlockProps) {
 
   return (
     <div
-      className={`flex items-center justify-center bg-dark h-10 min-w-10 px-2 cursor-pointer rounded-2xl text-muted text-2xl select-none hover:brightness-125 ${className}`}
+      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-pointer rounded-2xl text-2xl select-none hover:brightness-125 ${className ?? "bg-dark text-muted"}`}
     >
       {renderValue(item)}
     </div>

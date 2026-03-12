@@ -99,6 +99,13 @@ export function exprDiff(user: Expr, answer: Expr): Expr | null {
     return exprDiff(user.operand, answer.operand)
   }
 
+  // Same structure, different operator — highlight just the operator token
+  if (user.kind === "binary" && answer.kind === "binary" && user.op !== answer.op) {
+    if (exprEquals(user.left, answer.left) && exprEquals(user.right, answer.right) && user.opTokenIndex !== undefined) {
+      return { kind: "slot", tokenRange: { start: user.opTokenIndex, end: user.opTokenIndex + 1 } };
+    }
+  }
+
   // Recurse deeper to find the mismatch
   if (user.kind === "binary" && answer.kind === "binary" && user.op === answer.op) {
     if (COMMUTATIVE_OPS.has(user.op ?? "")) {

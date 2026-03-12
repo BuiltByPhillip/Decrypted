@@ -12,6 +12,7 @@ type TokenContainerProps = {
   onGapHover: (index: number | null) => void;
   onTokenStartDrag: (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => void;
   errorRange?: TokenRange | null;
+  isCorrect?: boolean | null;
 }
 
 /* Props for gap */
@@ -41,7 +42,7 @@ function Gap({ active, isDragging, isEmpty }: GapProps) {
   );
 }
 
-export default function TokenContainer({ tokens, isDragging, dragPos, draggingTokenIndex, onGapHover, onTokenStartDrag, errorRange }: TokenContainerProps) {
+export default function TokenContainer({ tokens, isDragging, dragPos, draggingTokenIndex, onGapHover, onTokenStartDrag, errorRange, isCorrect }: TokenContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeGap, setActiveGap] = useState<number | null>(null);
@@ -98,17 +99,22 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
         <Fragment key={i}>
           <div
             ref={el => { tokenRefs.current[i] = el; }}
-            className={[
-              draggingTokenIndex === i ? "opacity-0 pointer-events-none" : "",
-              errorRange && i >= errorRange.start && i < errorRange.end ? "border-2 border-red-500 rounded-lg" : ""
-            ].join(" ").trim() || undefined}
+            className={draggingTokenIndex === i ? "opacity-0 pointer-events-none" : undefined}
             onMouseDown={(e) => {
               e.stopPropagation();
               const rect = e.currentTarget.getBoundingClientRect();
               onTokenStartDrag(i, token, e.clientX, e.clientY, e.clientX - rect.left, e.clientY - rect.top);
             }}
           >
-            <ExprBlock item={token} />
+            <ExprBlock
+              item={token}
+              className={
+                isCorrect === true ? "bg-green text-green-foreground border-2 border-green-foreground rounded-2xl" :
+                errorRange && i >= errorRange.start && i < errorRange.end ? "bg-red-900 text-red-300 border-2 border-red-500 rounded-2xl" :
+                errorRange && i < errorRange.start ? "bg-emerald-900 text-emerald-300 border-2 border-emerald-500 rounded-2xl" :
+                undefined
+              }
+            />
           </div>
           <Gap active={activeGap === i + 1} isDragging={isDragging} isEmpty={false} />
         </Fragment>

@@ -30,6 +30,7 @@ type DragAndDropProps = {
   description?: string;
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
+  isCorrect?: boolean | null;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -53,7 +54,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange }: DragAndDropProps) {
+export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange, isCorrect }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -247,6 +248,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
               onGapHover={(index) => { hoveredGapRef.current = index; }}
               onTokenStartDrag={onTokenStartDrag}
               errorRange={errorRange}
+              isCorrect={isCorrect}
             />
           </div>
         </div>
