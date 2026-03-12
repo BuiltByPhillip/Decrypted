@@ -100,6 +100,7 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
           <div
             ref={el => { tokenRefs.current[i] = el; }}
             className={draggingTokenIndex === i ? "opacity-0 pointer-events-none" : undefined}
+            style={isCorrect === true ? { animation: `token-ripple 0.4s ease-in-out`, animationDelay: `${i * 80}ms`, animationFillMode: "both" } : undefined}
             onMouseDown={(e) => {
               e.stopPropagation();
               const rect = e.currentTarget.getBoundingClientRect();
@@ -114,6 +115,7 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
                 errorRange && i < errorRange.start ? "bg-emerald-900 text-emerald-300 border-2 border-emerald-500 rounded-2xl" :
                 undefined
               }
+              style={isCorrect === true ? { transitionDelay: `${i * 80}ms` } : undefined}
             />
           </div>
           <Gap active={activeGap === i + 1} isDragging={isDragging} isEmpty={false} />

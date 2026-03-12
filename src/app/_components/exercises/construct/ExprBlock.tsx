@@ -7,9 +7,10 @@ import {
 type ExprBlockProps = {
   item: PaletteItem;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export default function ExprBlock({ item, className }: ExprBlockProps) {
+export default function ExprBlock({ item, className, style }: ExprBlockProps) {
 
   const renderValue = (item: PaletteItem) => {
     switch (item.kind) {
@@ -34,7 +35,8 @@ export default function ExprBlock({ item, className }: ExprBlockProps) {
 
   return (
     <div
-      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-pointer rounded-2xl text-2xl select-none hover:brightness-125 ${className ?? "bg-dark text-muted"}`}
+      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-pointer rounded-2xl text-2xl select-none hover:brightness-125 transition-colors duration-300 ${className ?? "bg-dark text-muted"}`}
+      style={style}
     >
       {renderValue(item)}
     </div>
