@@ -121,9 +121,9 @@ export default function TokenContainer({ tokens, isDragging, dragPos, draggingTo
             <ExprBlock
               item={token}
               className={
-                isCorrect === true ? "bg-dark text-emerald-500 border-2 border-emerald-500 rounded-2xl" :
-                errorRange && i >= errorRange.start && i < errorRange.end ? "bg-dark text-red-500 border-2 border-red-500 rounded-2xl" :
-                errorRange && i < errorRange.start ? "bg-dark text-emerald-500 border-2 border-emerald-500 rounded-2xl" :
+                isCorrect === true ? "bg-dark text-success border-2 border-success rounded-2xl" :
+                errorRange && i >= errorRange.start && i < errorRange.end ? "bg-dark text-danger border-2 border-danger rounded-2xl" :
+                errorRange && i < errorRange.start ? "bg-dark text-success border-2 border-success rounded-2xl" :
                 undefined
               }
               style={{ transitionDelay: `${tokenColorDelay}ms` }}
