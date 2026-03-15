@@ -8,6 +8,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useLenis } from "~/components/SmoothScroll";
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
+import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -104,6 +105,11 @@ export default function ExercisePage() {
 
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
+      {/* Definitions selected container fixed position */}
+      <DefinitionContainer
+          selected={new Map(Object.entries(definitions))}
+          className="fixed left-10 top-7"
+      />
       {/* Definition selection */}
       <div className="flex min-h-screen flex-col items-center justify-center">
         <span className="text-gray pb-5 text-xl font-medium tracking-wider uppercase">
