@@ -32,12 +32,12 @@ export default function DefinitionContainer({ selected, className }: DefinitionC
     return (
         <div className={`min-w-40 min-h-60 border-2 border-muted rounded-2xl p-4 bg-muted/10 transition-all duration-300 ease-out ${visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2"} ${className}`}>
             <span className="font-bold text-xl text-muted select-none">Definitions</span>
-            <div className={`grid grid-cols-[2fr_1fr_auto] pt-2 text-muted`}>
+            <div className={`grid grid-cols-[auto_1fr_2fr] pt-2 text-muted`}>
                 {convertToList().map(([role, expr]) => (
                     <React.Fragment key={role}>
-                        <span className="text-left">{role}</span>
+                        <span className="text-left">{exprToString(expr)}</span>
                         <span className="text-center">{symbolDisplay["elem"]}</span>
-                        <span className="text-right">{exprToString(expr)}</span>
+                        <span className="text-left">{role}</span>
                     </React.Fragment>
                 ))}
             </div>

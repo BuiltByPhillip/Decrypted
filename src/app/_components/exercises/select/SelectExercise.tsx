@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { Expr } from "~/app/hooks/parser"
 import { exprListContains, substituteRoles } from "~/app/hooks/expr";
 import type { SelectedDefinitions } from "~/app/exercise/page";
+import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 
 type SelectExerciseProps = {
   options: Expr[];
@@ -18,6 +19,19 @@ type SelectExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
+/**
+ * A multiple-choice exercise component where the user selects one or more options and submits their answer.
+ * Options are color-coded after submission: green for correct, red for incorrect, orange while selected but unsubmitted.
+ *
+ * @param options - The list of expressions to display as selectable answer buttons.
+ * @param description - The main heading shown above the exercise (e.g. the set or expression being tested).
+ * @param prompt - A sub-heading giving the user instructions (e.g. "Select all elements of the set").
+ * @param hint - Optional hint text revealed via the hint button.
+ * @param definitions - The user's selected role-to-expression definitions, used to substitute roles in rendered options.
+ * @param answers - The list of expressions considered correct. An option is correct if it is contained within this list.
+ * @param onAnswerAction - Optional callback fired after submission. Receives `true` if every selected option was correct, `false` otherwise.
+ * @constructor
+ */
 export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction}: SelectExerciseProps) {
   const [selected, setSelected] = useState<number[]>([]);
   const [isCorrect, setIsCorrect] = useState<[number, boolean][]>([]);
@@ -73,14 +87,20 @@ export default function SelectExercise({options, description, prompt, hint, defi
       </div>
 
       <div className="relative flex justify-center w-full">
-        {/* Answer button */}
-        <Button
-          variant="submit"
-          className={"w-100 py-3"}
-          onClick={() => checkAnswer()}
-        >
-          Answer
-        </Button>
+        <div className="flex flex-col">
+          {/* User feedback */}
+          <UserFeedback exerciseType="select" />
+          
+          {/* Answer button */}
+          <Button
+              variant="submit"
+              className={"w-100 py-3"}
+              onClick={() => checkAnswer()}
+          >
+            Answer
+          </Button>
+        </div>
+        
 
         {/* Hint button - conditionally rendered, positioned to the right */}
         {hint && (

@@ -177,7 +177,7 @@ const EXERCISE_TYPES = [
   "calculate"
 ] as const;
 
-type ExerciseType = typeof EXERCISE_TYPES[number];
+export type ExerciseType = typeof EXERCISE_TYPES[number];
 
 export function tokenize(input: string): Token[] {
   function inner (i: number, acc: Token[]): Token[] {
