@@ -6,6 +6,7 @@ import type { SelectedDefinitions } from "~/app/exercise/page";
 import Button from "~/components/Button";
 import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
+import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 
 type ConstructExerciseProps = {
   palette: PaletteItem[];
@@ -17,10 +18,13 @@ type ConstructExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
+type buttonState = "Check answer" | "Correct!" | "Incorrect!"
+
 export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
+  const [submitButton, setSubmitButton] = useState<buttonState>("Check answer");
 
   const handleTokensChange = (newTokens: PaletteItem[]) => {
     setTokens(newTokens);
@@ -30,6 +34,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
 
   function handleAnswer(isMatch: boolean) {
     setIsCorrect(isMatch);
+    isMatch ? setSubmitButton("Correct!") : setSubmitButton("Incorrect!")
     if (isMatch) setErrorRange(null);
     onAnswerAction?.(isMatch);
   }
@@ -60,9 +65,8 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       <div>
         <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
-          <Button variant="submit" className="w-100" onClick={checkAnswer}>Check answer</Button>
-          {isCorrect === true && <span className="text-green-500">Correct!</span>}
-          {isCorrect === false && <span className="text-red-500">Incorrect, try again.</span>}
+          <UserFeedback exerciseType="construct" />
+          <Button variant="submit" className="w-100" onClick={checkAnswer}>{submitButton}</Button>
         </div>
       </div>
 
