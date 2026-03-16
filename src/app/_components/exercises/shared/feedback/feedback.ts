@@ -1,15 +1,24 @@
 import {type Expr, symbolDisplay} from "~/app/hooks/parser";
-import {findDiffPair} from "~/app/hooks/expr";
+import {exprEquals, findDiffPair} from "~/app/hooks/expr";
+import type {SelectedDefinitions} from "~/app/exercise/page";
 
+/**
+ * Reverse-looks up which role name a given expression is assigned to in the definitions.
+ * e.g. given `{kind: "var", name: "p"}` and definitions where `prime → p`, returns `"prime"`.
+ */
+function findRoleName(expr: Expr, definitions: SelectedDefinitions): string | undefined {
+    return Object.entries(definitions).find(([, value]) => exprEquals(value, expr))?.[0];
+}
 
 /**
  * Generates a human-readable feedback message describing where and why
  * the user's expression differs from the correct answer.
- * @param answer - The correct expression
+ * @param answer - The correct expression (substituted)
  * @param userInput - The expression the user provided
+ * @param definitions - The user's selected definitions, used to look up role names for specific feedback
  * @returns A feedback string, or null if the expressions are equal
  */
-export function provideFeedback(answer: Expr, userInput: Expr): string | null {
+export function provideFeedback(answer: Expr, userInput: Expr, definitions?: SelectedDefinitions): string | null {
     const pair = findDiffPair(userInput, answer);
     if (!pair) return null;
 
@@ -30,9 +39,10 @@ export function provideFeedback(answer: Expr, userInput: Expr): string | null {
         return `${userNode.name} ${symbolDisplay["notelem"]} ${correctNode.name}`;
     }
 
-    // Both plain variables — wrong value
+    // Both plain variables — look up role names from definitions for specific feedback
     if (userNode.kind === "var" && correctNode.kind === "var") {
-        return `'${userNode.name}' is not the right value here.`;
+        const correctRole = definitions ? findRoleName(correctNode, definitions) : undefined;
+        return `${userNode.name} ${symbolDisplay["notelem"]} ${correctRole ?? correctNode.name}`;
     }
 
     // Wrong integer

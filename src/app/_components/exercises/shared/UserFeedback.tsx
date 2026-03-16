@@ -6,7 +6,7 @@ import FillFeedback from "~/app/_components/exercises/shared/feedback/FillFeedba
 
 type UserFeedbackProps =
     | { exerciseType: "select"; results: [number, boolean][]; options: Expr[]; answers: Expr[]; }
-    | { exerciseType: "construct"; userAnswer?: { status: "valid"; expr: Expr } | { status: "invalid"; reason?: string }; correctAnswer?: Expr }
+    | { exerciseType: "construct"; userAnswer?: { status: "valid"; expr: Expr } | { status: "invalid"; reason?: string }; correctAnswer?: Expr; definitions?: Record<string, Expr> }
     | { exerciseType: "calculate"; }
     | { exerciseType: "fill"; }
 
@@ -16,7 +16,10 @@ export default function UserFeedback(props: UserFeedbackProps) {
         case "select":
             return <SelectFeedback results={props.results} options={props.options} answers={props.answers} />;
         case "construct":
-            return <ConstructFeedback />;
+            if (props.userAnswer?.status === "valid" && props.correctAnswer) {
+                return <ConstructFeedback userInput={props.userAnswer.expr} answer={props.correctAnswer} definitions={props.definitions} />;
+            }
+            return null;
         case "calculate":
             return <CalculateFeedback />;
         case "fill":

@@ -25,11 +25,14 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
   const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
+  const [submittedAnswer, setSubmittedAnswer] = useState<{ status: "valid"; expr: Expr } | { status: "invalid" } | null>(null);
+  const [resolvedAnswer, setResolvedAnswer] = useState<Expr>(answer);
 
   const handleTokensChange = (newTokens: PaletteItem[]) => {
     setTokens(newTokens);
     setErrorRange(null);
     setIsCorrect(null);
+    setSubmittedAnswer(null);
   };
 
   function handleAnswer(isMatch: boolean) {
@@ -53,6 +56,8 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
       const resolved = definitions ? substituteRoles(answer, definitions) : answer;
       const isMatch = exprEquals(userExpr, resolved);
+      setSubmittedAnswer({ status: "valid", expr: userExpr });
+      setResolvedAnswer(resolved);
       if (isMatch) {
         handleAnswer(true);
       }
@@ -62,6 +67,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
         handleAnswer(false);
       }
     } catch {
+      setSubmittedAnswer({ status: "invalid" });
       handleAnswer(false);
     }
   };
@@ -70,7 +76,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       <div>
         <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
-          <UserFeedback exerciseType="construct" />
+          {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} />}
           <Button variant="submit" className="w-100" onClick={checkAnswer}>{submitButton}</Button>
         </div>
       </div>
