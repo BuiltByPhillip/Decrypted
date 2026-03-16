@@ -80,33 +80,33 @@ describe("parseExpression", () => {
   // --- Leaf nodes ---
 
   it("parses a variable", () => {
-    expect(parseExpression("x")).toEqual({ kind: "var", name: "x" });
+    expect(parseExpression("x")).toMatchObject({ kind: "var", name: "x" });
   });
 
   it("parses an integer", () => {
-    expect(parseExpression("42")).toEqual({ kind: "int", value: 42 });
+    expect(parseExpression("42")).toMatchObject({ kind: "int", value: 42 });
   });
 
   it("parses a role reference", () => {
-    expect(parseExpression("{generator}")).toEqual({ kind: "role", name: "generator" });
+    expect(parseExpression("{generator}")).toMatchObject({ kind: "role", name: "generator" });
   });
 
   it("parses a placeholder", () => {
-    expect(parseExpression("$1")).toEqual({ kind: "placeholder", index: 1 });
+    expect(parseExpression("$1")).toMatchObject({ kind: "placeholder", index: 1 });
   });
 
   // --- Constants ---
 
   it("parses \\reals as a constant", () => {
-    expect(parseExpression("\\reals")).toEqual({ kind: "constant", symbol: "reals" });
+    expect(parseExpression("\\reals")).toMatchObject({ kind: "constant", symbol: "reals" });
   });
 
   it("parses \\naturals as a constant", () => {
-    expect(parseExpression("\\naturals")).toEqual({ kind: "constant", symbol: "naturals" });
+    expect(parseExpression("\\naturals")).toMatchObject({ kind: "constant", symbol: "naturals" });
   });
 
   it("parses \\emptyset as a constant", () => {
-    expect(parseExpression("\\emptyset")).toEqual({ kind: "constant", symbol: "emptyset" });
+    expect(parseExpression("\\emptyset")).toMatchObject({ kind: "constant", symbol: "emptyset" });
   });
 
   it("parses all constant symbols without throwing", () => {
@@ -119,7 +119,7 @@ describe("parseExpression", () => {
   // --- Unary ---
 
   it("parses \\forall with an operand", () => {
-    expect(parseExpression("\\forall x")).toEqual({
+    expect(parseExpression("\\forall x")).toMatchObject({
       kind: "unary",
       op: "forall",
       operand: { kind: "var", name: "x" },
@@ -127,7 +127,7 @@ describe("parseExpression", () => {
   });
 
   it("parses \\exists with an operand", () => {
-    expect(parseExpression("\\exists n")).toEqual({
+    expect(parseExpression("\\exists n")).toMatchObject({
       kind: "unary",
       op: "exists",
       operand: { kind: "var", name: "n" },
@@ -137,7 +137,7 @@ describe("parseExpression", () => {
   // --- Binary arithmetic ---
 
   it("parses addition", () => {
-    expect(parseExpression("a + b")).toEqual({
+    expect(parseExpression("a + b")).toMatchObject({
       kind: "binary", op: "add",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -145,7 +145,7 @@ describe("parseExpression", () => {
   });
 
   it("parses subtraction", () => {
-    expect(parseExpression("a - b")).toEqual({
+    expect(parseExpression("a - b")).toMatchObject({
       kind: "binary", op: "sub",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -153,7 +153,7 @@ describe("parseExpression", () => {
   });
 
   it("parses multiplication", () => {
-    expect(parseExpression("a * b")).toEqual({
+    expect(parseExpression("a * b")).toMatchObject({
       kind: "binary", op: "mul",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -161,7 +161,7 @@ describe("parseExpression", () => {
   });
 
   it("parses division", () => {
-    expect(parseExpression("a / b")).toEqual({
+    expect(parseExpression("a / b")).toMatchObject({
       kind: "binary", op: "div",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -169,7 +169,7 @@ describe("parseExpression", () => {
   });
 
   it("parses power", () => {
-    expect(parseExpression("a ^ b")).toEqual({
+    expect(parseExpression("a ^ b")).toMatchObject({
       kind: "binary", op: "pow",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -177,7 +177,7 @@ describe("parseExpression", () => {
   });
 
   it("parses mod", () => {
-    expect(parseExpression("a mod b")).toEqual({
+    expect(parseExpression("a mod b")).toMatchObject({
       kind: "binary", op: "mod",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -185,7 +185,7 @@ describe("parseExpression", () => {
   });
 
   it("parses logical and", () => {
-    expect(parseExpression("a and b")).toEqual({
+    expect(parseExpression("a and b")).toMatchObject({
       kind: "binary", op: "and",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -193,7 +193,7 @@ describe("parseExpression", () => {
   });
 
   it("parses logical or", () => {
-    expect(parseExpression("a or b")).toEqual({
+    expect(parseExpression("a or b")).toMatchObject({
       kind: "binary", op: "or",
       left: { kind: "var", name: "a" },
       right: { kind: "var", name: "b" },
@@ -210,7 +210,7 @@ describe("parseExpression", () => {
 
   it("* binds tighter than +: a + b * c → add(a, mul(b, c))", () => {
     const result = parseExpression("a + b * c");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: "binary", op: "add",
       left: { kind: "var", name: "a" },
       right: {
@@ -223,7 +223,7 @@ describe("parseExpression", () => {
 
   it("* binds tighter than +: a * b + c → add(mul(a, b), c)", () => {
     const result = parseExpression("a * b + c");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: "binary", op: "add",
       left: {
         kind: "binary", op: "mul",
@@ -255,7 +255,7 @@ describe("parseExpression", () => {
 
   it("parentheses override precedence: (a + b) * c → mul(add(a,b), c)", () => {
     const result = parseExpression("(a + b) * c");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: "binary", op: "mul",
       left: {
         kind: "binary", op: "add",
@@ -276,7 +276,7 @@ describe("parseExpression", () => {
 
   it("parses \\elem as a binary infix operator", () => {
     const result = parseExpression("a \\elem \\naturals");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: "binary", op: "elem",
       left: { kind: "var", name: "a" },
       right: { kind: "constant", symbol: "naturals" },
@@ -285,7 +285,7 @@ describe("parseExpression", () => {
 
   it("parses \\subset as a binary infix operator", () => {
     const result = parseExpression("A \\subset B");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       kind: "binary", op: "subset",
       left: { kind: "var", name: "A" },
       right: { kind: "var", name: "B" },

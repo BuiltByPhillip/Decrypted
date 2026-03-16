@@ -6,6 +6,9 @@ import {
   paletteItemToExpr,
   paletteItemToString,
   substituteRoles,
+  exprDiff,
+  exprListContains,
+  findDiffPair,
 } from "../app/hooks/expr";
 import { parseExpression } from "../app/hooks/parser";
 import type { Expr, PaletteItem } from "../app/hooks/parser";
@@ -408,7 +411,7 @@ describe("round-trip: token list → string → parseExpression", () => {
   it("constant: [\\naturals]", () => {
     const tokens: PaletteItem[] = [{ kind: "constantSymbol", op: "naturals" }];
     const str = tokens.map(paletteItemToString).join(" ");
-    expect(parseExpression(str)).toEqual({ kind: "constant", symbol: "naturals" });
+    expect(parseExpression(str)).toMatchObject({ kind: "constant", symbol: "naturals" });
   });
 
   it("unary: [\\forall, x]", () => {
@@ -427,7 +430,7 @@ describe("round-trip: token list → string → parseExpression", () => {
       { kind: "constantSymbol", op: "naturals" },
     ];
     const str = tokens.map(paletteItemToString).join(" ");
-    expect(parseExpression(str)).toEqual({
+    expect(parseExpression(str)).toMatchObject({
       kind: "binary", op: "elem",
       left: { kind: "var", name: "a" },
       right: { kind: "constant", symbol: "naturals" },
@@ -444,5 +447,167 @@ describe("round-trip: token list → string → parseExpression", () => {
     const professorExpr = parseExpression("a - b");
     const studentExpr = parseExpression("b - a");
     expect(exprEquals(studentExpr, professorExpr)).toBe(false);
+  });
+});
+
+// ─── exprDiff ─────────────────────────────────────────────────────────────────
+
+describe("exprDiff", () => {
+  it("returns null for equal expressions", () => {
+    const e: Expr = { kind: "var", name: "x" };
+    expect(exprDiff(e, e)).toBeNull();
+  });
+
+  it("returns the user node when top-level kinds differ", () => {
+    const user: Expr = { kind: "var", name: "x" };
+    const answer: Expr = { kind: "int", value: 1 };
+    expect(exprDiff(user, answer)).toEqual(user);
+  });
+
+  it("returns the user node when vars differ", () => {
+    const user: Expr = { kind: "var", name: "b" };
+    const answer: Expr = { kind: "var", name: "g" };
+    expect(exprDiff(user, answer)).toEqual(user);
+  });
+
+  it("recurses into matching unary to find inner mismatch", () => {
+    const user: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    const answer: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "y" } };
+    expect(exprDiff(user, answer)).toEqual({ kind: "var", name: "x" });
+  });
+
+  it("recurses into matching binary op to find inner mismatch", () => {
+    const user: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "b" },
+      right: { kind: "var", name: "a" },
+    };
+    const answer: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "g" },
+      right: { kind: "var", name: "a" },
+    };
+    expect(exprDiff(user, answer)).toEqual({ kind: "var", name: "b" });
+  });
+
+  it("returns a slot for operator-only mismatch when operands match", () => {
+    const user: Expr = {
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+      opTokenIndex: 1,
+    };
+    const answer: Expr = {
+      kind: "binary", op: "sub",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    };
+    const result = exprDiff(user, answer);
+    expect(result).toEqual({ kind: "slot", tokenRange: { start: 1, end: 2 } });
+  });
+
+  it("handles commutative mismatch: a + b vs a + c finds c/b", () => {
+    const user: Expr = {
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    };
+    const answer: Expr = {
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "c" },
+    };
+    expect(exprDiff(user, answer)).toEqual({ kind: "var", name: "b" });
+  });
+});
+
+// ─── exprListContains ─────────────────────────────────────────────────────────
+
+describe("exprListContains", () => {
+  const list: Expr[] = [
+    { kind: "var", name: "g" },
+    { kind: "int", value: 5 },
+    { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } },
+  ];
+
+  it("returns true when expr is in the list", () => {
+    expect(exprListContains({ kind: "var", name: "g" }, list)).toBe(true);
+  });
+
+  it("returns true for commutative match (a + b matches b + a in list)", () => {
+    const swapped: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprListContains(swapped, list)).toBe(true);
+  });
+
+  it("returns false when expr is not in the list", () => {
+    expect(exprListContains({ kind: "var", name: "z" }, list)).toBe(false);
+  });
+
+  it("returns false for an empty list", () => {
+    expect(exprListContains({ kind: "var", name: "x" }, [])).toBe(false);
+  });
+});
+
+// ─── findDiffPair ─────────────────────────────────────────────────────────────
+
+describe("findDiffPair", () => {
+  it("returns null for equal expressions", () => {
+    const e: Expr = { kind: "var", name: "x" };
+    expect(findDiffPair(e, e)).toBeNull();
+  });
+
+  it("returns [userNode, correctNode] for differing leaf nodes", () => {
+    const user: Expr = { kind: "var", name: "b" };
+    const answer: Expr = { kind: "var", name: "g" };
+    expect(findDiffPair(user, answer)).toEqual([user, answer]);
+  });
+
+  it("returns [userRole, correctRole] when roles are swapped", () => {
+    const user: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "role", name: "bob_secret" },
+      right: { kind: "role", name: "alice_secret" },
+    };
+    const answer: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "role", name: "generator" },
+      right: { kind: "role", name: "alice_secret" },
+    };
+    expect(findDiffPair(user, answer)).toEqual([
+      { kind: "role", name: "bob_secret" },
+      { kind: "role", name: "generator" },
+    ]);
+  });
+
+  it("recurses into matching unary to find the differing pair", () => {
+    const user: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } };
+    const answer: Expr = { kind: "unary", op: "forall", operand: { kind: "var", name: "y" } };
+    expect(findDiffPair(user, answer)).toEqual([
+      { kind: "var", name: "x" },
+      { kind: "var", name: "y" },
+    ]);
+  });
+
+  it("recurses into matching binary op to find the differing pair", () => {
+    const user: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "b" },
+      right: { kind: "var", name: "n" },
+    };
+    const answer: Expr = {
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "g" },
+      right: { kind: "var", name: "n" },
+    };
+    expect(findDiffPair(user, answer)).toEqual([
+      { kind: "var", name: "b" },
+      { kind: "var", name: "g" },
+    ]);
+  });
+
+  it("returns top-level pair when structures differ entirely", () => {
+    const user: Expr = { kind: "var", name: "x" };
+    const answer: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(findDiffPair(user, answer)).toEqual([user, answer]);
   });
 });
