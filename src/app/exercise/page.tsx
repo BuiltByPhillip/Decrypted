@@ -2,7 +2,7 @@
 
 import DefinitionsPicker from "~/app/_components/definition/DefinitionsPicker";
 import type { Code, Expr } from "~/app/hooks/parser";
-import SelectExercise from "~/app/_components/exercises/selectExercise/select";
+import SelectExercise from "~/app/_components/exercises/select/select";
 import Button from "~/components/Button";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useLenis } from "~/components/SmoothScroll";

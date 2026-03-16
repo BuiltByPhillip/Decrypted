@@ -1,8 +1,8 @@
 "use client"
 
-import Option from "~/app/_components/exercises/selectExercise/option"
+import Option from "~/app/_components/exercises/select/option"
 import Button from "~/components/Button";
-import Hint from "~/app/_components/exercises/selectExercise/hint";
+import Hint from "~/app/_components/exercises/select/hint";
 import { useState } from "react";
 import type { Expr } from "~/app/hooks/parser"
 import { exprListContains, substituteRoles } from "~/app/hooks/expr";
@@ -20,17 +20,31 @@ type SelectExerciseProps = {
 
 export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction}: SelectExerciseProps) {
   const [selected, setSelected] = useState<number[]>([]);
+  const [isCorrect, setIsCorrect] = useState<[number, boolean][]>([]);
 
   const checkAnswer = () => {
-    const selectedExprs: Expr[] = selected.map(i => options[i] as Expr);
-    const isCorrect = selectedExprs.length > 0 && selectedExprs.every(expr => exprListContains(expr, answers));
-    onAnswerAction?.(isCorrect);
+    if (selected.length === 0) return;
+    const correctness: [number, boolean][] = selected.map(i => [i, exprListContains(options[i] as Expr, answers)]);
+    setIsCorrect(correctness);
+    onAnswerAction?.(correctness.every(([, correct]) => correct));
   }
 
   const handleSelect = (index: number) => {
+    if (isCorrect.length > 0) return;
     selected.includes(index)
       ? setSelected(selected.filter(option => option !== index))
       : setSelected([...selected, index]);
+  }
+
+  const handleButtonColor = (i: number): string => {
+    const result = isCorrect.find(([idx]) => idx === i);
+    if (result !== undefined) {
+      return result[1] // Checks if the boolean in the tuple is true
+        ? "bg-green text-green-foreground"
+        : "bg-danger text-black";
+    }
+    if (selected.includes(i)) return "bg-amber text-amber-foreground";
+    return "bg-dark text-muted border border-muted opacity-70"
   }
 
   return (
@@ -51,7 +65,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
         {options.map((option, i) => (
           <Option
             key={i}
-            className={`h-20 w-full hover:border-amber ${selected.includes(i) ? "bg-amber text-amber-foreground" : "text-muted border bg-dark border-muted opacity-70"}`}
+            className={`h-20 w-full hover:border-amber ${handleButtonColor(i)}`}
             text={substituteRoles(option, definitions!)}
             onClick={() => handleSelect(i)}
           />
