@@ -30,7 +30,7 @@ export default function DefinitionContainer({ selected, className }: DefinitionC
     if (selected.size === 0) return null;
 
     return (
-        <div className={`min-w-40 min-h-60 border-2 border-muted rounded-2xl p-4 bg-muted/10 transition-all duration-300 ease-out ${visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2"} ${className}`}>
+        <div className={`min-w-40 min-h-40 border-2 border-muted rounded-2xl p-4 bg-dark/40 transition-all duration-300 ease-out ${visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2"} ${className}`}>
             <span className="font-bold text-xl text-muted select-none">Definitions</span>
             <div className={`grid grid-cols-[auto_1fr_2fr] pt-2 text-muted`}>
                 {convertToList().map(([role, expr]) => (
