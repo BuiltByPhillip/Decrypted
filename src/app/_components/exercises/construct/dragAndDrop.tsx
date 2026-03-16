@@ -70,7 +70,9 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
     onTokensChangeAction?.(next)
   }
 
+  const dragIdRef = useRef(0);
   const [dragState, setDragState] = useState<{
+    id: number; // unique per drag — used as React key to force DragGhost remount
     item: PaletteItem;
     x: number;
     y: number;
@@ -106,7 +108,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
   };
 
   const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
-    setDragState({ item, x, y, offsetX, offsetY });
+    setIsDragDisintegrating(false);
+    setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY });
   };
 
   const handleDragDisintegrateComplete = () => {
@@ -120,7 +123,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
     // Remove immediately so the gap collapses. Restoration happens on drop if needed.
     setTokens(tokens.filter((_, i) => i !== index));
     setDragCursorPos({ x, y });
-    setDragState({ item, x, y, offsetX, offsetY, tokenIndex: index });
+    setIsDragDisintegrating(false);
+    setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY, tokenIndex: index });
   };
 
   return (
@@ -194,6 +198,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
       {dragState && (
         <DragGhost
+          key={dragState.id}
           paletteItem={dragState.item}
           startX={dragState.x}
           startY={dragState.y}
