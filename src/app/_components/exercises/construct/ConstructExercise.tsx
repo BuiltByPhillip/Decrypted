@@ -63,15 +63,12 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       }
       else {
         const diff = exprDiff(userExpr, resolved);
-        if (diff?.kind === "binary" && diff.opTokenIndex !== undefined) {
-          setErrorRange({ start: diff.opTokenIndex, end: diff.opTokenIndex + 1 });
-        } else {
-          setErrorRange(diff?.tokenRange ?? null);
-        }
+        setErrorRange(diff?.tokenRange ?? null);
         handleAnswer(false);
       }
     } catch {
       setSubmittedAnswer({ status: "invalid" });
+      setErrorRange({ start: 0, end: tokens.length });
       handleAnswer(false);
     }
   };

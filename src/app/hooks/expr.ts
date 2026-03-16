@@ -99,9 +99,18 @@ export function exprDiff(user: Expr, answer: Expr): Expr | null {
     return exprDiff(user.operand, answer.operand)
   }
 
-  // Same structure, different operator — highlight just the operator token
+  // Different operator — highlight just the operator token when the user started correctly:
+  // either the left children match exactly, or the user's left is a simple var matching
+  // the leftmost leaf of the correct tree (e.g. `g = a mod p` vs `g^a mod p`).
   if (user.kind === "binary" && answer.kind === "binary" && user.op !== answer.op) {
-    if (exprEquals(user.left, answer.left) && exprEquals(user.right, answer.right) && user.opTokenIndex !== undefined) {
+    const leftMatches = exprEquals(user.left, answer.left);
+    const startsCorrectly = user.left.kind === "var" && (() => {
+      let e: Expr = answer;
+      while (e.kind === "binary") e = e.left;
+      while (e.kind === "unary") e = e.operand;
+      return exprEquals(user.left, e);
+    })();
+    if ((leftMatches || startsCorrectly) && user.opTokenIndex !== undefined) {
       return { kind: "slot", tokenRange: { start: user.opTokenIndex, end: user.opTokenIndex + 1 } };
     }
   }
@@ -156,6 +165,7 @@ export function findDiffPair(user: Expr, answer: Expr): [Expr, Expr] | null {
 
 /** Maps operator names to their display symbols for string serialization */
 export const OP_TO_STRING: Record<string, string> = {
+  // Arithmetic / logic operators
   pow: "^",
   mod: " mod ",
   mul: " * ",
@@ -167,6 +177,26 @@ export const OP_TO_STRING: Record<string, string> = {
   equal: " = ",
   and: " and ",
   or: " or ",
+  // Number theory
+  divides: " | ",
+  notdivides: " \u2224 ",
+  lessequal: " \u2264 ",
+  greaterequal: " \u2265 ",
+  // Set theory / relations
+  elem: " \u2208 ",
+  notelem: " \u2209 ",
+  subset: " \u2286 ",
+  union: " \u222A ",
+  intersection: " \u2229 ",
+  // Cryptographic / protocol
+  xor: " \u2295 ",
+  concat: " || ",
+  congruent: " \u2261 ",
+  notequal: " \u2260 ",
+  leftarrow: " \u2190 ",
+  rightarrow: " \u2192 ",
+  biarrow: " \u2194 ",
+  randomsample: " \u2190$ ",
 };
 
 /**
