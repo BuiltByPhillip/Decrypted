@@ -1,38 +1,28 @@
-import type {ExerciseType} from "~/app/hooks/parser";
+import type { Expr} from "~/app/hooks/parser";
+import ConstructFeedback from "~/app/_components/exercises/shared/feedback/ConstructFeedback";
+import SelectFeedback from "~/app/_components/exercises/shared/feedback/SelectFeedback";
+import CalculateFeedback from "~/app/_components/exercises/shared/feedback/CalculateFeedback";
+import FillFeedback from "~/app/_components/exercises/shared/feedback/FillFeedback";
 
-type UserFeedbackProps = {
-    exerciseType: ExerciseType
-}
+type UserFeedbackProps =
+    | { exerciseType: "select"; results: [number, boolean][]; options: Expr[]; answers: Expr[]; }
+    | { exerciseType: "construct"; userAnswer: { status: "valid"; expr: Expr } | { status: "invalid"; reason?: string }; correctAnswer: Expr }
+    | { exerciseType: "calculate"; }
+    | { exerciseType: "fill"; }
 
 
-export default function UserFeedback({ exerciseType }: UserFeedbackProps) {
-    switch (exerciseType) {
+export default function UserFeedback(props: UserFeedbackProps) {
+    switch (props.exerciseType) {
         case "select":
-            return (
-                <div>
-                    Under construction
-                </div>
-            );
+            return <SelectFeedback results={props.results} options={props.options} answers={props.answers} />;
         case "construct":
-            return (
-                <div>
-                    Under construction
-                </div>
-            );
+            return <ConstructFeedback />;
         case "calculate":
-            return (
-                <div>
-                    Under construction
-                </div>
-            );
+            return <CalculateFeedback />;
         case "fill":
-            return (
-                <div>
-                    Under construction
-                </div>
-            );
+            return <FillFeedback />;
         default:
-            throw new Error(`UserFeedback not implemented for exercise type: ${exerciseType}`);
+            throw new Error(`UserFeedback not implemented for: ${(props as {exerciseType: string}).exerciseType}`);
             
     }
     

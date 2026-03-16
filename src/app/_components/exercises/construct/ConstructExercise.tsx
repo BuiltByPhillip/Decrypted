@@ -34,7 +34,12 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
 
   function handleAnswer(isMatch: boolean) {
     setIsCorrect(isMatch);
-    isMatch ? setSubmitButton("Correct!") : setSubmitButton("Incorrect!")
+    if (isMatch) {
+      setSubmitButton("Correct!");
+    } else {
+      setSubmitButton("Incorrect!");
+      setTimeout(() => setSubmitButton("Check answer"), 2500);
+    }
     if (isMatch) setErrorRange(null);
     onAnswerAction?.(isMatch);
   }

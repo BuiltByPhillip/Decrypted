@@ -9,6 +9,8 @@ import { exprListContains, substituteRoles } from "~/app/hooks/expr";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 
+type ButtonState = "Answer" | "Correct!" | "Try again!"
+
 type SelectExerciseProps = {
   options: Expr[];
   description: string;
@@ -34,29 +36,35 @@ type SelectExerciseProps = {
  */
 export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction}: SelectExerciseProps) {
   const [selected, setSelected] = useState<number[]>([]);
-  const [isCorrect, setIsCorrect] = useState<[number, boolean][]>([]);
+  const [locked, setLocked] = useState<boolean>(false);
+  const [lastResults, setLastResults] = useState<[number, boolean][]>([]);
+  const [submitButton, setSubmitButton] = useState<ButtonState>("Answer");
 
   const checkAnswer = () => {
     if (selected.length === 0) return;
     const correctness: [number, boolean][] = selected.map(i => [i, exprListContains(options[i] as Expr, answers)]);
-    setIsCorrect(correctness);
-    onAnswerAction?.(correctness.every(([, correct]) => correct));
+    const allCorrect = correctness.every(([, correct]) => correct) && correctness.length === answers.length;
+    setLastResults(correctness);
+    onAnswerAction?.(allCorrect);
+    if (allCorrect) {
+      setLocked(true);
+      setSubmitButton("Correct!");
+    } else {
+      setSelected([]);
+      setSubmitButton("Try again!");
+      setTimeout(() => setSubmitButton("Answer"), 2500);
+    }
   }
 
   const handleSelect = (index: number) => {
-    if (isCorrect.length > 0) return;
+    if (locked) return;
     selected.includes(index)
       ? setSelected(selected.filter(option => option !== index))
       : setSelected([...selected, index]);
   }
 
   const handleButtonColor = (i: number): string => {
-    const result = isCorrect.find(([idx]) => idx === i);
-    if (result !== undefined) {
-      return result[1] // Checks if the boolean in the tuple is true
-        ? "bg-green text-green-foreground"
-        : "bg-danger text-black";
-    }
+    if (locked && selected.includes(i)) return "bg-green text-green-foreground";
     if (selected.includes(i)) return "bg-amber text-amber-foreground";
     return "bg-dark text-muted border border-muted opacity-70"
   }
@@ -87,17 +95,17 @@ export default function SelectExercise({options, description, prompt, hint, defi
       </div>
 
       <div className="relative flex justify-center w-full">
-        <div className="flex flex-col">
+        <div className="flex flex-col items-center">
           {/* User feedback */}
-          <UserFeedback exerciseType="select" />
+          <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />
           
           {/* Answer button */}
           <Button
               variant="submit"
-              className={"w-100 py-3"}
+              className={"w-100 py-3 mt-3"}
               onClick={() => checkAnswer()}
           >
-            Answer
+            {submitButton}
           </Button>
         </div>
         
