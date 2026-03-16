@@ -18,14 +18,18 @@ export default function DefinitionContainer({ selected, className }: DefinitionC
     if (selected.size === 0) return null;
 
     return (
-        <div className={`grid grid-cols-[1fr_auto_auto] justify-items-start min-w-60 min-h-100 border-2 transition delay-200 border-muted rounded-2xl ${className} p-4 text-muted`}>
-            {convertToList().map(([role, expr]) => (
-                <React.Fragment key={role}>
-                    <span className="font-bold">{role}</span>
-                    <span>{symbolDisplay["elem"]}</span>
-                    <span>{exprToString(expr)}</span>
-                </React.Fragment>
-            ))}
+        <div className={`min-w-40 min-h-60 border-2 border-muted rounded-2xl p-4 ${className}`}>
+            <span className="font-bold text-xl text-muted select-none">Your Definitions</span>
+            <div className={`grid grid-cols-[2fr_1fr_auto] pt-2 text-muted`}>
+                {convertToList().map(([role, expr]) => (
+                    <React.Fragment key={role}>
+                        <span className="text-left">{role}</span>
+                        <span className="text-center">{symbolDisplay["elem"]}</span>
+                        <span className="text-right">{exprToString(expr)}</span>
+                    </React.Fragment>
+                ))}
+            </div>
         </div>
+        
     );
 }
