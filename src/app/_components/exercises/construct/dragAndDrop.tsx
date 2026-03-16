@@ -121,7 +121,10 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
     // Remove immediately so the gap collapses. Restoration happens on drop if needed.
-    setTokens(tokens.filter((_, i) => i !== index));
+    const filtered = tokens.filter((_, i) => i !== index);
+    setTokens(filtered);
+    // Notify parent immediately so error/correct colors are cleared before indices shift.
+    onTokensChangeAction?.(filtered);
     setDragCursorPos({ x, y });
     setIsDragDisintegrating(false);
     setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY, tokenIndex: index });
