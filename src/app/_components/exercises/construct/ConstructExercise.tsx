@@ -74,7 +74,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   };
 
   return (
-      <div>
+      <div className="w-full">
         <DragAndDrop prompt={prompt} description={description} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
           {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} />}

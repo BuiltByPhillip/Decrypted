@@ -7,8 +7,7 @@ import {
   ALL_SYMBOL_PALETTE_ITEMS,
   ALL_SET_PALETTE_ITEMS,
   PAR_PALETTE_ITEMS,
-  type Expr,
-  type PaletteItem, parseExpression, type TokenRange,
+  type PaletteItem, type TokenRange,
 } from "~/app/hooks/parser";
 import {
   DEFAULT_VALUE_ITEMS,
@@ -18,11 +17,9 @@ import {
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
-import {substituteRoles, exprEquals, paletteItemToString} from "~/app/hooks/expr";
 import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
-import type { SelectedDefinitions } from "~/app/exercise/page";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
 
 type DragAndDropProps = {
@@ -115,7 +112,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
   const handleDragDisintegrateComplete = () => {
     setIsDragDisintegrating(false);
     setDragState(null);
-    // Token was already removed from `tokens` when drag started — just finalise
+    // Token was already removed from `tokens` when drag started — just finalize
     updateTokens(tokens);
   };
 
@@ -131,7 +128,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col relative w-full">
+    <div ref={containerRef} className="flex flex-col relative w-full h-full">
       {(description ?? prompt) && (
         <div className="flex flex-col items-center p-8 gap-3">
           {description && <span className="text-4xl font-bold text-gray">{description}</span>}
@@ -244,9 +241,12 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         />
       )}
 
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-end pt-50">
-        <div></div>
-        <div className="flex flex-col">
+      <div className="flex flex-col items-center pt-15 w-full">
+        <div className="flex justify-end w-7/10">
+          <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="" />
+        </div>
+        
+        <div className="flex flex-col pt-5">
           <Button
             variant="ghostMuted"
             className="flex justify-end pr-3 select-none"
@@ -255,7 +255,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
           >
             Clear expression
           </Button>
-          <div className="flex items-center justify-center select-none border-1 border-muted w-150 h-30 rounded-2xl overflow-hidden px-3">
+          <div className="flex items-center justify-center select-none border border-muted w-150 h-30 rounded-2xl overflow-hidden px-3">
             <TokenContainer
               tokens={tokens}
               isDragging={!!dragState}
@@ -267,7 +267,6 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
             />
           </div>
         </div>
-        <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="ml-70"/>
       </div>
     </div>
   );
