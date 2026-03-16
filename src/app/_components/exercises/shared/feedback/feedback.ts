@@ -1,5 +1,5 @@
 import {type Expr, symbolDisplay} from "~/app/hooks/parser";
-import {exprEquals, findDiffPair} from "~/app/hooks/expr";
+import {exprEquals, findDiffPair, OP_TO_STRING} from "~/app/hooks/expr";
 import type {SelectedDefinitions} from "~/app/exercise/page";
 
 /**
@@ -52,7 +52,7 @@ export function provideFeedback(answer: Expr, userInput: Expr, definitions?: Sel
 
     // Different operators on otherwise matching trees
     if (userNode.kind === "binary" && correctNode.kind === "binary" && userNode.op !== correctNode.op) {
-        return `The operator in your expression is incorrect.`;
+        return `The operator '${OP_TO_STRING[userNode.op!]}' used in your expression is incorrect.`;
     }
 
     // Structurally different shapes

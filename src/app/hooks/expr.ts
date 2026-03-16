@@ -155,7 +155,7 @@ export function findDiffPair(user: Expr, answer: Expr): [Expr, Expr] | null {
 }
 
 /** Maps operator names to their display symbols for string serialization */
-const OP_TO_STRING: Record<string, string> = {
+export const OP_TO_STRING: Record<string, string> = {
   pow: "^",
   mod: " mod ",
   mul: " * ",
