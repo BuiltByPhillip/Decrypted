@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {type Expr, symbolDisplay} from "~/app/hooks/parser";
 import {exprToString} from "~/app/hooks/expr";
 
@@ -10,15 +10,22 @@ type DefinitionContainerProps = {
 
 
 export default function DefinitionContainer({ selected, className }: DefinitionContainerProps) {
-    
+    const [visible, setVisible] = useState(false);
+
     function convertToList() {
         return Array.from(selected.entries())
     }
 
+    useEffect(() => {
+        if (selected.size > 0) {
+            requestAnimationFrame(() => setVisible(true));
+        }
+    }, [selected.size > 0]);
+
     if (selected.size === 0) return null;
 
     return (
-        <div className={`min-w-40 min-h-60 border-2 border-muted rounded-2xl p-4 bg-muted/10 ${className}`}>
+        <div className={`min-w-40 min-h-60 border-2 border-muted rounded-2xl p-4 bg-muted/10 transition-all duration-300 ease-out ${visible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-2"} ${className}`}>
             <span className="font-bold text-xl text-muted select-none">Definitions</span>
             <div className={`grid grid-cols-[2fr_1fr_auto] pt-2 text-muted`}>
                 {convertToList().map(([role, expr]) => (
@@ -30,6 +37,6 @@ export default function DefinitionContainer({ selected, className }: DefinitionC
                 ))}
             </div>
         </div>
-        
+
     );
 }
