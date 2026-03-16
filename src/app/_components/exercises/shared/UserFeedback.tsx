@@ -6,7 +6,7 @@ import FillFeedback from "~/app/_components/exercises/shared/feedback/FillFeedba
 
 type UserFeedbackProps =
     | { exerciseType: "select"; results: [number, boolean][]; options: Expr[]; answers: Expr[]; }
-    | { exerciseType: "construct"; userAnswer: { status: "valid"; expr: Expr } | { status: "invalid"; reason?: string }; correctAnswer: Expr }
+    | { exerciseType: "construct"; userAnswer?: { status: "valid"; expr: Expr } | { status: "invalid"; reason?: string }; correctAnswer?: Expr }
     | { exerciseType: "calculate"; }
     | { exerciseType: "fill"; }
 

@@ -124,6 +124,36 @@ export function exprDiff(user: Expr, answer: Expr): Expr | null {
   return user; // Structural mismatch (different kind or operator)
 }
 
+/**
+ * Walks both expression trees in parallel and returns the first pair of
+ * sub-expressions that differ: [userNode, correctNode].
+ * Unlike `exprDiff`, this returns both the user's wrong node AND the
+ * corresponding correct node, enabling specific feedback messages.
+ * Returns null if the expressions are equal.
+ * @param user - The expression built by the user
+ * @param answer - The expected expression
+ * @returns A tuple [userNode, correctNode] at the first point of difference, or null if equal
+ */
+export function findDiffPair(user: Expr, answer: Expr): [Expr, Expr] | null {
+  if (exprEquals(user, answer)) return null;
+
+  // Same unary op — recurse into operand
+  if (user.kind === "unary" && answer.kind === "unary" && user.op === answer.op) {
+    return findDiffPair(user.operand, answer.operand);
+  }
+
+  // Same binary op — recurse into children
+  if (user.kind === "binary" && answer.kind === "binary" && user.op === answer.op) {
+    if (COMMUTATIVE_OPS.has(user.op ?? "")) {
+      if (exprEquals(user.left, answer.left)) return findDiffPair(user.right, answer.right);
+      if (exprEquals(user.left, answer.right)) return findDiffPair(user.right, answer.left);
+    }
+    return findDiffPair(user.left, answer.left) ?? findDiffPair(user.right, answer.right);
+  }
+
+  return [user, answer];
+}
+
 /** Maps operator names to their display symbols for string serialization */
 const OP_TO_STRING: Record<string, string> = {
   pow: "^",

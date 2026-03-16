@@ -18,13 +18,13 @@ type ConstructExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-type buttonState = "Check answer" | "Correct!" | "Incorrect!"
+type ButtonState = "Check answer" | "Correct!" | "Incorrect!"
 
 export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
-  const [submitButton, setSubmitButton] = useState<buttonState>("Check answer");
+  const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
 
   const handleTokensChange = (newTokens: PaletteItem[]) => {
     setTokens(newTokens);
