@@ -110,18 +110,16 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
   };
 
   const handleDragDisintegrateComplete = () => {
-    const srcIndex = dragState?.tokenIndex;
     setIsDragDisintegrating(false);
     setDragState(null);
-    if (srcIndex !== undefined) {
-      const next = tokens.filter((_, i) => i !== srcIndex);
-      updateTokens(next);
-    }
+    // Token was already removed from `tokens` when drag started — just finalise
+    updateTokens(tokens);
   };
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
-    // Don't remove the token yet — keep it as an invisible placeholder so the
-    // layout doesn't collapse. Removal and insertion both happen on drop.
+    // Remove immediately so the gap collapses. Restoration happens on drop if needed.
+    setTokens(tokens.filter((_, i) => i !== index));
+    setDragCursorPos({ x, y });
     setDragState({ item, x, y, offsetX, offsetY, tokenIndex: index });
   };
 
@@ -222,19 +220,16 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
               }
               // Palette items dropped on trash are discarded — nothing to do
             } else if (gapIndex !== null) {
-              let next = [...tokens];
-              if (srcIndex !== undefined) {
-                // Remove placeholder first, then adjust gap index for the shift
-                next = next.filter((_, i) => i !== srcIndex);
-                const insertAt = gapIndex > srcIndex ? gapIndex - 1 : gapIndex;
-                next.splice(insertAt, 0, dragState.item);
-              } else {
-                next.splice(gapIndex, 0, dragState.item);
-              }
-              updateTokens(next)
+              // Token already removed from `tokens` (if from token list), insert directly
+              const next = [...tokens];
+              next.splice(gapIndex, 0, dragState.item);
+              updateTokens(next);
+            } else if (srcIndex !== undefined) {
+              // Dropped nowhere valid: restore the token at its original position
+              const next = [...tokens];
+              next.splice(srcIndex, 0, dragState.item);
+              setTokens(next);
             }
-            // Dropped nowhere valid: if from token list, placeholder is still in
-            // the list and becomes visible again when dragState clears. No restore needed.
 
             setDragState(null);
           }}
@@ -257,7 +252,6 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
               tokens={tokens}
               isDragging={!!dragState}
               dragPos={dragCursorPos}
-              draggingTokenIndex={dragState?.tokenIndex}
               onGapHover={(index) => { hoveredGapRef.current = index; }}
               onTokenStartDrag={onTokenStartDrag}
               errorRange={errorRange}

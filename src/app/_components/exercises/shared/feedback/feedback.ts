@@ -56,5 +56,5 @@ export function provideFeedback(answer: Expr, userInput: Expr, definitions?: Sel
     }
 
     // Structurally different shapes
-    return `Part of your expression has an incorrect structure.`;
+    return `You have provided an invalid structure`;
 }
