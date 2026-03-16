@@ -8,7 +8,12 @@ type DefinitionContainerProps = {
 }
 
 
-
+/**
+ * A container that showcases the user selected definitions,
+ * @param selected - The definitions that the user has selected in the definition step.
+ * @param className - Tailwind classes for styling applied to the outer div.
+ * @constructor
+ */
 export default function DefinitionContainer({ selected, className }: DefinitionContainerProps) {
     const [visible, setVisible] = useState(false);
 
