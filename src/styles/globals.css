@@ -163,6 +163,11 @@ body::-webkit-scrollbar {
   50% { transform: translateY(-6px) scale(1.12); }
 }
 
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-150%) skewX(-12deg); }
+  100% { transform: translateX(300%) skewX(-12deg); }
+}
+
 @keyframes shimmer {
   0% {
     background-position: 200% center;

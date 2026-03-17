@@ -39,6 +39,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
   const [locked, setLocked] = useState<boolean>(false);
   const [lastResults, setLastResults] = useState<[number, boolean][]>([]);
   const [submitButton, setSubmitButton] = useState<ButtonState>("Answer");
+  const [justCorrect, setJustCorrect] = useState<boolean>(false);
 
   const checkAnswer = () => {
     if (selected.length === 0) return;
@@ -49,6 +50,8 @@ export default function SelectExercise({options, description, prompt, hint, defi
     if (allCorrect) {
       setLocked(true);
       setSubmitButton("Correct!");
+      setJustCorrect(true);
+      setTimeout(() => setJustCorrect(false), 500);
     } else {
       setSelected([]);
       setSubmitButton("Try again!");
@@ -90,6 +93,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
             className={`h-20 w-full hover:border-amber ${handleButtonColor(i)}`}
             text={substituteRoles(option, definitions!)}
             onClick={() => handleSelect(i)}
+            justCorrect={justCorrect && selected.includes(i)}
           />
         ))}
       </div>

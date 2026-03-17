@@ -6,22 +6,27 @@ import { exprToString } from "~/app/hooks/expr";
 type OptionProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   text: Expr;
   selected?: boolean;
+  justCorrect?: boolean;
 }
 
 export default function Option({
   className = "",
   text,
   selected,
+  justCorrect,
   ...props
 }: OptionProps) {
 
   return (
     <Button
       variant="option"
-      className={`${className}`}
+      className={`relative overflow-hidden ${className}`}
       {...props}
     >
       {exprToString(text)}
+      {justCorrect && (
+        <span className="pointer-events-none absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-[shimmer-sweep_0.65s_ease-in-out]" />
+      )}
     </Button>
   );
 }
