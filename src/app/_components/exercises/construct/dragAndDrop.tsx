@@ -241,8 +241,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         />
       )}
 
-      <div className="flex flex-col items-center pt-15 w-full">
-        <div className="flex justify-end w-7/10">
+      <div className="flex flex-col items-center pt-10 w-full">
+        <div className="flex justify-end w-8/10">
           <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="" />
         </div>
         
