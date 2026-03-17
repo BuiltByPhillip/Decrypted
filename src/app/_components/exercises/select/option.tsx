@@ -7,6 +7,7 @@ type OptionProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   text: Expr;
   selected?: boolean;
   justCorrect?: boolean;
+  wrongAnswer?: boolean;
 }
 
 export default function Option({
@@ -14,13 +15,14 @@ export default function Option({
   text,
   selected,
   justCorrect,
+  wrongAnswer,
   ...props
 }: OptionProps) {
 
   return (
     <Button
       variant="option"
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-hidden ${className} ${wrongAnswer ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
       {...props}
     >
       {exprToString(text)}

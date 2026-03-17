@@ -40,6 +40,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
   const [lastResults, setLastResults] = useState<[number, boolean][]>([]);
   const [submitButton, setSubmitButton] = useState<ButtonState>("Answer");
   const [justCorrect, setJustCorrect] = useState<boolean>(false);
+  const [wrongAnswer, setWrongAnswer] = useState<boolean>(false);
 
   const checkAnswer = () => {
     if (selected.length === 0) return;
@@ -53,8 +54,12 @@ export default function SelectExercise({options, description, prompt, hint, defi
       setJustCorrect(true);
       setTimeout(() => setJustCorrect(false), 500);
     } else {
-      setSelected([]);
+      setWrongAnswer(true);
       setSubmitButton("Try again!");
+      setTimeout(() => {
+        setSelected([]);
+        setWrongAnswer(false);
+      }, 550);
       setTimeout(() => setSubmitButton("Answer"), 2500);
     }
   }
@@ -68,6 +73,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
 
   const handleButtonColor = (i: number): string => {
     if (locked && selected.includes(i)) return "bg-green text-green-foreground";
+    if (wrongAnswer && selected.includes(i)) return "bg-danger text-white";
     if (selected.includes(i)) return "bg-amber text-amber-foreground";
     return "bg-dark text-muted border border-muted opacity-70"
   }
@@ -94,6 +100,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
             text={substituteRoles(option, definitions!)}
             onClick={() => handleSelect(i)}
             justCorrect={justCorrect && selected.includes(i)}
+            wrongAnswer={wrongAnswer && selected.includes(i)}
           />
         ))}
       </div>
