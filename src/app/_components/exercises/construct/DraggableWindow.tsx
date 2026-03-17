@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef } from "react";
 type Position = { x: number; y: number };
 
 type DraggableWindowProps = {
-  id: string;
   defaultPosition: Position;
   children: React.ReactNode;
   zIndex?: number;
@@ -11,54 +10,25 @@ type DraggableWindowProps = {
   containerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-const STORAGE_KEY = "draggable-window-positions";
-
-function loadPositions(): Record<string, Position> {
-  if (typeof window === "undefined") return {};
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
-}
-
-function savePositions(positions: Record<string, Position>) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
-}
-
-function getInitialPosition(id: string, defaultPosition: Position): Position {
-  if (typeof window === "undefined") return defaultPosition;
-  const positions = loadPositions();
-  return positions[id] ?? defaultPosition;
-}
-
-export default function DraggableWindow({ id, defaultPosition, children, zIndex = 0, onBringToFront, containerRef }: DraggableWindowProps) {
-  const [isClient, setIsClient] = useState(false);
-  const [position, setPosition] = useState<Position>(defaultPosition);
+export default function DraggableWindow({ defaultPosition, children, zIndex = 0, onBringToFront, containerRef }: DraggableWindowProps) {
+  const [position, setPosition] = useState<Position | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  // Load saved position on mount (client-side only)
+  // Center horizontally on mount
   useEffect(() => {
-    setPosition(getInitialPosition(id, defaultPosition));
-    setIsClient(true);
-  }, [id, defaultPosition]);
-
-  // Save position when it changes (debounced on drag end)
-  const savePosition = (pos: Position) => {
-    const positions = loadPositions();
-    positions[id] = pos;
-    savePositions(positions);
-  };
+    const windowWidth = windowRef.current?.getBoundingClientRect().width ?? 0;
+    const containerWidth = containerRef?.current?.getBoundingClientRect().width ?? window.innerWidth;
+    setPosition({
+      x: Math.max(0, (containerWidth - windowWidth) / 2),
+      y: defaultPosition.y,
+    });
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Bring to front when clicked
     onBringToFront?.();
 
-    // Only start drag if clicking on the drag handle (data attribute)
     const target = e.target as HTMLElement;
     if (!target.closest("[data-drag-handle]")) return;
 
@@ -68,15 +38,15 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
     const offsetX = parentRect?.left ?? 0;
     const offsetY = parentRect?.top ?? 0;
     dragOffset.current = {
-      x: e.clientX - offsetX - position.x,
-      y: e.clientY - offsetY - position.y,
+      x: e.clientX - offsetX - (position?.x ?? 0),
+      y: e.clientY - offsetY - (position?.y ?? 0),
     };
   };
 
   useEffect(() => {
     if (!isDragging) return;
 
-    let currentPos = position;
+    let currentPos = position ?? defaultPosition;
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = windowRef.current?.getBoundingClientRect();
@@ -98,7 +68,6 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      savePosition(currentPos);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -110,19 +79,15 @@ export default function DraggableWindow({ id, defaultPosition, children, zIndex 
     };
   }, [isDragging]);
 
-  // Don't render until client-side position is loaded to prevent flicker
-  if (!isClient) {
-    return null;
-  }
-
   return (
     <div
       ref={windowRef}
       onMouseDown={handleMouseDown}
       style={{
         position: "absolute",
-        left: position.x,
-        top: position.y,
+        left: position?.x ?? 0,
+        top: position?.y ?? defaultPosition.y,
+        visibility: position ? "visible" : "hidden",
         cursor: isDragging ? "grabbing" : "default",
         zIndex: zIndex,
       }}

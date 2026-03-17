@@ -131,8 +131,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         </div>
       )}
       <DraggableWindow
-        id="palette"
-        defaultPosition={{ x: 20, y: 20 }}
+        defaultPosition={{ x: 0, y: 320 }}
         zIndex={getZIndex("palette")}
         onBringToFront={() => bringToFront("palette")}
         containerRef={containerRef}
@@ -146,8 +145,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         />
       </DraggableWindow>
       <DraggableWindow
-        id="values"
-        defaultPosition={{ x: 20, y: 120 }}
+        defaultPosition={{ x: 0, y: 140 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}
         containerRef={containerRef}

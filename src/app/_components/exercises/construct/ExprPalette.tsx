@@ -17,18 +17,9 @@ const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 export default function ExprPalette({ category, defaultItems, searchFn, onStartDrag, searchPlaceholder }: PaletteProps) {
   // Load expanded state from localStorage
-  const [isExpanded, setExpanded] = React.useState(() => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem(`exprPalette-${category}-expanded`);
-    return saved === 'true';
-  });
+  const [isExpanded, setExpanded] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
-
-  // Save expanded state to localStorage whenever it changes
-  React.useEffect(() => {
-    localStorage.setItem(`exprPalette-${category}-expanded`, String(isExpanded));
-  }, [isExpanded, category]);
 
   // Compute displayed items based on search query
   const displayedItems = searchQuery.trim() === ""
