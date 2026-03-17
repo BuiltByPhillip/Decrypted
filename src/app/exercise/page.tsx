@@ -8,6 +8,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useLenis } from "~/components/SmoothScroll";
 import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
 import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
+import FinishScreen from "~/app/_components/exercises/FinishScreen";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -17,6 +18,7 @@ export default function ExercisePage() {
   const [showExercises, setShowExercises] = useState(false);
   const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
   const [results, setResults] = useState<Record<number, boolean>>({});
+  const [showFinish, setShowFinish] = useState(false);
 
   const lenis = useLenis();
   const exerciseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -68,8 +70,24 @@ export default function ExercisePage() {
   }, []);
 
   const handleFinish = () => {
-    // TODO: Navigate to results page or handle completion
-    console.log("Exercises completed!", results);
+    setShowFinish(true);
+  };
+
+  useEffect(() => {
+    if (!showFinish || !lenis) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        lenis.resize();
+        lenis.scrollTo("bottom", { duration: 2 });
+      });
+    });
+  }, [showFinish, lenis]);
+
+  const handleRestart = () => {
+    setResults({});
+    setShowFinish(false);
+    setShowExercises(false);
+    lenis?.scrollTo("top", { duration: 1.5 });
   };
 
   const setExerciseRef = useCallback((index: number, el: HTMLDivElement | null) => {
@@ -187,6 +205,14 @@ export default function ExercisePage() {
           </div>
         );
       })}
+
+      {showFinish && (
+        <FinishScreen
+          totalExercises={exercises.length}
+          results={results}
+          onRestart={handleRestart}
+        />
+      )}
     </main>
   );
 }
