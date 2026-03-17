@@ -29,7 +29,7 @@ export default forwardRef<HTMLDivElement, TrashContainerProps>(function TrashCon
   return (
     <div
       ref={ref}
-      className={`${className} flex justify-center items-center xl:h-70 2xl:h-100 w-30 border rounded-2xl
+      className={`${className} flex justify-center items-center h-100 w-30 border rounded-2xl
         transition-all duration-300 ease-out
         ${getStyles()}`}>
       <Trash2 size={32} strokeWidth={1.5}/>
