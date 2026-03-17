@@ -7,6 +7,12 @@ html.lenis, html.lenis body {
 
 html, body {
   background-color: #121212;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 .lenis.lenis-smooth {
@@ -44,6 +50,14 @@ html, body {
   --color-mac-red: #ED6A5F;
   --color-mac-yellow: #F6BE50;
   --color-mac-green: #61C555;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 .custom-scrollbar {
