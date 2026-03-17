@@ -4,7 +4,7 @@ import React from "react";
 import { Plus, Minus, Search } from "lucide-react";
 
 type PaletteProps = {
-  category: "Operators" | "Values" | "Symbols" | "Sets"
+  category: "Palette" | "Values"
   defaultItems: Item[]
   searchFn: (query: string) => Item[]
   onStartDrag: (item: Item, x: number, y: number, offsetX: number, offsetY: number) => void;

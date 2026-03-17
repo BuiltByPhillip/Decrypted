@@ -3,17 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import ExprPalette from "~/app/_components/exercises/construct/ExprPalette";
 import {
-  ALL_OPERATOR_PALETTE_ITEMS,
-  ALL_SYMBOL_PALETTE_ITEMS,
-  ALL_SET_PALETTE_ITEMS,
-  PAR_PALETTE_ITEMS,
   type PaletteItem, type TokenRange,
 } from "~/app/hooks/parser";
 import {
+  DEFAULT_PALETTE_ITEMS,
   DEFAULT_VALUE_ITEMS,
-  searchOperators,
-  searchSets,
-  searchSymbols,
+  searchPalette,
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
@@ -83,8 +78,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
     if (saved) updateTokens(saved);
   }, []);
 
-  type PaletteId = "operators" | "symbols" | "sets" | "values";
-  const [stackOrder, setStackOrder] = useState<PaletteId[]>(["operators", "symbols", "sets", "values"]);
+  type PaletteId = "palette" | "values";
+  const [stackOrder, setStackOrder] = useState<PaletteId[]>(["palette", "values"]);
 
   const bringToFront = (id: PaletteId) => {
     setStackOrder(prev => [...prev.filter(item => item !== id), id]);
@@ -136,53 +131,23 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         </div>
       )}
       <DraggableWindow
-        id="operators"
+        id="palette"
         defaultPosition={{ x: 20, y: 20 }}
-        zIndex={getZIndex("operators")}
-        onBringToFront={() => bringToFront("operators")}
+        zIndex={getZIndex("palette")}
+        onBringToFront={() => bringToFront("palette")}
         containerRef={containerRef}
       >
         <ExprPalette
-          category="Operators"
-          defaultItems={[...PAR_PALETTE_ITEMS, ...ALL_OPERATOR_PALETTE_ITEMS]}
-          searchFn={searchOperators}
-          onStartDrag={onStartDrag}
-          searchPlaceholder="Search..."
-        />
-      </DraggableWindow>
-      <DraggableWindow
-        id="symbols"
-        defaultPosition={{ x: 20, y: 120 }}
-        zIndex={getZIndex("symbols")}
-        onBringToFront={() => bringToFront("symbols")}
-        containerRef={containerRef}
-      >
-        <ExprPalette
-          category="Symbols"
-          defaultItems={ALL_SYMBOL_PALETTE_ITEMS}
-          searchFn={searchSymbols}
-          onStartDrag={onStartDrag}
-          searchPlaceholder="Search..."
-        />
-      </DraggableWindow>
-      <DraggableWindow
-        id="sets"
-        defaultPosition={{ x: 20, y: 220 }}
-        zIndex={getZIndex("sets")}
-        onBringToFront={() => bringToFront("sets")}
-        containerRef={containerRef}
-      >
-        <ExprPalette
-          category="Sets"
-          defaultItems={ALL_SET_PALETTE_ITEMS}
-          searchFn={searchSets}
+          category="Palette"
+          defaultItems={DEFAULT_PALETTE_ITEMS}
+          searchFn={searchPalette}
           onStartDrag={onStartDrag}
           searchPlaceholder="Search..."
         />
       </DraggableWindow>
       <DraggableWindow
         id="values"
-        defaultPosition={{ x: 20, y: 320 }}
+        defaultPosition={{ x: 20, y: 120 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}
         containerRef={containerRef}

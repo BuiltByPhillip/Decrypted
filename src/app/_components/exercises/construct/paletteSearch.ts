@@ -9,6 +9,33 @@ import {
   type PaletteItem as Item,
 } from "~/app/hooks/parser";
 
+// Curated default palette: 2 rows (~24 items) covering the most common items
+export const DEFAULT_PALETTE_ITEMS: Item[] = [
+  { kind: "LPAR" },
+  { kind: "RPAR" },
+  { kind: "operator", op: "and" },
+  { kind: "operator", op: "or" },
+  { kind: "operator", op: "add" },
+  { kind: "operator", op: "sub" },
+  { kind: "operator", op: "mul" },
+  { kind: "operator", op: "div" },
+  { kind: "operator", op: "mod" },
+  { kind: "operator", op: "pow" },
+  { kind: "operator", op: "equal" },
+  { kind: "binarySymbol", op: "xor" },
+  { kind: "binarySymbol", op: "concat" },
+  { kind: "binarySymbol", op: "congruent" },
+  { kind: "binarySymbol", op: "notequal" },
+  { kind: "binarySymbol", op: "leftarrow" },
+  { kind: "binarySymbol", op: "rightarrow" },
+  { kind: "binarySymbol", op: "elem" },
+  { kind: "unarySymbol", op: "forall" },
+  { kind: "unarySymbol", op: "exists" },
+  { kind: "constantSymbol", op: "integers" },
+  { kind: "constantSymbol", op: "reals" },
+  { kind: "constantSymbol", op: "naturals" },
+];
+
 function matchSymbols<K extends "binarySymbol" | "unarySymbol" | "constantSymbol">(
   ops: readonly string[], kind: K, q: string, results: Item[]
 ) {
@@ -29,6 +56,9 @@ const PAREN_SEARCH_TERMS: { item: Item; terms: string[] }[] = [
   { item: { kind: "LPAR" }, terms: ["(", "left", "paren", "parenthesis"] },
   { item: { kind: "RPAR" }, terms: [")", "right", "paren", "parenthesis"] },
 ];
+
+const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
+const NON_SET_BINARY_SYMBOLS = BINARY_SYMBOLS.filter(op => !SET_BINARY_SET.has(op));
 
 // Search function for operators
 export function searchOperators(query: string): Item[] {
@@ -53,8 +83,7 @@ export function searchOperators(query: string): Item[] {
 export function searchSymbols(query: string): Item[] {
   const q = query.toLowerCase();
   const results: Item[] = [];
-  const nonSetBinary = BINARY_SYMBOLS.filter(op => !(SET_BINARY_SYMBOLS as readonly string[]).includes(op));
-  matchSymbols(nonSetBinary, "binarySymbol", q, results);
+  matchSymbols(NON_SET_BINARY_SYMBOLS, "binarySymbol", q, results);
   matchSymbols(UNARY_SYMBOLS, "unarySymbol", q, results);
   return results;
 }
@@ -66,6 +95,11 @@ export function searchSets(query: string): Item[] {
   matchSymbols(SET_BINARY_SYMBOLS, "binarySymbol", q, results);
   matchSymbols(CONSTANT_SYMBOLS, "constantSymbol", q, results);
   return results;
+}
+
+// Search function for the combined Palette (operators + symbols + sets)
+export function searchPalette(query: string): Item[] {
+  return [...searchOperators(query), ...searchSymbols(query), ...searchSets(query)];
 }
 
 // Search function for values (numbers and variables)
