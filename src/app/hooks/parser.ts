@@ -174,7 +174,7 @@ const EXERCISE_TYPES = [
   "construct", // Drag and drop
   "fill",
   "select", // Multiple choice
-  "calculate"
+  "calculate" // Computational exercise where the user performs a calculation 
 ] as const;
 
 export type ExerciseType = typeof EXERCISE_TYPES[number];

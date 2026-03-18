@@ -6,6 +6,7 @@ import {
   paletteItemToExpr,
   paletteItemToString,
   substituteRoles,
+  substituteRolesInString,
   exprDiff,
   exprListContains,
   findDiffPair,
@@ -371,6 +372,42 @@ describe("substituteRoles", () => {
     expect(substituteRoles(constant, defs)).toEqual(constant);
     const slot: Expr = { kind: "slot" };
     expect(substituteRoles(slot, defs)).toEqual(slot);
+  });
+});
+
+// ─── substituteRolesInString ──────────────────────────────────────────────────
+
+describe("substituteRolesInString", () => {
+  const defs = {
+    generator: { kind: "var" as const, name: "g" },
+    prime: { kind: "var" as const, name: "p" },
+  };
+
+  it("replaces a single role reference", () => {
+    expect(substituteRolesInString("The generator is {generator}", defs)).toBe("The generator is g");
+  });
+
+  it("replaces multiple role references", () => {
+    expect(substituteRolesInString("{generator} and {prime}", defs)).toBe("g and p");
+  });
+
+  it("leaves unknown roles unchanged", () => {
+    expect(substituteRolesInString("Choose {unknown}", defs)).toBe("Choose {unknown}");
+  });
+
+  it("returns the string unchanged when there are no role references", () => {
+    expect(substituteRolesInString("No roles here", defs)).toBe("No roles here");
+  });
+
+  it("replaces a role with a complex expression string", () => {
+    const complexDefs = {
+      public_key: { kind: "binary" as const, op: "mod", left: { kind: "binary" as const, op: "pow", left: { kind: "var" as const, name: "g" }, right: { kind: "var" as const, name: "a" } }, right: { kind: "var" as const, name: "p" } },
+    };
+    expect(substituteRolesInString("Compute {public_key}", complexDefs)).toBe("Compute g^a mod p");
+  });
+
+  it("handles an empty string", () => {
+    expect(substituteRolesInString("", defs)).toBe("");
   });
 });
 

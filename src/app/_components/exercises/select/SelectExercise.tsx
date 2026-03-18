@@ -83,7 +83,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
     <div className="flex flex-col items-center w-full">
 
       {/* Exercise description & prompt */}
-      <ExerciseDescription description={description} prompt={prompt}/>
+      <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
 
       {/* Multiple-choice option buttons */}
       <div className="grid w-full grid-cols-2 gap-4 pb-10 px-20">

@@ -17,6 +17,7 @@ import DraggableWindow from "~/app/_components/exercises/construct/DraggableWind
 import Button from "~/components/Button";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
 import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
+import type {SelectedDefinitions} from "~/app/exercise/page";
 
 type DragAndDropProps = {
   prompt: string;
@@ -24,6 +25,7 @@ type DragAndDropProps = {
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
+  definitions: SelectedDefinitions;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
@@ -47,7 +49,7 @@ function saveTokens(tokens: PaletteItem[] | null) {
   }
 }
 
-export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange, isCorrect }: DragAndDropProps) {
+export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange, isCorrect, definitions }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -127,7 +129,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
     <div ref={containerRef} className="flex flex-col relative w-full h-full">
 
       {/* Exercise description & prompt */}
-      <ExerciseDescription description={description} prompt={prompt}/>
+      <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
       
       <DraggableWindow
         defaultPosition={{ x: 0, y: 320 }}

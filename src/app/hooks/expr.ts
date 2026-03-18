@@ -342,3 +342,18 @@ export function paletteItemToString(item: PaletteItem): string {
       return ")";
   }
 }
+
+/**
+ * Replaces role references (e.g. `{generator}`, `{alice_secret}`) in a plain string with the
+ * actual symbols selected by the user. Used to substitute roles in description, prompt, and hint fields.
+ * @param text - The string potentially containing role references (e.g. `"Choose Alice's secret {alice_secret}"`)
+ * @param definitions - The user's selected symbol definitions
+ * @returns A new string with all `{roleName}` patterns replaced by their corresponding symbol,
+ *          or left unchanged if the role is not in definitions
+ */
+export function substituteRolesInString(text: string, definitions: SelectedDefinitions): string {
+  return text.replace(/\{(\w+)\}/g, (match, role) => {
+    const expr = definitions[role];
+    return expr ? exprToString(expr) : match;
+  });
+}     

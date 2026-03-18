@@ -9,6 +9,8 @@ import { useLenis } from "~/components/SmoothScroll";
 import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
 import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
 import FinishScreen from "~/app/_components/exercises/FinishScreen";
+import {Calculator} from "lucide-react";
+import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -118,7 +120,8 @@ export default function ExercisePage() {
     .map((step, stepIndex) => ({ step, stepIndex }))
     .filter(({ step }) =>
       (step.exercise?.type === "select" && step.exercise.options) ||
-      (step.exercise?.type === "construct" && step.exercise.palette));
+      (step.exercise?.type === "construct" && step.exercise.palette) ||
+      (step.exercise?.type === "calculate"));
 
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
@@ -186,7 +189,12 @@ export default function ExercisePage() {
             ) : step.exercise?.type === "fill" ? (
               <div>Empty placeholder</div>
             ) : step.exercise?.type === "calculate" ? (
-              <div>Empty placeholder</div>
+              <CalculateExercise
+                  description={step.description}
+                  prompt={step.exercise.prompt}
+                  answer={step.exercise.answer[0]!}
+                  definitions={definitions}
+              />
             ) : <div>Something went wrong while rendering</div>}
 
             <Button
