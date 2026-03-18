@@ -42,6 +42,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
   const [submitButton, setSubmitButton] = useState<ButtonState>("Answer");
   const [justCorrect, setJustCorrect] = useState<boolean>(false);
   const [wrongAnswer, setWrongAnswer] = useState<boolean>(false);
+  const [showHint, setShowHint] = useState<boolean>(false);
 
   const checkAnswer = () => {
     if (selected.length === 0) return;
@@ -103,7 +104,12 @@ export default function SelectExercise({options, description, prompt, hint, defi
         <div className="flex flex-col items-center">
           {/* User feedback */}
           <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />
-          
+
+          {/* Hint text */}
+          {showHint && hint && (
+            <span className="text-muted text-sm pb-1">{hint}</span>
+          )}
+
           {/* Answer button */}
           <Button
               variant="submit"
@@ -113,12 +119,11 @@ export default function SelectExercise({options, description, prompt, hint, defi
             {submitButton}
           </Button>
         </div>
-        
 
         {/* Hint button - conditionally rendered, positioned to the right */}
         {hint && (
-          <div className="absolute right-0 py-3">
-            <Hint hint={hint}/>
+          <div className="absolute right-20 py-3">
+            <Hint open={showHint} onClick={() => setShowHint(s => !s)} />
           </div>
         )}
       </div>

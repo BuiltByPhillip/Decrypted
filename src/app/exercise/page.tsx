@@ -11,6 +11,7 @@ import DefinitionContainer from "~/app/_components/definition/DefinitionContaine
 import FinishScreen from "~/app/_components/exercises/FinishScreen";
 import {Calculator} from "lucide-react";
 import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
+import { substituteRolesInString } from "~/app/hooks/expr";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -173,6 +174,7 @@ export default function ExercisePage() {
                 options={step.exercise!.options!}
                 description={step.description}
                 prompt={step.exercise!.prompt}
+                hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
                 definitions={definitions}
                 answers={step.exercise!.answer}
                 onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
@@ -183,6 +185,7 @@ export default function ExercisePage() {
                 answer={step.exercise.answer[0]!}
                 description={step.description}
                 prompt={step.exercise.prompt}
+                hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
                 definitions={definitions}
                 onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
               />
@@ -192,8 +195,10 @@ export default function ExercisePage() {
               <CalculateExercise
                   description={step.description}
                   prompt={step.exercise.prompt}
+                  hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
                   answer={step.exercise.answer[0]!}
                   definitions={definitions}
+                  onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
               />
             ) : <div>Something went wrong while rendering</div>}
 

@@ -1,20 +1,21 @@
-import Button from "~/components/Button";
-import { CircleQuestionMark } from "lucide-react";
+"use client"
+
+import { CircleHelp } from "lucide-react";
 
 type HintProps = {
-  hint: string | null;
+  open?: boolean;
+  onClick?: () => void;
   className?: string;
 }
 
-export default function Hint({ hint, className}: HintProps) {
-
+export default function Hint({ open, onClick, className }: HintProps) {
   return (
-    <div className={`flex items-center ${className}`}>
-      <Button variant="ghostMuted" className="flex items-center px-2">
-        <CircleQuestionMark size={25} />
-        <span className="pl-1">Help</span>
-      </Button>
-    </div>
-
+    <button
+      onClick={onClick}
+      className={`transition-colors duration-200 hover:cursor-pointer ${open ? "text-muted" : "text-muted/40 hover:text-muted"} ${className}`}
+      aria-label="Toggle hint"
+    >
+      <CircleHelp size={22} />
+    </button>
   );
 }
