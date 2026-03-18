@@ -6,10 +6,10 @@ type DefinitionListProps = {
   children: ReactNode;
 }
 
-// Wrapper component that establishes the shared grid
+// Wrapper component that establishes the shared 3-column grid
 export function DefinitionList({children}: DefinitionListProps) {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-y-4 gap-x-0">
+    <div className="grid grid-cols-[auto_auto_auto] items-center gap-y-4 gap-x-4">
       {children}
     </div>
   );
@@ -30,7 +30,13 @@ export default function Definition({ choices, name, onChange, selected }: Defini
   return (
     <div className="contents">
 
-      {/* Column 1: buttons, right-aligned so they sit flush against ∈ */}
+      {/* Col 1: invisible mirror of ∈ name — makes buttons the true center */}
+      <div className="invisible flex items-center gap-x-2" aria-hidden="true">
+        <span className="text-xl font-bold text-gray">{elementOf}</span>
+        <span className="text-xl font-bold text-gray">{name}</span>
+      </div>
+
+      {/* Col 2: buttons — right-aligned so they sit flush against ∈ */}
       <div className="flex items-center justify-end">
         {choices.map(choice => {
           if (choice.kind === "var") {
@@ -52,10 +58,12 @@ export default function Definition({ choices, name, onChange, selected }: Defini
           return null;
         })}
       </div>
-      {/* Column 2: element-of sign */}
-      <span className="text-xl font-bold px-4 text-gray">{elementOf}</span>
-      {/* Column 3: role name */}
-      <span className="text-xl font-bold pr-2 text-gray">{name}</span>
+
+      {/* Col 3: visible ∈ name */}
+      <div className="flex items-center gap-x-2">
+        <span className="text-xl font-bold text-gray">{elementOf}</span>
+        <span className="text-xl font-bold text-gray">{name}</span>
+      </div>
     </div>
   );
 }
