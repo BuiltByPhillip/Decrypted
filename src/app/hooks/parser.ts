@@ -171,9 +171,9 @@ type Token = {
 }
 
 const EXERCISE_TYPES = [
-  "construct",
+  "construct", // Drag and drop
   "fill",
-  "select",
+  "select", // Multiple choice
   "calculate"
 ] as const;
 

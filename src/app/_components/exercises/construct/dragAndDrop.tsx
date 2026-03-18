@@ -16,10 +16,11 @@ import TrashContainer from "~/app/_components/exercises/construct/TrashContainer
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
+import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
 
 type DragAndDropProps = {
-  prompt?: string;
-  description?: string;
+  prompt: string;
+  description: string;
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
@@ -124,12 +125,10 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
   return (
     <div ref={containerRef} className="flex flex-col relative w-full h-full">
-      {(description ?? prompt) && (
-        <div className="flex flex-col items-center p-8 gap-3">
-          {description && <span className="text-4xl font-bold text-gray">{description}</span>}
-          {prompt && <span className="text-xl text-gray/70">{prompt}</span>}
-        </div>
-      )}
+
+      {/* Exercise description & prompt */}
+      <ExerciseDescription description={description} prompt={prompt}/>
+      
       <DraggableWindow
         defaultPosition={{ x: 0, y: 320 }}
         zIndex={getZIndex("palette")}

@@ -8,6 +8,7 @@ import type { Expr } from "~/app/hooks/parser"
 import { exprListContains, substituteRoles } from "~/app/hooks/expr";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
+import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
 
 type ButtonState = "Answer" | "Correct!" | "Try again!"
 
@@ -81,15 +82,8 @@ export default function SelectExercise({options, description, prompt, hint, defi
   return (
     <div className="flex flex-col items-center w-full">
 
-      <div className="flex flex-col items-center p-8 gap-3">
-        {/* Description */}
-        <span className="text-4xl font-bold text-gray">
-          {description}
-        </span>
-
-        {/* Prompt*/}
-        <span className="text-xl text-gray/70">{prompt}</span>
-      </div>
+      {/* Exercise description & prompt */}
+      <ExerciseDescription description={description} prompt={prompt}/>
 
       {/* Multiple-choice option buttons */}
       <div className="grid w-full grid-cols-2 gap-4 pb-10 px-20">
