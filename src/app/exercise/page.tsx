@@ -29,6 +29,13 @@ export default function ExercisePage() {
   // Flag to trigger scroll to first exercise after render
   const shouldScrollToFirst = useRef(false);
 
+  // Snap scroll state
+  const currentExerciseIndexRef = useRef(0);
+  const isSnapScrollingRef = useRef(false);
+  const finishElementRef = useRef<HTMLDivElement | null>(null);
+  const showFinishRef = useRef(false);
+  const exercisesLengthRef = useRef(0);
+
   useEffect(() => {
     const rawData = sessionStorage.getItem("exerciseData");
     if (rawData) {
@@ -43,6 +50,8 @@ export default function ExercisePage() {
     const element = exerciseRefs.current.get(index);
     if (!element) return;
 
+    currentExerciseIndexRef.current = index;
+
     // CRITICAL: Update Lenis's internal dimensions before scrolling
     // Without this, Lenis may not know about newly added content
     lenis.resize();
@@ -51,6 +60,50 @@ export default function ExercisePage() {
       duration: 2,
     });
   }, [lenis]);
+
+  // Snap scroll: intercept wheel events and navigate between exercises
+  useEffect(() => {
+    if (!showExercises || !lenis) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      if (isSnapScrollingRef.current) return;
+
+      const currentIdx = currentExerciseIndexRef.current;
+
+      if (e.deltaY > 0) {
+        const nextIdx = currentIdx + 1;
+        if (exerciseRefs.current.has(nextIdx)) {
+          isSnapScrollingRef.current = true;
+          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
+          scrollToExercise(nextIdx);
+        } else if (showFinishRef.current && finishElementRef.current) {
+          // Last exercise → scroll to finish screen
+          isSnapScrollingRef.current = true;
+          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
+          currentExerciseIndexRef.current = exercisesLengthRef.current;
+          lenis.resize();
+          lenis.scrollTo(finishElementRef.current, { duration: 2 });
+        }
+      } else if (e.deltaY < 0) {
+        if (currentIdx === exercisesLengthRef.current) {
+          // At finish screen → scroll back to last exercise
+          isSnapScrollingRef.current = true;
+          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
+          scrollToExercise(exercisesLengthRef.current - 1);
+        } else if (currentIdx > 0) {
+          isSnapScrollingRef.current = true;
+          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
+          scrollToExercise(currentIdx - 1);
+        }
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { capture: true, passive: false });
+    return () => window.removeEventListener("wheel", handleWheel, { capture: true });
+  }, [showExercises, lenis, scrollToExercise]);
 
   // Handle scroll to first exercise after content is rendered
   useEffect(() => {
@@ -73,6 +126,8 @@ export default function ExercisePage() {
   }, []);
 
   const handleFinish = () => {
+    showFinishRef.current = true;
+    currentExerciseIndexRef.current = exercisesLengthRef.current;
     setShowFinish(true);
   };
 
@@ -87,6 +142,9 @@ export default function ExercisePage() {
   }, [showFinish, lenis]);
 
   const handleRestart = () => {
+    currentExerciseIndexRef.current = 0;
+    isSnapScrollingRef.current = false;
+    showFinishRef.current = false;
     setResults({});
     setShowFinish(false);
     setShowExercises(false);
@@ -123,6 +181,8 @@ export default function ExercisePage() {
       (step.exercise?.type === "select" && step.exercise.options) ||
       (step.exercise?.type === "construct" && step.exercise.palette) ||
       (step.exercise?.type === "calculate"));
+
+  exercisesLengthRef.current = exercises.length;
 
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
@@ -220,11 +280,13 @@ export default function ExercisePage() {
       })}
 
       {showFinish && (
-        <FinishScreen
-          totalExercises={exercises.length}
-          results={results}
-          onRestart={handleRestart}
-        />
+        <div ref={finishElementRef}>
+          <FinishScreen
+            totalExercises={exercises.length}
+            results={results}
+            onRestart={handleRestart}
+          />
+        </div>
       )}
     </main>
   );
