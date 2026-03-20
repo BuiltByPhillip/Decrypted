@@ -12,6 +12,8 @@ import FinishScreen from "~/app/_components/exercises/FinishScreen";
 import {Calculator} from "lucide-react";
 import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
 import { substituteRolesInString } from "~/app/hooks/expr";
+import Definition from "~/app/_components/definition/Definition";
+import DefinitionStep from "~/app/_components/definition/DefinitionStep";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -206,10 +208,10 @@ export default function ExercisePage() {
         <span className="text-gray pb-5 text-xl font-medium tracking-wider uppercase">
           define symbols for exercises
         </span>
-        <DefinitionsPicker
-          definitions={code.information.definition}
-          onSelect={updateDefinitions}
-          selected={definitions}
+        <DefinitionStep
+            definitions={code.information.definition}
+            onSelect={updateDefinitions}
+            selected={definitions}
         />
         <Button
           variant="submit"
