@@ -25,7 +25,7 @@ type DragAndDropProps = {
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
-  definitions: SelectedDefinitions;
+  definitions?: SelectedDefinitions;
 };
 
 const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
