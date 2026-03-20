@@ -14,6 +14,7 @@ import CalculateExercise from "~/app/_components/exercises/calculate/CalculateEx
 import { substituteRolesInString } from "~/app/hooks/expr";
 import Definition from "~/app/_components/definition/Definition";
 import DefinitionStep from "~/app/_components/definition/DefinitionStep";
+import ProgressBar from "~/app/_components/exercises/shared/ProgressBar";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -198,6 +199,11 @@ export default function ExercisePage() {
 
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
+      {/* Progress bar fixed to right side */}
+      <div className="fixed right-5 top-1/2 -translate-y-1/2">
+        <ProgressBar total={exercises.length} results={results}/>
+      </div>
+
       {/* Definitions selected container fixed position */}
       <DefinitionContainer
           selected={new Map(Object.entries(definitions))}
