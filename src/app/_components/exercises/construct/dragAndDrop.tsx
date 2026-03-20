@@ -20,8 +20,8 @@ import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDesc
 import type {SelectedDefinitions} from "~/app/exercise/page";
 
 type DragAndDropProps = {
-  prompt: string;
-  description: string;
+  prompt?: string;
+  description?: string;
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
