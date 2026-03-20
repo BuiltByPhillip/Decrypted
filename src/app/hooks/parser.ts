@@ -9,7 +9,16 @@ type Information = {
   definition: Definition[];
 }
 
+const DEFINITION_TYPES = [
+  "select",    // Multiple choice picker
+  "construct", // Drag-and-drop builder
+] as const;
+
+export type DefinitionType = typeof DEFINITION_TYPES[number];
+
 export type Definition = {
+  // Example: Select for the definitionsPicker or construct for a drag-and-drop
+  type: DefinitionType;
   // Example: "generator", "prime", etc.
   role: string;
   // Example: [g, x, a, b] etc.
@@ -508,6 +517,7 @@ export function parse(input: string, startIndex: number): Code {
 function defineParse(lines: string[], startIndex: number): [Definition[], number] {
   let i: number = startIndex + 1;
   let definitions: Definition[] = [];
+  let type: DefinitionType = DEFINITION_TYPES[0];
 
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
@@ -516,18 +526,28 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       break; // End of define block
     }
 
+    if (line.startsWith("type:")) {
+      const typeValue = line.replace("type:", "").trim();
+      if (!isDefinitionType(typeValue)) {
+        throw new Error(`Line ${i} - Invalid definition type: '${typeValue}'`);
+      }
+      type = typeValue;
+      i++;
+      continue;
+    }
+
     const tokens: Token[] = tokenize(line);
-    const def: Definition = parseDefinition(tokens);
+    const def: Definition = parseDefinition(tokens, type);
     definitions.push(def);
     i++
   }
   return [definitions, i++];
 }
 
-function parseDefinition(tokens: Token[]): Definition {
+function parseDefinition(tokens: Token[], type: DefinitionType): Definition {
   let i: number = 0;
-  let definition: Definition = {role: "", symbols: []};
-
+  let definition: Definition = {type, role: "", symbols: []};
+  
   // Expect: VARIABLE("generator")
   if (tokens[i]?.type !== "VAR") {
     throw new Error("Expected role name");
@@ -698,6 +718,10 @@ function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
 
 function isExerciseType(value: string): value is ExerciseType {
   return (EXERCISE_TYPES as readonly string[]).includes(value);
+}
+
+function isDefinitionType(value: string): value is DefinitionType {
+  return (DEFINITION_TYPES as readonly string[]).includes(value);
 }
 
 export const operatorSymbol: Record<string, string> = {

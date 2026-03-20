@@ -9,11 +9,11 @@ Example syntax for Diffie-Hellman
 protocol: Diffie-Hellman
 participants: Alice, Bob
 define:
-      generator \elem  {g, x, a, b}
-      prime \elem {p, n, m, q}
-      alice_secret \elem  {a, s, x}
-      bob_secret \elem  {b, t, y}
-
+    type: select
+    generator \elem  {g, x, a, b}
+    prime \elem {p, n, m, q}
+    alice_secret \elem  {a, s, x}
+    bob_secret \elem  {b, t, y}
 step 1:
     description: Alice chooses secret {alice_secret}
     exercise:
