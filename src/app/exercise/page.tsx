@@ -61,6 +61,16 @@ export default function ExercisePage() {
     });
   }, [lenis]);
 
+  // Disable scrolling on the definition step
+  useEffect(() => {
+    if (!lenis) return;
+    if (showExercises) {
+      lenis.start();
+    } else {
+      lenis.stop();
+    }
+  }, [showExercises, lenis]);
+
   // Snap scroll: intercept wheel events and navigate between exercises
   useEffect(() => {
     if (!showExercises || !lenis) return;
