@@ -28,8 +28,7 @@ export default function CalculateExercise({ description, prompt, hint, answer, o
 
     const checkAnswer = () => {
         if (!value.trim() || locked) return;
-        // TODO: wire up real answer checking against `answer` expr
-        const isCorrect = false;
+        const isCorrect = answer.kind === "int" && Number(value.trim()) === answer.value;
         onAnswerAction?.(isCorrect);
         if (isCorrect) {
             setLocked(true);
