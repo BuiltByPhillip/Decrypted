@@ -6,6 +6,7 @@ import type { SelectedDefinitions } from "~/app/exercise/page";
 import Button from "~/components/Button";
 import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
+import Hint from "~/app/_components/exercises/select/hint";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 
 type ConstructExerciseProps = {
@@ -20,8 +21,9 @@ type ConstructExerciseProps = {
 
 type ButtonState = "Check answer" | "Correct!" | "Incorrect!"
 
-export default function ConstructExercise({ answer, definitions, prompt, description, onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, definitions, prompt, description, hint, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [showHint, setShowHint] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
   const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
@@ -78,7 +80,17 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
         <DragAndDrop prompt={prompt} description={description} definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
           {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} />}
-          <Button variant="submit" className="w-100" onClick={checkAnswer}>{submitButton}</Button>
+          {showHint && hint && (
+            <span className="text-muted text-sm pb-1">{hint}</span>
+          )}
+          <div className="relative flex w-150 justify-center items-center">
+            <Button variant="submit" className="w-100" onClick={checkAnswer}>{submitButton}</Button>
+            {hint && (
+              <div className="absolute right-0">
+                <Hint open={showHint} onClick={() => setShowHint(s => !s)} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
