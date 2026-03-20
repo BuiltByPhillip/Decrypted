@@ -485,6 +485,7 @@ export function parse(input: string, startIndex: number): Code {
       const [definition, nextI] = defineParse(lines, i)
       code.information.definition = definition
       i = nextI
+      continue
     }
     else if (line.startsWith("step")) {
       const [step, nextI] = stepParse(lines, i);

@@ -16,14 +16,26 @@ export default function DraggableWindow({ defaultPosition, children, zIndex = 0,
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  // Center horizontally on mount
-  useEffect(() => {
+  const resetPosition = () => {
     const windowWidth = windowRef.current?.getBoundingClientRect().width ?? 0;
     const containerWidth = containerRef?.current?.getBoundingClientRect().width ?? window.innerWidth;
     setPosition({
       x: Math.max(0, (containerWidth - windowWidth) / 2),
       y: defaultPosition.y,
     });
+  };
+
+  // Center horizontally on mount
+  useEffect(() => {
+    resetPosition();
+  }, []);
+
+  // Reset position when viewport is resized
+  useEffect(() => {
+    window.addEventListener("resize", resetPosition);
+    return () => {
+      window.removeEventListener("resize", resetPosition);
+    };
   }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
