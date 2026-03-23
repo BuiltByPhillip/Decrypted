@@ -35,7 +35,8 @@ type Exercise = {
   hint?: string;
   palette?: PaletteItem[];
   options?: Expr[];
-  answer: Expr[];
+  pairs?: { left: Expr; right: string }[];
+  answer?: Expr[];
 }
 
 export type TokenRange = { start: number; end: number}
@@ -641,6 +642,15 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
         .split(",")
         .map(p => parsePaletteItem(p.trim()))
     }
+    else if (line.startsWith("pairs:")) {
+      const [pairs, nextI] = pairsParse(lines, i+1)
+      if (pairs.length == 0) {
+        throw new Error(`Line ${i} - No pairs for exercise type match`);
+      }
+      pendingExercise.pairs = pairs;
+      i = nextI;
+      continue;
+    }
     else if (line.startsWith("options:")) {
       const [options, nextI] = optionsParse(lines, i+1)
       if (options.length == 0) {
@@ -666,6 +676,41 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
     i++
   }
   return [finalizeExercise(pendingExercise, startIndex), i]
+}
+
+/**
+ * Parses a list of match pairs from DSL lines of the form `- <expr> -> <label>`.
+ * The left side is parsed as an Expr, the right side is kept as a plain string.
+ * Stops when it encounters a line that does not start with `-`.
+ *
+ * @param lines - All DSL lines
+ * @param startIndex - The line index to start parsing from (first `-` line)
+ * @returns A tuple of the parsed pairs and the index of the first unconsumed line
+ */
+function pairsParse(lines: string[], startIndex: number): [{ left: Expr; right: string }[], number] {
+  let i: number = startIndex;
+  let pairs: { left: Expr; right: string }[] = [];
+
+  while (i < lines.length) {
+    const line: string | undefined = lines[i]?.trim()
+
+    if (line == undefined) {
+      throw new Error(`Line ${i} - Line is undefined`);
+    }
+
+    if (line.startsWith("-")) {
+      const pair = line.replace("-", "").trim().split("->")
+      if (pair.length !== 2) throw new Error(`Line ${i} - Each pair must have exactly one '->'`);
+      const tokens = tokenize(pair[0]!.trim());
+      const parser = new ExpressionParser(tokens);
+      pairs.push({ left: parser.parse(), right: pair[1]!.trim() })
+    }
+    else {
+      return [pairs, i]
+    }
+    i++
+  }
+  return [pairs, i]
 }
 
 function optionsParse(lines: string[], startIndex: number): [string[], number] {
@@ -697,13 +742,16 @@ function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
   if (!fields.prompt) {
     throw new Error(`Line: ${line} - Exercise must have a prompt`)
   }
-  if (!fields.answer) {
+  if (!fields.answer && fields.type !== "match") {
     throw new Error(`Line: ${line} - Exercise must have an answer`)
   }
 
   // Type-specific requirements
   if (fields.type === "construct" && !fields.palette) {
     throw new Error(`Line: ${line} - Exercise type construct must have a palette`)
+  }
+  if (fields.type === "match" && !fields.pairs) {
+    throw new Error(`Line: ${line} - Exercise type match must have pairs`)
   }
 
   return fields as Exercise
