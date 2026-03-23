@@ -82,7 +82,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       <div className="w-full">
         <DragAndDrop prompt={prompt} description={description} definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
-          {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
+          {submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
           {showHint && hint && (
             <span className="text-muted text-sm pb-1">{hint}</span>
           )}

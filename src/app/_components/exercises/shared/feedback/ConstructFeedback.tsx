@@ -11,7 +11,7 @@ type ConstructFeedbackProps = {
 
 
 export default function ConstructFeedback({ userInput, answer, definitions, attempts }: ConstructFeedbackProps) {
-    const feedback = attempts > 1 ? provideFeedback(answer, userInput, definitions) : "Not quite - try again.";
+    const feedback = attempts > 1 ? provideFeedback(answer, userInput, attempts, definitions) : "Not quite - try again.";
 
     return (
         <div>

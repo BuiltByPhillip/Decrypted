@@ -14,10 +14,10 @@ type UserFeedbackProps =
 export default function UserFeedback(props: UserFeedbackProps) {
     switch (props.exerciseType) {
         case "select":
-            return <SelectFeedback results={props.results} answers={props.answers} />;
+            return <SelectFeedback results={props.results} />;
         case "construct":
             if (props.userAnswer?.status === "invalid") {
-                return <span className="text-danger text-sm">This expression is not valid — check your syntax.</span>;
+                return <span className="text-danger text-sm">This expression is not valid - check your syntax.</span>;
             }
             if (props.userAnswer?.status === "valid" && props.correctAnswer) {
                 return <ConstructFeedback userInput={props.userAnswer.expr} answer={props.correctAnswer} definitions={props.definitions} attempts={props.attempts ?? 0} />;
