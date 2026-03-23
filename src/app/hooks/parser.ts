@@ -180,7 +180,7 @@ type Token = {
 
 const EXERCISE_TYPES = [
   "construct", // Drag and drop
-  "fill",
+  "match", // Drag labels to expressions
   "select", // Multiple choice
   "calculate", // Computational exercise where the user performs a calculation
 ] as const;
