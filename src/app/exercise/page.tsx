@@ -275,7 +275,7 @@ export default function ExercisePage() {
                       : undefined
                   }
                   definitions={definitions}
-                  answers={step.exercise!.answer}
+                  answers={step.exercise!.answer ?? []}
                   onAnswerAction={(isCorrect) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
@@ -283,7 +283,7 @@ export default function ExercisePage() {
               ) : step.exercise?.type === "construct" ? (
                 <ConstructExercise
                   palette={step.exercise!.palette!}
-                  answer={step.exercise.answer[0]!}
+                  answer={step.exercise.answer![0]!}
                   description={step.description}
                   prompt={step.exercise.prompt}
                   hint={
@@ -305,7 +305,7 @@ export default function ExercisePage() {
                       ? substituteRolesInString(step.exercise.hint, definitions)
                       : undefined
                   }
-                  answer={step.exercise.answer[0]!}
+                  answer={step.exercise.answer![0]!}
                   definitions={definitions}
                   onAnswerAction={(isCorrect) =>
                     onAnswerAction(exerciseIndex, isCorrect)

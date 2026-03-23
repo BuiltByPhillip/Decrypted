@@ -401,7 +401,7 @@ describe("substituteRolesInString", () => {
 
   it("replaces a role with a complex expression string", () => {
     const complexDefs = {
-      public_key: { kind: "binary" as const, op: "mod", left: { kind: "binary" as const, op: "pow", left: { kind: "var" as const, name: "g" }, right: { kind: "var" as const, name: "a" } }, right: { kind: "var" as const, name: "p" } },
+      public_key: { kind: "binary" as const, op: "mod" as const, left: { kind: "binary" as const, op: "pow" as const, left: { kind: "var" as const, name: "g" }, right: { kind: "var" as const, name: "a" } }, right: { kind: "var" as const, name: "p" } },
     };
     expect(substituteRolesInString("Compute {public_key}", complexDefs)).toBe("Compute g^a mod p");
   });

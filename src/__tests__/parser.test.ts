@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, parseExpression } from "../app/hooks/parser";
+import { tokenize, parseExpression, parse } from "../app/hooks/parser";
 
 // ─── tokenize ────────────────────────────────────────────────────────────────
 
@@ -298,5 +298,60 @@ describe("parseExpression", () => {
 
   it("parses \\rightarrow as a binary infix operator", () => {
     expect(parseExpression("a \\rightarrow b")).toMatchObject({ kind: "binary", op: "rightarrow" });
+  });
+});
+
+// ─── match exercise parsing ───────────────────────────────────────────────────
+
+describe("match exercise parsing", () => {
+  const matchDsl = `protocol: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - 0 -> Always produces 1
+            - {prime}-1 -> Reveals group structure
+            - 7 -> Valid choice`;
+
+  it("parses a match exercise without throwing", () => {
+    expect(() => parse(matchDsl, 0)).not.toThrow();
+  });
+
+  it("parses the correct number of pairs", () => {
+    const result = parse(matchDsl, 0);
+    expect(result.step[0]?.exercise?.pairs).toHaveLength(3);
+  });
+
+  it("parses pair left sides as Expr", () => {
+    const result = parse(matchDsl, 0);
+    const pairs = result.step[0]?.exercise?.pairs!;
+    expect(pairs[0]?.left).toMatchObject({ kind: "int", value: 0 });
+    expect(pairs[1]?.left).toMatchObject({ kind: "binary", op: "sub" });
+    expect(pairs[2]?.left).toMatchObject({ kind: "int", value: 7 });
+  });
+
+  it("parses pair right sides as plain strings", () => {
+    const result = parse(matchDsl, 0);
+    const pairs = result.step[0]?.exercise?.pairs!;
+    expect(pairs[0]?.right).toBe("Always produces 1");
+    expect(pairs[1]?.right).toBe("Reveals group structure");
+    expect(pairs[2]?.right).toBe("Valid choice");
+  });
+
+  it("throws when match exercise has no pairs", () => {
+    const dsl = `protocol: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("does not require an answer field for match exercises", () => {
+    const result = parse(matchDsl, 0);
+    expect(result.step[0]?.exercise?.answer).toBeUndefined();
   });
 });
