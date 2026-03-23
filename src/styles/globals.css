@@ -176,3 +176,8 @@ body::-webkit-scrollbar {
     background-position: -200% center;
   }
 }
+
+@keyframes wave-fill {
+  from { transform: translateY(-75%); }
+  to   { transform: translateY(0%); }
+}
