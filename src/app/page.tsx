@@ -51,14 +51,18 @@ define:
       prime \\elem {p, n, m, q}
       alice_secret \\elem  {a, s, x}
       bob_secret \\elem  {b, t, y}
-
 step:
     description: Alice chooses secret {alice_secret}
     exercise:
-        type: fill
-        prompt: Choose Alice's secret exponent {alice_secret}
+        type: select
+        prompt: Choose a valid secret exponent for Alice's secret {alice_secret}
         hint: Choose a random integer in the range [2, {prime}-2]
-        answer: 2 < $1 and $1 < {prime}-2
+        options:
+            - 1
+            - 7
+            - {prime}-1
+            - {prime}-2
+        answer: 7
 step:
     description: Alice computes her public key A
     exercise:

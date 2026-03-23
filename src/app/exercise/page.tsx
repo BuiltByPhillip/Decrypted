@@ -9,6 +9,7 @@ import ConstructExercise from "~/app/_components/exercises/construct/ConstructEx
 import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
 import FinishScreen from "~/app/_components/exercises/FinishScreen";
 import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
+import FillExercise from "~/app/_components/exercises/fill/FillExercise";
 import { substituteRolesInString } from "~/app/hooks/expr";
 import DefinitionStep from "~/app/_components/definition/DefinitionStep";
 import ProgressBar from "~/app/_components/exercises/shared/ProgressBar";
@@ -297,7 +298,20 @@ export default function ExercisePage() {
                   }
                 />
               ) : step.exercise?.type === "fill" ? (
-                <div>Empty placeholder</div>
+                <FillExercise
+                  description={step.description}
+                  prompt={step.exercise.prompt}
+                  hint={
+                    step.exercise.hint
+                      ? substituteRolesInString(step.exercise.hint, definitions)
+                      : undefined
+                  }
+                  answer={step.exercise.answer[0]!}
+                  definitions={definitions}
+                  onAnswerAction={(isCorrect) =>
+                    onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                />
               ) : step.exercise?.type === "calculate" ? (
                 <CalculateExercise
                   description={step.description}

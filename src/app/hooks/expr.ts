@@ -356,4 +356,5 @@ export function substituteRolesInString(text: string, definitions: SelectedDefin
     const expr = definitions[role];
     return expr ? exprToString(expr) : match;
   });
-}     
+}
+
