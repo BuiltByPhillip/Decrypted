@@ -1,6 +1,5 @@
 "use client"
 
-import DefinitionsPicker from "~/app/_components/definition/DefinitionsPicker";
 import type { Code, Expr } from "~/app/hooks/parser";
 import SelectExercise from "~/app/_components/exercises/select/SelectExercise";
 import Button from "~/components/Button";
@@ -9,12 +8,11 @@ import { useLenis } from "~/components/SmoothScroll";
 import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
 import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
 import FinishScreen from "~/app/_components/exercises/FinishScreen";
-import {Calculator} from "lucide-react";
 import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
 import { substituteRolesInString } from "~/app/hooks/expr";
-import Definition from "~/app/_components/definition/Definition";
 import DefinitionStep from "~/app/_components/definition/DefinitionStep";
 import ProgressBar from "~/app/_components/exercises/shared/ProgressBar";
+import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -191,18 +189,30 @@ export default function ExercisePage() {
   const exercises = code.step
     .map((step, stepIndex) => ({ step, stepIndex }))
     .filter(({ step }) =>
+      !step.exercise ||
       (step.exercise?.type === "select" && step.exercise.options) ||
       (step.exercise?.type === "construct" && step.exercise.palette) ||
       (step.exercise?.type === "calculate"));
 
   exercisesLengthRef.current = exercises.length;
 
+  // Map real exercises (no description steps) to consecutive indices for ProgressBar / FinishScreen
+  const realExerciseIndices = exercises
+    .map((e, i) => ({ e, i }))
+    .filter(({ e }) => !!e.step.exercise)
+    .map(({ i }) => i);
+
+  const remappedResults: Record<number, boolean> = {};
+  realExerciseIndices.forEach((exIdx, j) => {
+    if (results[exIdx] !== undefined) remappedResults[j] = results[exIdx]!;
+  });
+
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
       {/* Progress bar fixed to right side */}
       {
         showExercises ? <div className="fixed top-1/2 right-5 -translate-y-1/2">
-          <ProgressBar total={exercises.length} results={results} />
+          <ProgressBar total={realExerciseIndices.length} results={remappedResults} />
         </div> : null
       }
 
@@ -241,8 +251,11 @@ export default function ExercisePage() {
       {showExercises &&
         exercises.map(({ step, stepIndex }, exerciseIndex) => {
           const isLastExercise = exerciseIndex === exercises.length - 1;
+          const prevStep = exerciseIndex > 0 ? exercises[exerciseIndex - 1] : null;
           const isUnlocked =
-            exerciseIndex === 0 || results[exerciseIndex - 1] === true;
+            exerciseIndex === 0 ||
+            results[exerciseIndex - 1] ||
+            (prevStep !== null && !prevStep?.step.exercise);
           if (!isUnlocked) return null;
 
           return (
@@ -300,13 +313,15 @@ export default function ExercisePage() {
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
+              ) : !step.exercise && step.description? (
+                  <ExerciseDescription description={step.description} />
               ) : (
                 <div>Something went wrong while rendering</div>
               )}
 
               <Button
                 variant="submit"
-                className={`w-50 transition delay-150 select-none ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
+                className={`w-50 transition delay-150 select-none ${step.exercise && !results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
                 onClick={() => {
                   if (isLastExercise) {
                     handleFinish();
@@ -324,8 +339,8 @@ export default function ExercisePage() {
       {showFinish && (
         <div ref={finishElementRef}>
           <FinishScreen
-            totalExercises={exercises.length}
-            results={results}
+            totalExercises={realExerciseIndices.length}
+            results={remappedResults}
             onRestart={handleRestart}
           />
         </div>
