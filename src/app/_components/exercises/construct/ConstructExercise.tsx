@@ -36,17 +36,16 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
     setErrorRange(null);
     setIsCorrect(null);
     setSubmittedAnswer(null);
-    setAttempts(0)
   };
 
-  function handleAnswer(isMatch: boolean) {
+  function handleAnswer(isMatch: boolean, isDuplicate = false) {
     setIsCorrect(isMatch);
     if (isMatch) {
       setSubmitButton("Correct!");
     } else {
       setSubmitButton("Incorrect!");
       setTimeout(() => setSubmitButton("Check answer"), 2500);
-      setAttempts(a => a + 1);
+      if (!isDuplicate) setAttempts(a => a + 1);
     }
     if (isMatch) setErrorRange(null);
     onAnswerAction?.(isMatch);
@@ -61,6 +60,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
       const resolved = definitions ? substituteRoles(answer, definitions) : answer;
       const isMatch = exprEquals(userExpr, resolved);
+      const isDuplicate = submittedAnswer?.status === "valid" && exprEquals(userExpr, submittedAnswer.expr);
       setSubmittedAnswer({ status: "valid", expr: userExpr });
       setResolvedAnswer(resolved);
       if (isMatch) {
@@ -69,12 +69,12 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       else {
         const diff = exprDiff(userExpr, resolved);
         setErrorRange(diff?.tokenRange ?? null);
-        handleAnswer(false);
+        handleAnswer(false, isDuplicate);
       }
     } catch {
       setSubmittedAnswer({ status: "invalid" });
       setErrorRange({ start: 0, end: tokens.length });
-      handleAnswer(false);
+      handleAnswer(false, true);
     }
   };
 

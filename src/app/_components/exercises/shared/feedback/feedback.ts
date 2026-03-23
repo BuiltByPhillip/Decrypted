@@ -23,44 +23,52 @@ function leftmostLeaf(expr: Expr): Expr {
  * the user's expression differs from the correct answer.
  * @param answer - The correct expression (substituted)
  * @param userInput - The expression the user provided
+ * @param attempts - The amount of attempts the user has spent on the exercise
  * @param definitions - The user's selected definitions, used to look up role names for specific feedback
  * @returns A feedback string, or null if the expressions are equal
  */
-export function provideFeedback(answer: Expr, userInput: Expr, definitions?: SelectedDefinitions): string | null {
+export function provideFeedback(answer: Expr, userInput: Expr, attempts: number, definitions?: SelectedDefinitions): string | null {
     const pair = findDiffPair(userInput, answer);
     if (!pair) return null;
 
     const [userNode, correctNode] = pair;
+    const revealExtra: boolean = attempts > 4
 
     // Both are role references — most informative: roles were swapped
     if (userNode.kind === "role" && correctNode.kind === "role") {
+      if (revealExtra) return `This position expects the '${correctNode.name}' role, but '${userNode.name}' was used instead`
         return `This position expects '${correctNode.name}'.`;
     }
 
     // User used a role where a specific var/value was expected
     if (userNode.kind === "role" && correctNode.kind === "var") {
+      if (revealExtra) return `This position expects a plain variable, not ${userNode.name} from the definition`
         return `This position expects a variable.`;
     }
 
     // User used a plain variable where a role was expected
     if (userNode.kind === "var" && correctNode.kind === "role") {
+      if (revealExtra) return `This position expects a variable ${symbolDisplay["elem"]} ${correctNode.name}, but ${userNode.name} ${symbolDisplay["notelem"]} ${correctNode.name}`;
         return `This position expects a variable ${symbolDisplay["elem"]} ${correctNode.name}`;
     }
     
     // User used an integer where a variable was expected
     if (userNode.kind === "int" && correctNode.kind === "var") {
         const correctRole = definitions ? findRoleName(correctNode, definitions) : undefined;
+        if (revealExtra) return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}, but received ${userNode.value}`;
         return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}.`;
     }
 
     // Both plain variables — look up role names from definitions for specific feedback
     if (userNode.kind === "var" && correctNode.kind === "var") {
         const correctRole = definitions ? findRoleName(correctNode, definitions) : undefined;
-        return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}`;
+        if (revealExtra) return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}, but ${userNode.name} ${symbolDisplay["notelem"]} ${correctRole ?? correctNode.name}`;
+        return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}.`;
     }
 
     // Wrong integer
     if (userNode.kind === "int" && correctNode.kind === "int") {
+        if (revealExtra) return `This position expects a specific integer value, which is not ${userNode.value}`;
         return `This position expects a specific integer value.`;
     }
 
@@ -73,6 +81,7 @@ export function provideFeedback(answer: Expr, userInput: Expr, definitions?: Sel
         const startsCorrectly = userNode.left.kind === "var" && exprEquals(userNode.left, leftmostLeaf(correctNode));
         if (leftMatches || startsCorrectly) {
             const opDisplay = OP_TO_STRING[userNode.op!] ?? userNode.op;
+            if (revealExtra) return `Check the operator used here, as ${opDisplay} was used`;
             return `Check the operator used here.`;
         }
     }
