@@ -3,7 +3,6 @@ import type {Expr} from "~/app/hooks/parser";
 
 type SelectFeedbackProps = {
     results: [number, boolean][];
-    options: Expr[];
     answers: Expr[];
 }
 
@@ -24,7 +23,7 @@ function getFeedbackMessage(results: [number, boolean][], answers: Expr[]): stri
     return null;
 }
 
-export default function SelectFeedback({ results, options, answers }: SelectFeedbackProps) {
+export default function SelectFeedback({ results, answers }: SelectFeedbackProps) {
     const message = getFeedbackMessage(results, answers);
 
     return (
