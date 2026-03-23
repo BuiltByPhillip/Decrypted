@@ -9,18 +9,7 @@ type SelectFeedbackProps = {
 function getFeedbackMessage(results: [number, boolean][], answers: Expr[]): string | null {
     if (results.length === 0) return null;
 
-    const correctCount = results.filter(([, correct]) => correct).length;
-
-    if (results.length > answers.length) {
-        return "Think carefully - not all of these belong here. Re-read the definition and reconsider your selection.";
-    }
-    if (correctCount === 0) {
-        return "Your answer does not fit the definition. Go back and review what it says, then try again.";
-    }
-    if (correctCount > 0 && correctCount < answers.length) {
-        return "Not quite right. Revisit the definition and think about what truly satisfies it.";
-    }
-    return null;
+    return "Not quite - re-read the question carefully and try again."
 }
 
 export default function SelectFeedback({ results, answers }: SelectFeedbackProps) {
