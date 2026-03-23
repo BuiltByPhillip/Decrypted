@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Noto_Sans_Math } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import SmoothScroll from "~/components/SmoothScroll";
@@ -20,11 +20,17 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
+const notoMath = Noto_Sans_Math({
+  weight: "400",
+  subsets: ["math"],
+  variable: "--font-noto-math",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${geist.variable} ${notoMath.variable}`}>
       <body>
         <header className="absolute top-0 left-0 z-10 flex w-full items-center px-4 py-3 lg:px-8 lg:py-4 xl:px-32">
           {/*<Logo className="h-30 w-30 shrink-0" /> */}

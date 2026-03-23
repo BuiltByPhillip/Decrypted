@@ -21,11 +21,11 @@ export default function ExprBlock({ item, className, style }: ExprBlockProps) {
       case "role":
         return <div>{item.name}</div>;
       case "operator":
-        return <div>{operatorSymbol[item.op]}</div>;
+        return <div style={{ fontFamily: "var(--font-noto-math)" }}>{operatorSymbol[item.op]}</div>;
       case "constantSymbol":
       case "unarySymbol":
       case "binarySymbol":
-        return <div>{symbolDisplay[item.op]}</div>;
+        return <div style={{ fontFamily: "var(--font-noto-math)" }}>{symbolDisplay[item.op]}</div>;
       case "LPAR":
         return <div>(</div>;
       case "RPAR":
