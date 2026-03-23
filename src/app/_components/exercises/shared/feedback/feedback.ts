@@ -34,34 +34,34 @@ export function provideFeedback(answer: Expr, userInput: Expr, definitions?: Sel
 
     // Both are role references — most informative: roles were swapped
     if (userNode.kind === "role" && correctNode.kind === "role") {
-        return `This position expects the '${correctNode.name}' role, but '${userNode.name}' was used instead.`;
+        return `This position expects '${correctNode.name}'.`;
     }
 
     // User used a role where a specific var/value was expected
     if (userNode.kind === "role" && correctNode.kind === "var") {
-        return `The ${userNode.kind} does not belong here`;
+        return `This position expects a variable.`;
     }
 
     // User used a plain variable where a role was expected
     if (userNode.kind === "var" && correctNode.kind === "role") {
-        return `Wrong answer, because ${userNode.name} ${symbolDisplay["notelem"]} ${correctNode.name}`;
+        return `This position expects a variable ${symbolDisplay["elem"]} ${correctNode.name}`;
     }
     
     // User used an integer where a variable was expected
     if (userNode.kind === "int" && correctNode.kind === "var") {
         const correctRole = definitions ? findRoleName(correctNode, definitions) : undefined;
-        return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}, but received ${userNode.value}.`;
+        return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}.`;
     }
 
     // Both plain variables — look up role names from definitions for specific feedback
     if (userNode.kind === "var" && correctNode.kind === "var") {
         const correctRole = definitions ? findRoleName(correctNode, definitions) : undefined;
-        return `Wrong answer, because ${userNode.name} ${symbolDisplay["notelem"]} ${correctRole ?? correctNode.name}`;
+        return `This position expects a variable ${symbolDisplay["elem"]} ${correctRole ?? correctNode.name}`;
     }
 
     // Wrong integer
     if (userNode.kind === "int" && correctNode.kind === "int") {
-        return `The value ${userNode.value} is incorrect here.`;
+        return `This position expects a specific integer value.`;
     }
 
     // Different operators — report the operator when:
@@ -73,10 +73,10 @@ export function provideFeedback(answer: Expr, userInput: Expr, definitions?: Sel
         const startsCorrectly = userNode.left.kind === "var" && exprEquals(userNode.left, leftmostLeaf(correctNode));
         if (leftMatches || startsCorrectly) {
             const opDisplay = OP_TO_STRING[userNode.op!] ?? userNode.op;
-            return `The operator '${opDisplay}' is incorrect here.`;
+            return `Check the operator used here.`;
         }
     }
 
     // Structurally different shapes
-    return `You have provided an invalid structure.`;
+    return `The structure here is not quite right.`;
 }

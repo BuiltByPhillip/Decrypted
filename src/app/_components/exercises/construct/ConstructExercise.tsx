@@ -29,12 +29,14 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
   const [submittedAnswer, setSubmittedAnswer] = useState<{ status: "valid"; expr: Expr } | { status: "invalid" } | null>(null);
   const [resolvedAnswer, setResolvedAnswer] = useState<Expr>(answer);
+  const [attempts, setAttempts] = useState<number>(0);
 
   const handleTokensChange = (newTokens: PaletteItem[]) => {
     setTokens(newTokens);
     setErrorRange(null);
     setIsCorrect(null);
     setSubmittedAnswer(null);
+    setAttempts(0)
   };
 
   function handleAnswer(isMatch: boolean) {
@@ -44,6 +46,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
     } else {
       setSubmitButton("Incorrect!");
       setTimeout(() => setSubmitButton("Check answer"), 2500);
+      setAttempts(a => a + 1);
     }
     if (isMatch) setErrorRange(null);
     onAnswerAction?.(isMatch);
@@ -79,7 +82,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
       <div className="w-full">
         <DragAndDrop prompt={prompt} description={description} definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10 gap-2">
-          {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} />}
+          {submittedAnswer && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
           {showHint && hint && (
             <span className="text-muted text-sm pb-1">{hint}</span>
           )}
