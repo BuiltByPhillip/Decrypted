@@ -37,12 +37,15 @@ step:
 step:
     description: Alice sends A to Bob
 step:
-    description: Bob chooses secret {bob_secret}
-    exercise:
-        type: fill
-        prompt: Choose Bob's secret exponent {bob_secret}
-        hint: Choose a random integer in the range [2, {prime}-2]
-        answer: 2 < $1 < {prime}-2
+  description: Bob chooses secret {bob_secret}
+  exercise:
+      type: match
+      prompt: Match each candidate value to why it is or isn't a valid choice for {bob_secret}
+      pairs:
+          - 0 -> Always produces 1 as the public key
+          - 1 -> Always produces {generator} mod {prime}
+          - {prime}-1 -> Public key is always 1, secret is exposed
+          - {prime}-3 -> Falls within the safe range
 step:
     description: Bob computes his public key B
     exercise:
