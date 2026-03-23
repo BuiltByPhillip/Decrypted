@@ -103,7 +103,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
       <div className="relative flex justify-center w-full">
         <div className="flex flex-col items-center">
           {/* User feedback */}
-          <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />
+          {!locked && <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />}
 
           {/* Hint text */}
           {showHint && hint && (

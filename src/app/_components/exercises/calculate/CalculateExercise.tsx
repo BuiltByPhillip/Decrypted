@@ -22,20 +22,16 @@ export default function CalculateExercise({ description, prompt, hint, answer, o
     const [value, setValue] = useState("");
     const [locked, setLocked] = useState(false);
     const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
-    const [justCorrect, setJustCorrect] = useState(false);
     const [wrongAnswer, setWrongAnswer] = useState(false);
     const [showHint, setShowHint] = useState(false);
 
     const checkAnswer = () => {
         if (!value.trim() || locked) return;
-        // TODO: wire up real answer checking against `answer` expr
-        const isCorrect = false;
+        const isCorrect = answer.kind === "int" && Number(value.trim()) === answer.value;
         onAnswerAction?.(isCorrect);
         if (isCorrect) {
             setLocked(true);
             setSubmitButton("Correct!");
-            setJustCorrect(true);
-            setTimeout(() => setJustCorrect(false), 500);
         } else {
             setWrongAnswer(true);
             setSubmitButton("Try again!");
