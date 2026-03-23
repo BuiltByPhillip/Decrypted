@@ -46,21 +46,20 @@ export default function Home() {
             variant="secondary"
             onClick={() => {
               setCode(`protocol: Diffie-Hellman
-participants: Alice, Bob
 define:
       generator \\elem  {g, x, a, b}
       prime \\elem {p, n, m, q}
       alice_secret \\elem  {a, s, x}
       bob_secret \\elem  {b, t, y}
 
-step 1:
+step:
     description: Alice chooses secret {alice_secret}
     exercise:
         type: fill
         prompt: Choose Alice's secret exponent {alice_secret}
         hint: Choose a random integer in the range [2, {prime}-2]
         answer: 2 < $1 and $1 < {prime}-2
-step 2:
+step:
     description: Alice computes her public key A
     exercise:
         type: construct
@@ -68,16 +67,16 @@ step 2:
         hint: Bob uses the same expression to calculate B
         palette: {generator}, {alice_secret}, {prime}, ^, mod, *
         answer: {generator} ^ {alice_secret} mod {prime}
-step 3:
+step:
     description: Alice sends A to Bob
-step 4:
+step:
     description: Bob chooses secret {bob_secret}
     exercise:
         type: fill
         prompt: Choose Bob's secret exponent {bob_secret}
         hint: Choose a random integer in the range [2, {prime}-2]
         answer: 2 < $1 < {prime}-2
-step 5:
+step:
     description: Bob computes his public key B
     exercise:
         type: select
@@ -88,9 +87,9 @@ step 5:
             - {prime}^{bob_secret} mod {generator}
             - {generator}^{bob_secret} mod {prime}
         answer: {generator}^{bob_secret} mod {prime}
-step 6:
+step:
     description: Bob sends B to Alice
-step 7:
+step:
     description: Alice computes shared key
     exercise:
         type: calculate

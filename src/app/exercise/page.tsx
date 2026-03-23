@@ -200,14 +200,16 @@ export default function ExercisePage() {
   return (
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
       {/* Progress bar fixed to right side */}
-      <div className="fixed right-5 top-1/2 -translate-y-1/2">
-        <ProgressBar total={exercises.length} results={results}/>
-      </div>
+      {
+        showExercises ? <div className="fixed top-1/2 right-5 -translate-y-1/2">
+          <ProgressBar total={exercises.length} results={results} />
+        </div> : null
+      }
 
       {/* Definitions selected container fixed position */}
       <DefinitionContainer
-          selected={new Map(Object.entries(definitions))}
-          className="fixed left-10 top-7"
+        selected={new Map(Object.entries(definitions))}
+        className="fixed top-7 left-10"
       />
       {/* Definition selection */}
       <div className="flex min-h-screen flex-col items-center justify-center">
@@ -215,9 +217,9 @@ export default function ExercisePage() {
           define symbols for exercises
         </span>
         <DefinitionStep
-            definitions={code.information.definition}
-            onSelect={updateDefinitions}
-            selected={definitions}
+          definitions={code.information.definition}
+          onSelect={updateDefinitions}
+          selected={definitions}
         />
         <Button
           variant="submit"
@@ -236,66 +238,88 @@ export default function ExercisePage() {
       </div>
 
       {/* Exercise sections */}
-      {showExercises && exercises.map(({ step, stepIndex }, exerciseIndex) => {
-        const isLastExercise = exerciseIndex === exercises.length - 1;
-        const isUnlocked = exerciseIndex === 0 || results[exerciseIndex - 1] === true;
-        if (!isUnlocked) return null;
+      {showExercises &&
+        exercises.map(({ step, stepIndex }, exerciseIndex) => {
+          const isLastExercise = exerciseIndex === exercises.length - 1;
+          const isUnlocked =
+            exerciseIndex === 0 || results[exerciseIndex - 1] === true;
+          if (!isUnlocked) return null;
 
-        return (
-          <div
-            key={stepIndex}
-            ref={(el) => setExerciseRef(exerciseIndex, el)}
-            className="flex min-h-screen flex-col items-center justify-center gap-8 w-full"
-          >
-            {step.exercise?.type === "select" ? (
-              <SelectExercise
-                options={step.exercise!.options!}
-                description={step.description}
-                prompt={step.exercise!.prompt}
-                hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
-                definitions={definitions}
-                answers={step.exercise!.answer}
-                onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
-              />
-            ) : step.exercise?.type === "construct" ? (
-              <ConstructExercise
-                palette={step.exercise!.palette!}
-                answer={step.exercise.answer[0]!}
-                description={step.description}
-                prompt={step.exercise.prompt}
-                hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
-                definitions={definitions}
-                onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
-              />
-            ) : step.exercise?.type === "fill" ? (
-              <div>Empty placeholder</div>
-            ) : step.exercise?.type === "calculate" ? (
-              <CalculateExercise
+          return (
+            <div
+              key={stepIndex}
+              ref={(el) => setExerciseRef(exerciseIndex, el)}
+              className="flex min-h-screen w-full flex-col items-center justify-center gap-8"
+            >
+              {step.exercise?.type === "select" ? (
+                <SelectExercise
+                  options={step.exercise!.options!}
+                  description={step.description}
+                  prompt={step.exercise!.prompt}
+                  hint={
+                    step.exercise.hint
+                      ? substituteRolesInString(step.exercise.hint, definitions)
+                      : undefined
+                  }
+                  definitions={definitions}
+                  answers={step.exercise!.answer}
+                  onAnswerAction={(isCorrect) =>
+                    onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                />
+              ) : step.exercise?.type === "construct" ? (
+                <ConstructExercise
+                  palette={step.exercise!.palette!}
+                  answer={step.exercise.answer[0]!}
                   description={step.description}
                   prompt={step.exercise.prompt}
-                  hint={step.exercise.hint ? substituteRolesInString(step.exercise.hint, definitions) : undefined}
+                  hint={
+                    step.exercise.hint
+                      ? substituteRolesInString(step.exercise.hint, definitions)
+                      : undefined
+                  }
+                  definitions={definitions}
+                  onAnswerAction={(isCorrect) =>
+                    onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                />
+              ) : step.exercise?.type === "fill" ? (
+                <div>Empty placeholder</div>
+              ) : step.exercise?.type === "calculate" ? (
+                <CalculateExercise
+                  description={step.description}
+                  prompt={step.exercise.prompt}
+                  hint={
+                    step.exercise.hint
+                      ? substituteRolesInString(step.exercise.hint, definitions)
+                      : undefined
+                  }
                   answer={step.exercise.answer[0]!}
                   definitions={definitions}
-                  onAnswerAction={(isCorrect) => onAnswerAction(exerciseIndex, isCorrect)}
-              />
-            ) : <div>Something went wrong while rendering</div>}
+                  onAnswerAction={(isCorrect) =>
+                    onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                />
+              ) : (
+                <div>Something went wrong while rendering</div>
+              )}
 
-            <Button
-              variant="submit"
-              className={`w-50 transition delay-150 select-none ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
-              onClick={() => {
-                if (isLastExercise) {
-                  handleFinish();
-                } else {
-                  scrollToExercise(exerciseIndex + 1);
-                }
-              }}
-            >
-              {isLastExercise ? "Finish" : "Continue"}
-            </Button>
-          </div>
-        );
-      })}
+              <Button
+                variant="submit"
+                className={`w-50 transition delay-150 select-none ${!results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
+                onClick={() => {
+                  if (isLastExercise) {
+                    handleFinish();
+                  } else {
+                    scrollToExercise(exerciseIndex + 1);
+                  }
+                }}
+              >
+                {isLastExercise ? "Finish" : "Continue"}
+              </Button>
+            </div>
+          );
+        })}
 
       {showFinish && (
         <div ref={finishElementRef}>

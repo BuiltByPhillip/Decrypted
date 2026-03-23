@@ -13,7 +13,7 @@ export default function ProgressBar({ results, total }: ProgressBarProps) {
                 <div
                     key={index}
                     style={{ height: `${100 / total}%` }}
-                    className={`w-full border border-dark ${results[index] ? "bg-green/90" : "bg-muted/70"}`} />
+                    className={`w-full border border-dark ${results[index] ? "bg-green/90" : "bg-muted/50"}`} />
             ))}
         </div>
     );

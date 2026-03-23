@@ -5,7 +5,6 @@ export type Code = {
 
 type Information = {
   name: string;
-  participants: string[];
   definition: Definition[];
 }
 
@@ -468,7 +467,7 @@ function parsePaletteItem(input: string): PaletteItem {
 export function parse(input: string, startIndex: number): Code {
   const lines: string[] = input.split("\n");
   let code: Code = {
-    information: { name: "", participants: [], definition: []},
+    information: { name: "", definition: []},
     step: []
   }
 
@@ -483,12 +482,6 @@ export function parse(input: string, startIndex: number): Code {
 
     if (line.startsWith("protocol:")) {
       code.information.name = line.replace("protocol:", "").trim();
-    }
-    else if (line.startsWith("participants:")) {
-      code.information.participants =
-        line.replace("participants:", "")
-          .split(",")
-          .map(p => p.trim())
     }
     else if (line.startsWith("define:")) {
       const [definition, nextI] = defineParse(lines, i)
