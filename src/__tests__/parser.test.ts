@@ -324,12 +324,12 @@ step:
     expect(result.step[0]?.exercise?.pairs).toHaveLength(3);
   });
 
-  it("parses pair left sides as Expr", () => {
+  it("parses pair left sides as strings", () => {
     const result = parse(matchDsl, 0);
     const pairs = result.step[0]?.exercise?.pairs!;
-    expect(pairs[0]?.left).toMatchObject({ kind: "int", value: 0 });
-    expect(pairs[1]?.left).toMatchObject({ kind: "binary", op: "sub" });
-    expect(pairs[2]?.left).toMatchObject({ kind: "int", value: 7 });
+    expect(pairs[0]?.left).toBe("0");
+    expect(pairs[1]?.left).toBe("{prime}-1");
+    expect(pairs[2]?.left).toBe("7");
   });
 
   it("parses pair right sides as plain strings", () => {

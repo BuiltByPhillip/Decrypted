@@ -35,7 +35,7 @@ type Exercise = {
   hint?: string;
   palette?: PaletteItem[];
   options?: Expr[];
-  pairs?: { left: Expr; right: string }[];
+  pairs?: { left: string; right: string }[];
   answer?: Expr[];
 }
 
@@ -687,9 +687,9 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
  * @param startIndex - The line index to start parsing from (first `-` line)
  * @returns A tuple of the parsed pairs and the index of the first unconsumed line
  */
-function pairsParse(lines: string[], startIndex: number): [{ left: Expr; right: string }[], number] {
+function pairsParse(lines: string[], startIndex: number): [{ left: string; right: string }[], number] {
   let i: number = startIndex;
-  let pairs: { left: Expr; right: string }[] = [];
+  let pairs: { left: string; right: string }[] = [];
 
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
@@ -701,9 +701,7 @@ function pairsParse(lines: string[], startIndex: number): [{ left: Expr; right: 
     if (line.startsWith("-")) {
       const pair = line.replace("-", "").trim().split("->")
       if (pair.length !== 2) throw new Error(`Line ${i} - Each pair must have exactly one '->'`);
-      const tokens = tokenize(pair[0]!.trim());
-      const parser = new ExpressionParser(tokens);
-      pairs.push({ left: parser.parse(), right: pair[1]!.trim() })
+      pairs.push({ left: pair[0]!.trim(), right: pair[1]!.trim() })
     }
     else {
       return [pairs, i]
