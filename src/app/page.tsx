@@ -14,6 +14,7 @@ export default function Home() {
 
   const handleClick = () => {
     try {
+      if (code.trim() === "") throw new Error("No code entered");
       const userCode = parse(code, 0);
       setError(null);
       sessionStorage.setItem("exerciseData", JSON.stringify(userCode));

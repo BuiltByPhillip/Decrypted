@@ -642,6 +642,8 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
     }
 
     if (line.startsWith("type:")) {
+      if (pendingExercise.type)
+        throw new Error(`Line ${i + 1} - Type defined multiple times`);
       const rest = line.replace("type:", "").trim()
       if (!isExerciseType(rest)) {
         throw new Error(`Line ${i + 1} - Invalid exercise type '${rest}'`)
@@ -649,17 +651,25 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
       pendingExercise.type = rest
     }
     else if (line.startsWith("prompt:")) {
+      if (pendingExercise.prompt)
+        throw new Error(`Line ${i + 1} - Prompt defined multiple times`);
       pendingExercise.prompt = line.replace("prompt:", "").trim()
     }
     else if (line.startsWith("hint")) {
+      if (pendingExercise.hint)
+        throw new Error(`Line ${i + 1} - Hint defined multiple times`);
       pendingExercise.hint = line.replace("hint:", "").trim()
     }
     else if (line.startsWith("palette:")) {
+      if (pendingExercise.palette)
+        throw new Error(`Line ${i + 1} - Palette defined multiple times`);
       pendingExercise.palette = line.replace("palette:", "").trim()
         .split(",")
         .map(p => parsePaletteItem(p.trim()))
     }
     else if (line.startsWith("pairs:")) {
+      if (pendingExercise.pairs)
+        throw new Error(`Line ${i + 1} - Pairs defined multiple times`);
       const [pairs, nextI] = pairsParse(lines, i+1)
       if (pairs.length == 0) {
         throw new Error(`Line ${i + 1} - No pairs for exercise type match`);
@@ -669,6 +679,8 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
       continue;
     }
     else if (line.startsWith("options:")) {
+      if (pendingExercise.options)
+        throw new Error(`Line ${i + 1} - Options defined multiple times`);
       const [options, nextI] = optionsParse(lines, i+1)
       if (options.length == 0) {
         throw new Error(`Line ${i + 1} - No options for exercise type select`);
@@ -686,6 +698,8 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
       continue
     }
     else if (line.startsWith("answer:")) {
+      if (pendingExercise.answer)
+        throw new Error(`Line ${i + 1} - Answer defined multiple times`);
       const answerText = line.replace("answer:", "").trim()
       try {
         const tokens = tokenize(answerText)
