@@ -299,6 +299,204 @@ describe("parseExpression", () => {
   it("parses \\rightarrow as a binary infix operator", () => {
     expect(parseExpression("a \\rightarrow b")).toMatchObject({ kind: "binary", op: "rightarrow" });
   });
+
+  // --- Trailing tokens (regression for silent-ignore bug) ---
+
+  it("throws on trailing token after valid expression", () => {
+    expect(() => parseExpression("a + b c")).toThrow();
+  });
+
+  it("throws on trailing variable after g ^ a mod p", () => {
+    expect(() => parseExpression("g ^ a mod p j")).toThrow();
+  });
+
+  it("throws on trailing number after expression", () => {
+    expect(() => parseExpression("a + b 3")).toThrow();
+  });
+});
+
+// ─── define block parsing ─────────────────────────────────────────────────────
+
+describe("define block parsing", () => {
+  it("parses a multi-element set", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, x, a}`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.symbols).toHaveLength(3);
+  });
+
+  it("parses a single-element set {g} (regression for ROLE_REF bug)", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g}`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.symbols).toHaveLength(1);
+    expect(result.information.definition[0]?.symbols[0]).toMatchObject({ kind: "var", name: "g" });
+  });
+
+  it("throws on duplicate symbols in a definition", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, g, x}`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on missing \\elem", () => {
+    const dsl = `protocol: Test
+define:
+    generator {g, x}`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("error message includes the line number", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, g}`;
+    expect(() => parse(dsl, 0)).toThrow(/Line 3/);
+  });
+
+  it("parses the role name correctly", () => {
+    const dsl = `protocol: Test
+define:
+    prime \\elem {p, q}`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.role).toBe("prime");
+  });
+
+  it("parses multiple definitions", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, x}
+    prime \\elem {p, q}`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition).toHaveLength(2);
+  });
+});
+
+// ─── construct exercise parsing ───────────────────────────────────────────────
+
+describe("construct exercise parsing", () => {
+  const constructDsl = `protocol: Test
+define:
+    generator \\elem {g, x}
+    prime \\elem {p, q}
+    secret \\elem {a, b}
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: {generator}, {secret}, {prime}, ^, mod
+        answer: {generator} ^ {secret} mod {prime}`;
+
+  it("parses a construct exercise without throwing", () => {
+    expect(() => parse(constructDsl, 0)).not.toThrow();
+  });
+
+  it("parses the palette items", () => {
+    const result = parse(constructDsl, 0);
+    expect(result.step[0]?.exercise?.palette).toHaveLength(5);
+  });
+
+  it("parses the answer expression", () => {
+    const result = parse(constructDsl, 0);
+    expect(result.step[0]?.exercise?.answer).toHaveLength(1);
+  });
+
+  it("throws when construct exercise has no palette", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        answer: g ^ a mod p`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws when construct exercise has no answer", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: g, a, p, ^, mod`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+});
+
+// ─── select exercise parsing ──────────────────────────────────────────────────
+
+describe("select exercise parsing", () => {
+  const selectDsl = `protocol: Test
+step:
+    description: Choose a value
+    exercise:
+        type: select
+        prompt: Pick the right one
+        options:
+            - 1
+            - 7
+            - 23
+        answer: 7`;
+
+  it("parses a select exercise without throwing", () => {
+    expect(() => parse(selectDsl, 0)).not.toThrow();
+  });
+
+  it("parses the correct number of options", () => {
+    const result = parse(selectDsl, 0);
+    expect(result.step[0]?.exercise?.options).toHaveLength(3);
+  });
+
+  it("parses the answer", () => {
+    const result = parse(selectDsl, 0);
+    expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({ kind: "int", value: 7 });
+  });
+
+  it("throws when select exercise has no options", () => {
+    const dsl = `protocol: Test
+step:
+    description: Choose a value
+    exercise:
+        type: select
+        prompt: Pick the right one
+        answer: 7`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+});
+
+// ─── general parse errors ─────────────────────────────────────────────────────
+
+describe("parse error messages", () => {
+  it("includes line number in error for invalid exercise type", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: invalid
+        prompt: Prompt
+        answer: x`;
+    expect(() => parse(dsl, 0)).toThrow(/Line 5/);
+  });
+
+  it("throws on a step with no description", () => {
+    const dsl = `protocol: Test
+step:
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - 1
+        answer: 1`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on unknown top-level keyword", () => {
+    expect(() => parse("unknown: value", 0)).toThrow();
+  });
 });
 
 // ─── match exercise parsing ───────────────────────────────────────────────────

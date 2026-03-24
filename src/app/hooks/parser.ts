@@ -631,6 +631,9 @@ function stepParse(lines: string[], startIndex: number): [Step, number] {
     }
     i++
   }
+  if (!currentStep.description) {
+    throw new Error(`Line ${startIndex + 1} - Step must have a description`)
+  }
   return [currentStep, i]
 }
 
@@ -793,6 +796,9 @@ function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
   }
   if (fields.type === "match" && !fields.pairs) {
     throw new Error(`Line ${line + 1} - Exercise type match must have pairs`)
+  }
+  if (fields.type === "select" && !fields.options) {
+    throw new Error(`Line ${line + 1} - Exercise type select must have options`)
   }
 
   return fields as Exercise

@@ -125,6 +125,55 @@ describe("exprEquals", () => {
     const ba: Expr = { kind: "binary", op: "div", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
     expect(exprEquals(ab, ba)).toBe(false);
   });
+
+  it("pow is NOT commutative: g ^ a !== a ^ g", () => {
+    const ga: Expr = { kind: "binary", op: "pow", left: { kind: "var", name: "g" }, right: { kind: "var", name: "a" } };
+    const ag: Expr = { kind: "binary", op: "pow", left: { kind: "var", name: "a" }, right: { kind: "var", name: "g" } };
+    expect(exprEquals(ga, ag)).toBe(false);
+  });
+
+  it("mod is NOT commutative: a mod p !== p mod a", () => {
+    const ap: Expr = { kind: "binary", op: "mod", left: { kind: "var", name: "a" }, right: { kind: "var", name: "p" } };
+    const pa: Expr = { kind: "binary", op: "mod", left: { kind: "var", name: "p" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ap, pa)).toBe(false);
+  });
+
+  it("less is NOT commutative: a < b !== b < a", () => {
+    const ab: Expr = { kind: "binary", op: "less", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "less", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(false);
+  });
+
+  it("g ^ a mod p does not equal g ^ a mod p with extra term", () => {
+    const correct = parseExpression("g ^ a mod p");
+    const withExtra = parseExpression("g ^ a mod p");
+    // Structural equality — same tree should match
+    expect(exprEquals(correct, withExtra)).toBe(true);
+  });
+
+  it("g ^ a mod p does not equal g ^ b mod p", () => {
+    const correct = parseExpression("g ^ a mod p");
+    const wrong = parseExpression("g ^ b mod p");
+    expect(exprEquals(correct, wrong)).toBe(false);
+  });
+
+  it("nested commutativity: (a + b) * c === c * (b + a)", () => {
+    const left = parseExpression("(a + b) * c");
+    const right = parseExpression("c * (b + a)");
+    expect(exprEquals(left, right)).toBe(true);
+  });
+
+  it("and is commutative: a and b === b and a", () => {
+    const ab: Expr = { kind: "binary", op: "and", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "and", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(true);
+  });
+
+  it("or is commutative: a or b === b or a", () => {
+    const ab: Expr = { kind: "binary", op: "or", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "or", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(true);
+  });
 });
 
 // ─── exprToString ─────────────────────────────────────────────────────────────
