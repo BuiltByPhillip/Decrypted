@@ -3,12 +3,10 @@
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 import {type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import Button from "~/components/Button";
 import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
-import Hint from "~/app/_components/exercises/select/hint";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
-import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
+import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 
 type ConstructExerciseProps = {
   palette: PaletteItem[];
@@ -20,14 +18,11 @@ type ConstructExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-type ButtonState = "Check answer" | "Correct!" | "Incorrect!"
-
 export default function ConstructExercise({ answer, definitions, prompt, description, hint, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [showHint, setShowHint] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
-  const [submitButton, setSubmitButton] = useState<ButtonState>("Check answer");
   const [submittedAnswer, setSubmittedAnswer] = useState<{ status: "valid"; expr: Expr } | { status: "invalid" } | null>(null);
   const [resolvedAnswer, setResolvedAnswer] = useState<Expr>(answer);
   const [attempts, setAttempts] = useState<number>(0);
@@ -42,10 +37,8 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   function handleAnswer(isMatch: boolean, isDuplicate = false) {
     setIsCorrect(isMatch);
     if (isMatch) {
-      setSubmitButton("Correct!");
+      setLocked(true);
     } else {
-      setSubmitButton("Incorrect!");
-      setTimeout(() => setSubmitButton("Check answer"), 2500);
       if (!isDuplicate) setAttempts(a => a + 1);
     }
     if (isMatch) setErrorRange(null);
@@ -53,6 +46,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   }
 
   const checkAnswer = () => {
+    if (locked) return;
     if (tokens.length === 0) {
       handleAnswer(false);
       return;
@@ -80,26 +74,18 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
   };
 
   return (
-      <div className="w-full">
-        <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
-        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
-        <div className="flex flex-col items-center pt-10">
-          <div className="relative flex w-150 justify-center items-center">
-            <div className="absolute bottom-full w-full flex flex-col items-center pb-2">
-              {showHint && hint
-                ? <span className="text-muted text-sm">{hint}</span>
-                : submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />
-              }
-            </div>
-            <Button variant="submit" className="w-100" onClick={checkAnswer}>{submitButton}</Button>
-            {hint && (
-              <div className="absolute right-0">
-                <Hint open={showHint} onClick={() => setShowHint(s => !s)} />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <ExerciseShell
+        className="w-full"
+        description={description}
+        prompt={prompt}
+        hint={hint}
+        definitions={definitions}
+        submitState={locked ? "correct" : isCorrect === false ? "incorrect" : "idle"}
+        onSubmit={checkAnswer}
+        feedback={submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
+      >
+        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked}/>
+      </ExerciseShell>
 
 )
   ;

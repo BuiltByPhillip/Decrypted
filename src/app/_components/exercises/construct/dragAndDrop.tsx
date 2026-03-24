@@ -23,10 +23,11 @@ type DragAndDropProps = {
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
   definitions?: SelectedDefinitions;
+  locked?: boolean;
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions, locked }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -76,6 +77,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
   };
 
   const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
+    if (locked) return;
     setIsDragDisintegrating(false);
     setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY });
   };
@@ -88,6 +90,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
   };
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
+    if (locked) return;
     // Remove immediately so the gap collapses. Restoration happens on drop if needed.
     const filtered = tokens.filter((_, i) => i !== index);
     setTokens(filtered);
@@ -184,7 +187,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
             variant="ghostMuted"
             className="flex justify-end pr-3 select-none"
             size="none"
-            onClick={() => { updateTokens([]) }}
+            onClick={() => { if (!locked) updateTokens([]) }}
           >
             Clear expression
           </Button>
