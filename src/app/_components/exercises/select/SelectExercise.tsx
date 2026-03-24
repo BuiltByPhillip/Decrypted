@@ -1,16 +1,12 @@
 "use client"
 
 import Option from "~/app/_components/exercises/select/option"
-import Button from "~/components/Button";
-import Hint from "~/app/_components/exercises/select/hint";
 import { useState } from "react";
 import type { Expr } from "~/app/hooks/parser"
 import { exprListContains, substituteRoles } from "~/app/hooks/expr";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
-import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
-
-type ButtonState = "Answer" | "Correct!" | "Try again!"
+import ExerciseShell from "../shared/ExerciseShell";
 
 type SelectExerciseProps = {
   options: Expr[];
@@ -39,10 +35,8 @@ export default function SelectExercise({options, description, prompt, hint, defi
   const [selected, setSelected] = useState<number[]>([]);
   const [locked, setLocked] = useState<boolean>(false);
   const [lastResults, setLastResults] = useState<[number, boolean][]>([]);
-  const [submitButton, setSubmitButton] = useState<ButtonState>("Answer");
   const [justCorrect, setJustCorrect] = useState<boolean>(false);
   const [wrongAnswer, setWrongAnswer] = useState<boolean>(false);
-  const [showHint, setShowHint] = useState<boolean>(false);
 
   const checkAnswer = () => {
     if (selected.length === 0) return;
@@ -52,17 +46,14 @@ export default function SelectExercise({options, description, prompt, hint, defi
     onAnswerAction?.(allCorrect);
     if (allCorrect) {
       setLocked(true);
-      setSubmitButton("Correct!");
       setJustCorrect(true);
       setTimeout(() => setJustCorrect(false), 500);
     } else {
       setWrongAnswer(true);
-      setSubmitButton("Try again!");
       setTimeout(() => {
         setSelected([]);
         setWrongAnswer(false);
       }, 550);
-      setTimeout(() => setSubmitButton("Answer"), 2500);
     }
   }
 
@@ -81,55 +72,39 @@ export default function SelectExercise({options, description, prompt, hint, defi
   }
 
   return (
-    <div className="flex flex-col items-center w-full">
-
-      {/* Exercise description & prompt */}
-      <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
-
-      {/* Multiple-choice option buttons */}
-      <div className="grid w-full grid-cols-2 gap-4 pb-10 px-20">
-        {options.map((option, i) => (
-          <Option
-            key={i}
-            className={`h-20 w-full hover:border-amber ${handleButtonColor(i)}`}
-            text={substituteRoles(option, definitions!)}
-            onClick={() => handleSelect(i)}
-            justCorrect={justCorrect && selected.includes(i)}
-            wrongAnswer={wrongAnswer && selected.includes(i)}
+    /* Exercise wrapper */
+    <ExerciseShell
+      className="flex w-full flex-col items-center"
+      description={description}
+      prompt={prompt}
+      definitions={definitions}
+      hint={hint}
+      submitState={locked ? "correct" : wrongAnswer ? "incorrect" : "idle"}
+      onSubmit={checkAnswer}
+      feedback={
+        !locked && (
+          <UserFeedback
+            exerciseType="select"
+            results={lastResults}
+            options={options}
+            answers={answers}
           />
-        ))}
-      </div>
-
-      <div className="relative flex justify-center w-full">
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            {/* User feedback + hint float above button */}
-            <div className="absolute bottom-full w-full flex flex-col items-center pb-2">
-              {!locked && <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />}
-              {showHint && hint && (
-                <span className="text-muted text-sm pb-1">{hint}</span>
-              )}
-            </div>
-
-            {/* Answer button */}
-            <Button
-                variant="submit"
-                className={"w-100 py-3 mt-3"}
-                onClick={() => checkAnswer()}
-            >
-              {submitButton}
-            </Button>
-          </div>
-        </div>
-
-        {/* Hint button - conditionally rendered, positioned to the right */}
-        {hint && (
-          <div className="absolute right-20 py-3">
-            <Hint open={showHint} onClick={() => setShowHint(s => !s)} />
-          </div>
-        )}
-      </div>
-
+        )
+      }
+    >
+    {/* Multiple-choice option buttons */}
+    <div className="grid w-full grid-cols-2 gap-4 px-20 pb-10">
+      {options.map((option, i) => (
+        <Option
+          key={i}
+          className={`hover:border-amber h-20 w-full ${handleButtonColor(i)}`}
+          text={substituteRoles(option, definitions!)}
+          onClick={() => handleSelect(i)}
+          justCorrect={justCorrect && selected.includes(i)}
+          wrongAnswer={wrongAnswer && selected.includes(i)}
+        />
+      ))}
     </div>
+    </ExerciseShell>
   );
 }

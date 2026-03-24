@@ -13,14 +13,15 @@ type ExerciseShellProps = {
   onSubmit: () => void;
   feedback?: React.ReactNode;
   children: React.ReactNode;
+  className?: string;
 }
 
 
-export default function ExerciseShell({ description, prompt, hint, onSubmit, submitState, children, definitions, feedback }: ExerciseShellProps) {
+export default function ExerciseShell({ description, prompt, hint, onSubmit, submitState, children, definitions, feedback, className }: ExerciseShellProps) {
   const [showHint, setShowHint] = useState(false);
 
   return (
-    <div>
+    <div className={className}>
       {/* Description & prompt */}
       <ExerciseDescription
         description={description}
