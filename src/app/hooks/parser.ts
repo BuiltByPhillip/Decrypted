@@ -555,6 +555,12 @@ function parseDefinition(tokens: Token[], type: DefinitionType): Definition {
   }
   i++;
 
+  // {element} is tokenized as a single ROLE_REF token, handle it as a single-element set
+  if (tokens[i]?.type === "ROLE_REF") {
+    definition.symbols.push({ kind: "var", name: tokens[i]!.value });
+    return definition;
+  }
+
   // Expect: LBRACE
   if (tokens[i]?.type !== "LBRACE") {
     throw new Error("Expected {");
