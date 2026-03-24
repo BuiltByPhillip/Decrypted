@@ -23,6 +23,7 @@ export default function ExercisePage() {
   const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
   const [results, setResults] = useState<Record<number, boolean>>({});
   const [showFinish, setShowFinish] = useState(false);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
   const lenis = useLenis();
   const exerciseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -32,7 +33,7 @@ export default function ExercisePage() {
 
   // Snap scroll state
   const currentExerciseIndexRef = useRef(0);
-  const isSnapScrollingRef = useRef(false);
+  const lastScrollTimeRef = useRef(0);
   const finishElementRef = useRef<HTMLDivElement | null>(null);
   const showFinishRef = useRef(false);
   const exercisesLengthRef = useRef(0);
@@ -52,13 +53,15 @@ export default function ExercisePage() {
     if (!element) return;
 
     currentExerciseIndexRef.current = index;
+    setCurrentExerciseIndex(index);
 
     // CRITICAL: Update Lenis's internal dimensions before scrolling
     // Without this, Lenis may not know about newly added content
     lenis.resize();
 
     lenis.scrollTo(element, {
-      duration: 2,
+      duration: 1,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
     });
   }, [lenis]);
 
@@ -80,33 +83,27 @@ export default function ExercisePage() {
       e.preventDefault();
       e.stopImmediatePropagation();
 
-      if (isSnapScrollingRef.current) return;
+      const now = Date.now();
+      if (now - lastScrollTimeRef.current < 800) return;
+      if (Math.abs(e.deltaY) < 15) return; // ignore momentum tails
+
+      lastScrollTimeRef.current = now;
 
       const currentIdx = currentExerciseIndexRef.current;
 
       if (e.deltaY > 0) {
         const nextIdx = currentIdx + 1;
         if (exerciseRefs.current.has(nextIdx)) {
-          isSnapScrollingRef.current = true;
-          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
           scrollToExercise(nextIdx);
         } else if (showFinishRef.current && finishElementRef.current) {
-          // Last exercise → scroll to finish screen
-          isSnapScrollingRef.current = true;
-          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
           currentExerciseIndexRef.current = exercisesLengthRef.current;
           lenis.resize();
-          lenis.scrollTo(finishElementRef.current, { duration: 2 });
+          lenis.scrollTo(finishElementRef.current, { duration: 1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
         }
       } else if (e.deltaY < 0) {
         if (currentIdx === exercisesLengthRef.current) {
-          // At finish screen → scroll back to last exercise
-          isSnapScrollingRef.current = true;
-          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
           scrollToExercise(exercisesLengthRef.current - 1);
         } else if (currentIdx > 0) {
-          isSnapScrollingRef.current = true;
-          setTimeout(() => { isSnapScrollingRef.current = false; }, 900);
           scrollToExercise(currentIdx - 1);
         }
       }
@@ -211,8 +208,8 @@ export default function ExercisePage() {
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
       {/* Progress bar fixed to right side */}
       {
-        showExercises ? <div className="fixed top-1/2 right-5 -translate-y-1/2">
-          <ProgressBar total={realExerciseIndices.length} results={remappedResults} />
+        showExercises ? <div className="fixed top-1/2 right-5 -translate-y-1/2 z-50">
+          <ProgressBar total={exercises.length} results={results} currentIndex={currentExerciseIndex} onSegmentClick={scrollToExercise} />
         </div> : null
       }
 
@@ -251,13 +248,6 @@ export default function ExercisePage() {
       {showExercises &&
         exercises.map(({ step, stepIndex }, exerciseIndex) => {
           const isLastExercise = exerciseIndex === exercises.length - 1;
-          const prevStep = exerciseIndex > 0 ? exercises[exerciseIndex - 1] : null;
-          const isUnlocked =
-            exerciseIndex === 0 ||
-            results[exerciseIndex - 1] ||
-            (prevStep !== null && !prevStep?.step.exercise);
-          if (!isUnlocked) return null;
-
           return (
             <div
               key={stepIndex}
@@ -319,7 +309,7 @@ export default function ExercisePage() {
 
               <Button
                 variant="submit"
-                className={`w-50 transition delay-150 select-none ${step.exercise && !results[exerciseIndex] ? "pointer-events-none opacity-50" : "opacity-100"}`}
+                className="w-50 transition delay-150 select-none"
                 onClick={() => {
                   if (isLastExercise) {
                     handleFinish();
