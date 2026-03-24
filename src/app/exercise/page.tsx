@@ -151,7 +151,7 @@ export default function ExercisePage() {
 
   const handleRestart = () => {
     currentExerciseIndexRef.current = 0;
-    isSnapScrollingRef.current = false;
+    lastScrollTimeRef.current = 0;
     showFinishRef.current = false;
     setResults({});
     setShowFinish(false);
