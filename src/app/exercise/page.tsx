@@ -37,6 +37,7 @@ export default function ExercisePage() {
   const finishElementRef = useRef<HTMLDivElement | null>(null);
   const showFinishRef = useRef(false);
   const exercisesLengthRef = useRef(0);
+  const exercisesRef = useRef<typeof exercises>([]);
 
   useEffect(() => {
     const rawData = sessionStorage.getItem("exerciseData");
@@ -93,6 +94,9 @@ export default function ExercisePage() {
 
       if (e.deltaY > 0) {
         const nextIdx = currentIdx + 1;
+        if (!exercisesRef.current[currentIdx]?.step.exercise) {
+          setResults(prev => ({ ...prev, [currentIdx]: true }));
+        }
         if (exerciseRefs.current.has(nextIdx)) {
           scrollToExercise(nextIdx);
         } else if (showFinishRef.current && finishElementRef.current) {
@@ -192,6 +196,7 @@ export default function ExercisePage() {
       (step.exercise?.type === "calculate"));
 
   exercisesLengthRef.current = exercises.length;
+  exercisesRef.current = exercises;
 
   // Map real exercises (no description steps) to consecutive indices for ProgressBar / FinishScreen
   const realExerciseIndices = exercises
@@ -308,7 +313,7 @@ export default function ExercisePage() {
               )}
 
               <Button
-                variant="submit"
+                variant={!step.exercise || results[exerciseIndex] ? "submit" : "continue"}
                 className="w-50 transition delay-150 select-none"
                 onClick={() => {
                   if (!step.exercise) {
@@ -321,7 +326,7 @@ export default function ExercisePage() {
                   }
                 }}
               >
-                {isLastExercise ? "Finish" : "Continue"}
+                {isLastExercise ? "Finish" : !step.exercise || results[exerciseIndex] ? "Continue" : "Skip"}
               </Button>
             </div>
           );
