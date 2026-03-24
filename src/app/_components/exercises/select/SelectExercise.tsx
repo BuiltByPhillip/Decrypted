@@ -102,22 +102,24 @@ export default function SelectExercise({options, description, prompt, hint, defi
 
       <div className="relative flex justify-center w-full">
         <div className="flex flex-col items-center">
-          {/* User feedback */}
-          {!locked && <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />}
+          <div className="relative">
+            {/* User feedback + hint float above button */}
+            <div className="absolute bottom-full w-full flex flex-col items-center pb-2">
+              {!locked && <UserFeedback exerciseType="select" results={lastResults} options={options} answers={answers} />}
+              {showHint && hint && (
+                <span className="text-muted text-sm pb-1">{hint}</span>
+              )}
+            </div>
 
-          {/* Hint text */}
-          {showHint && hint && (
-            <span className="text-muted text-sm pb-1">{hint}</span>
-          )}
-
-          {/* Answer button */}
-          <Button
-              variant="submit"
-              className={"w-100 py-3 mt-3"}
-              onClick={() => checkAnswer()}
-          >
-            {submitButton}
-          </Button>
+            {/* Answer button */}
+            <Button
+                variant="submit"
+                className={"w-100 py-3 mt-3"}
+                onClick={() => checkAnswer()}
+            >
+              {submitButton}
+            </Button>
+          </div>
         </div>
 
         {/* Hint button - conditionally rendered, positioned to the right */}

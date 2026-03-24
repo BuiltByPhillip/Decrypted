@@ -28,26 +28,6 @@ type DragAndDropProps = {
   definitions?: SelectedDefinitions;
 };
 
-const TOKENS_STORAGE_KEY = "drag-and-drop-tokens";
-
-function loadTokens(): PaletteItem[] | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(TOKENS_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveTokens(tokens: PaletteItem[] | null) {
-  if (typeof window === "undefined") return;
-  if (tokens === null || tokens.length === 0) {
-    localStorage.removeItem(TOKENS_STORAGE_KEY);
-  } else {
-    localStorage.setItem(TOKENS_STORAGE_KEY, JSON.stringify(tokens));
-  }
-}
 
 export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange, isCorrect, definitions }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,7 +41,6 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
   function updateTokens(next: PaletteItem[]) {
     setTokens(next);
-    saveTokens(next);
     onTokensChangeAction?.(next)
   }
 
@@ -76,10 +55,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
     tokenIndex?: number; // set when dragging an existing token
   } | null>(null);
 
-  useEffect(() => {
-    const saved = loadTokens();
-    if (saved) updateTokens(saved);
-  }, []);
+
 
   type PaletteId = "palette" | "values";
   const [stackOrder, setStackOrder] = useState<PaletteId[]>(["palette", "values"]);
