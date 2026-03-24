@@ -480,7 +480,7 @@ export function parse(input: string, startIndex: number): Code {
     const line: string | undefined = lines[i]?.trim()
 
     if (line == undefined) {
-      throw new Error(`Line ${line} - Line is undefined`);
+      throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
     if (line.startsWith("protocol:")) {
@@ -502,7 +502,7 @@ export function parse(input: string, startIndex: number): Code {
       // Empty line
     }
     else {
-      throw new Error(`Line ${i} - Unexpected string: '${line}'`);
+      throw new Error(`Line ${i + 1} - Unexpected string: '${line}'`);
     }
     i++
   }
@@ -525,7 +525,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
     if (line.startsWith("type:")) {
       const typeValue = line.replace("type:", "").trim();
       if (!isDefinitionType(typeValue)) {
-        throw new Error(`Line ${i} - Invalid definition type: '${typeValue}'`);
+        throw new Error(`Line ${i + 1} - Invalid definition type: '${typeValue}'`);
       }
       type = typeValue;
       i++;
@@ -536,7 +536,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
     try {
       tokens = tokenize(line);
     } catch (e) {
-      throw new Error(`Line ${i} - ${(e as Error).message}`);
+      throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
     }
     const def: Definition = parseDefinition(tokens, type, i);
     definitions.push(def);
@@ -551,14 +551,14 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
 
   // Expect: VARIABLE("generator")
   if (tokens[i]?.type !== "VAR") {
-    throw new Error(`Line ${line} - Expected role name`);
+    throw new Error(`Line ${line + 1} - Expected role name`);
   }
   definition.role = tokens[i]!.value;
   i++;
 
   // Expect: KEYWORD("elem")
   if (tokens[i]?.type !== "KEYWORD" || tokens[i]?.value !== "elem") {
-    throw new Error(`Line ${line} - Expected \\elem`);
+    throw new Error(`Line ${line + 1} - Expected \\elem`);
   }
   i++;
 
@@ -570,7 +570,7 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
 
   // Expect: LBRACE
   if (tokens[i]?.type !== "LBRACE") {
-    throw new Error(`Line ${line} - Expected {`);
+    throw new Error(`Line ${line + 1} - Expected {`);
   }
   i++;
 
@@ -579,7 +579,7 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
     if (tokens[i]?.type === "VAR") {
       const expr: Expr = { kind: "var", name: tokens[i]!.value };
       if (exprListContains(expr, definition.symbols)) {
-        throw new Error(`Line ${line} - Cannot contain duplicate variable names`);
+        throw new Error(`Line ${line + 1} - Cannot contain duplicate variable names`);
       }
       definition.symbols.push(expr);
     }
@@ -604,7 +604,7 @@ function stepParse(lines: string[], startIndex: number): [Step, number] {
     }
 
     if (line == undefined) {
-      throw new Error(`Line ${line} - Line is undefined`);
+      throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
     if (line.startsWith("description:")) {
@@ -614,7 +614,7 @@ function stepParse(lines: string[], startIndex: number): [Step, number] {
       const rest = line.replace("exercise:", "").trim()
 
       if (rest.length > 0) {
-        throw new Error(`Line ${i} - Line is undefined`);
+        throw new Error(`Line ${i + 1} - Line is undefined`);
       }
 
       const [exercise, nextI] = exerciseParse(lines, i+1)
@@ -638,13 +638,13 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
     const line: string | undefined = lines[i]?.trim()
 
     if (line == undefined) {
-      throw new Error(`Line ${i} - Line is undefined`);
+      throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
     if (line.startsWith("type:")) {
       const rest = line.replace("type:", "").trim()
       if (!isExerciseType(rest)) {
-        throw new Error(`Line ${i} - Invalid exercise type ${line}`)
+        throw new Error(`Line ${i + 1} - Invalid exercise type '${rest}'`)
       }
       pendingExercise.type = rest
     }
@@ -662,7 +662,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
     else if (line.startsWith("pairs:")) {
       const [pairs, nextI] = pairsParse(lines, i+1)
       if (pairs.length == 0) {
-        throw new Error(`Line ${i} - No pairs for exercise type match`);
+        throw new Error(`Line ${i + 1} - No pairs for exercise type match`);
       }
       pendingExercise.pairs = pairs;
       i = nextI;
@@ -671,7 +671,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
     else if (line.startsWith("options:")) {
       const [options, nextI] = optionsParse(lines, i+1)
       if (options.length == 0) {
-        throw new Error(`Line ${i} - No options for exercise type select`);
+        throw new Error(`Line ${i + 1} - No options for exercise type select`);
       }
       pendingExercise.options = options.map(opt => {
         try {
@@ -679,7 +679,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
           const parser = new ExpressionParser(tokens);
           return parser.parse();
         } catch (e) {
-          throw new Error(`Line ${i} - ${(e as Error).message}`);
+          throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
         }
       });
       i = nextI
@@ -692,7 +692,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
         const parser = new ExpressionParser(tokens)
         pendingExercise.answer = [parser.parse()]
       } catch (e) {
-        throw new Error(`Line ${i} - ${(e as Error).message}`);
+        throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
       }
     }
     else {
@@ -720,12 +720,12 @@ function pairsParse(lines: string[], startIndex: number): [{ left: string; right
     const line: string | undefined = lines[i]?.trim()
 
     if (line == undefined) {
-      throw new Error(`Line ${i} - Line is undefined`);
+      throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
     if (line.startsWith("-")) {
       const pair = line.replace("-", "").trim().split("->")
-      if (pair.length !== 2) throw new Error(`Line ${i} - Each pair must have exactly one '->'`);
+      if (pair.length !== 2) throw new Error(`Line ${i + 1} - Each pair must have exactly one '->'`);
       pairs.push({ left: pair[0]!.trim(), right: pair[1]!.trim() })
     }
     else {
@@ -744,7 +744,7 @@ function optionsParse(lines: string[], startIndex: number): [string[], number] {
     const line: string | undefined = lines[i]?.trim()
 
     if (line == undefined) {
-      throw new Error(`Line ${i} - Line is undefined`);
+      throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
     if (line.startsWith("-")) {
@@ -760,21 +760,21 @@ function optionsParse(lines: string[], startIndex: number): [string[], number] {
 
 function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
   if (!fields.type) {
-    throw new Error(`Line: ${line} - Exercise type must be specified`)
+    throw new Error(`Line ${line + 1} - Exercise type must be specified`)
   }
   if (!fields.prompt) {
-    throw new Error(`Line: ${line} - Exercise must have a prompt`)
+    throw new Error(`Line ${line + 1} - Exercise must have a prompt`)
   }
   if (!fields.answer && fields.type !== "match") {
-    throw new Error(`Line: ${line} - Exercise must have an answer`)
+    throw new Error(`Line ${line + 1} - Exercise must have an answer`)
   }
 
   // Type-specific requirements
   if (fields.type === "construct" && !fields.palette) {
-    throw new Error(`Line: ${line} - Exercise type construct must have a palette`)
+    throw new Error(`Line ${line + 1} - Exercise type construct must have a palette`)
   }
   if (fields.type === "match" && !fields.pairs) {
-    throw new Error(`Line: ${line} - Exercise type match must have pairs`)
+    throw new Error(`Line ${line + 1} - Exercise type match must have pairs`)
   }
 
   return fields as Exercise
