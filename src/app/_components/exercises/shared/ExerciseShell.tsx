@@ -14,7 +14,7 @@ type ExerciseShellProps = {
 }
 
 
-export default function ExerciseShell({}: ExerciseShellProps) {
+export default function ExerciseShell({ description, prompt, hint, onSubmit, submitState, children, definitions, feedback }: ExerciseShellProps) {
 
   return (
     <div>

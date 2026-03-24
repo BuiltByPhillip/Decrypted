@@ -8,6 +8,7 @@ import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
 import Hint from "~/app/_components/exercises/select/hint";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
+import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
 
 type ConstructExerciseProps = {
   palette: PaletteItem[];
@@ -80,7 +81,8 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
 
   return (
       <div className="w-full">
-        <DragAndDrop prompt={prompt} description={description} definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
+        <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
+        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect}/>
         <div className="flex flex-col items-center pt-10">
           <div className="relative flex w-150 justify-center items-center">
             <div className="absolute bottom-full w-full flex flex-col items-center pb-2">

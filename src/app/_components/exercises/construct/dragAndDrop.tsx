@@ -16,12 +16,9 @@ import TrashContainer from "~/app/_components/exercises/construct/TrashContainer
 import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
 import Button from "~/components/Button";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
-import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
 import type {SelectedDefinitions} from "~/app/exercise/page";
 
 type DragAndDropProps = {
-  prompt?: string;
-  description?: string;
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
@@ -29,7 +26,7 @@ type DragAndDropProps = {
 };
 
 
-export default function DragAndDrop({ description, prompt, onTokensChangeAction, errorRange, isCorrect, definitions }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -103,12 +100,8 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
 
   return (
     <div ref={containerRef} className="flex flex-col relative w-full h-full">
-
-      {/* Exercise description & prompt */}
-      <ExerciseDescription description={description} prompt={prompt} definitions={definitions}/>
-      
       <DraggableWindow
-        defaultPosition={{ x: 0, y: 320 }}
+        defaultPosition={{ x: 0, y: 180 }}
         zIndex={getZIndex("palette")}
         onBringToFront={() => bringToFront("palette")}
         containerRef={containerRef}
@@ -122,7 +115,7 @@ export default function DragAndDrop({ description, prompt, onTokensChangeAction,
         />
       </DraggableWindow>
       <DraggableWindow
-        defaultPosition={{ x: 0, y: 140 }}
+        defaultPosition={{ x: 0, y: 10 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}
         containerRef={containerRef}
