@@ -311,6 +311,9 @@ export default function ExercisePage() {
                 variant="submit"
                 className="w-50 transition delay-150 select-none"
                 onClick={() => {
+                  if (!step.exercise) {
+                    setResults(prev => ({ ...prev, [exerciseIndex]: true }));
+                  }
                   if (isLastExercise) {
                     handleFinish();
                   } else {
