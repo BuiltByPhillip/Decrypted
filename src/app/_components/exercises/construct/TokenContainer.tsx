@@ -99,7 +99,7 @@ export default function TokenContainer({ tokens, isDragging, dragPos, onGapHover
   return (
     <div
       ref={containerRef}
-      className="flex items-center"
+      className="flex items-center justify-center w-full"
       style={isCorrect === false ? { animation: `shake 0.5s ease-in-out`, animationDelay: `${shakeDelay}ms`, animationFillMode: "both" } : undefined}
     >
       {tokens.length === 0 ? (
