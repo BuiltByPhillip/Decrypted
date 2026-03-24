@@ -330,7 +330,11 @@ class ExpressionParser {
   }
 
   parse(): Expr {
-    return this.parseExpression(0)
+    const expr = this.parseExpression(0);
+    if (!this.isAtEnd()) {
+      throw new Error(`Unexpected token: '${this.peek().value}'`);
+    }
+    return expr;
   }
 
   private precedence(op: string): number {
