@@ -10,14 +10,17 @@ import { darkTheme } from "~/app/codeMirrorTheme";
 export default function Home() {
   const router = useRouter();
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleClick = () => {
-    let userCode = parse(code, 0);
-    console.log(userCode);
-    sessionStorage.setItem("exerciseData", JSON.stringify(userCode))
-
-    // Navigate to /exercise
-    router.push("/exercise");
+    try {
+      const userCode = parse(code, 0);
+      setError(null);
+      sessionStorage.setItem("exerciseData", JSON.stringify(userCode));
+      router.push("/exercise");
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-pattern text-cream">
@@ -33,6 +36,9 @@ export default function Home() {
             className="h-full"
           />
         </div>
+        {error && (
+          <p className="mt-4 text-red-400 text-sm font-mono">{error}</p>
+        )}
         <div>
           <Button
             className="bg-dark rounded-xl text-soft-white hover:shadow-[0_0_10px_theme(colors.muted)] px-3 py-1 transition duration-300 opacity-70 hover:cursor-pointer mt-10 border-2 border-medium hover:border-muted"

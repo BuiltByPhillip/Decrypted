@@ -1,3 +1,5 @@
+import { exprListContains } from "~/app/hooks/expr";
+
 export type Code = {
   information: Information;
   step: Step[];
@@ -530,28 +532,33 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       continue;
     }
 
-    const tokens: Token[] = tokenize(line);
-    const def: Definition = parseDefinition(tokens, type);
+    let tokens: Token[];
+    try {
+      tokens = tokenize(line);
+    } catch (e) {
+      throw new Error(`Line ${i} - ${(e as Error).message}`);
+    }
+    const def: Definition = parseDefinition(tokens, type, i);
     definitions.push(def);
     i++
   }
   return [definitions, i++];
 }
 
-function parseDefinition(tokens: Token[], type: DefinitionType): Definition {
+function parseDefinition(tokens: Token[], type: DefinitionType, line: number): Definition {
   let i: number = 0;
   let definition: Definition = {type, role: "", symbols: []};
-  
+
   // Expect: VARIABLE("generator")
   if (tokens[i]?.type !== "VAR") {
-    throw new Error("Expected role name");
+    throw new Error(`Line ${line} - Expected role name`);
   }
   definition.role = tokens[i]!.value;
   i++;
 
   // Expect: KEYWORD("elem")
   if (tokens[i]?.type !== "KEYWORD" || tokens[i]?.value !== "elem") {
-    throw new Error("Expected \\elem");
+    throw new Error(`Line ${line} - Expected \\elem`);
   }
   i++;
 
@@ -563,14 +570,18 @@ function parseDefinition(tokens: Token[], type: DefinitionType): Definition {
 
   // Expect: LBRACE
   if (tokens[i]?.type !== "LBRACE") {
-    throw new Error("Expected {");
+    throw new Error(`Line ${line} - Expected {`);
   }
   i++;
 
   // Collect options until RBRACE
   while (tokens[i] && tokens[i]?.type !== "RBRACE") {
     if (tokens[i]?.type === "VAR") {
-      definition.symbols.push({ kind: "var", name: tokens[i]!.value });
+      const expr: Expr = { kind: "var", name: tokens[i]!.value };
+      if (exprListContains(expr, definition.symbols)) {
+        throw new Error(`Line ${line} - Cannot contain duplicate variable names`);
+      }
+      definition.symbols.push(expr);
     }
     i++;
   }
@@ -663,18 +674,26 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
         throw new Error(`Line ${i} - No options for exercise type select`);
       }
       pendingExercise.options = options.map(opt => {
-        const tokens = tokenize(opt);
-        const parser = new ExpressionParser(tokens);
-        return parser.parse()
+        try {
+          const tokens = tokenize(opt);
+          const parser = new ExpressionParser(tokens);
+          return parser.parse();
+        } catch (e) {
+          throw new Error(`Line ${i} - ${(e as Error).message}`);
+        }
       });
       i = nextI
       continue
     }
     else if (line.startsWith("answer:")) {
       const answerText = line.replace("answer:", "").trim()
-      const tokens = tokenize(answerText)
-      const parser = new ExpressionParser(tokens)
-      pendingExercise.answer = [parser.parse()]
+      try {
+        const tokens = tokenize(answerText)
+        const parser = new ExpressionParser(tokens)
+        pendingExercise.answer = [parser.parse()]
+      } catch (e) {
+        throw new Error(`Line ${i} - ${(e as Error).message}`);
+      }
     }
     else {
       return [finalizeExercise(pendingExercise, startIndex), i]
