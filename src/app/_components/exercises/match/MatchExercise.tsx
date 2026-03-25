@@ -2,6 +2,7 @@ import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 import type { Expr } from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import { useState } from "react";
+import MatchCard from "~/app/_components/exercises/match/MatchCard";
 
 type MatchExerciseProps = {
   description: string;
@@ -43,7 +44,19 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       onSubmit={checkAnswer}
     >
       <div>
+        {/* Draggable objects */}
+        <div className="grid grid-cols-4 gap-4">
+          {pairs.map((pair) => (
+            <MatchCard key={pair.left} className="" label={pair.left}/>
+          ))}
+        </div>
 
+        {/* Droppable container and right pair */}
+        <div>
+          {pairs.map((pair) => (
+            <MatchCard key={pair.right} className="" label={pair.right}/>
+          ))}
+        </div>
       </div>
     </ExerciseShell>
   );
