@@ -7,7 +7,7 @@ type MatchExerciseProps = {
   description: string;
   prompt: string;
   hint?: string;
-  answer: Expr;
+  pairs: {left: string, right: string}[];
   onAnswerAction?: (isCorrect: boolean) => void;
   definitions: SelectedDefinitions;
 };
@@ -24,7 +24,7 @@ type MatchExerciseProps = {
  * - Unlike `select`, there are multiple simultaneous decisions, not one isolated question.
  * - Unlike `calculate`, no computation is required — only conceptual understanding.
  */
-export default function MatchExercise({ description, prompt, hint, answer, onAnswerAction, definitions }: MatchExerciseProps) {
+export default function MatchExercise({ description, prompt, hint, pairs, onAnswerAction, definitions }: MatchExerciseProps) {
   const [locked, setLocked] = useState(false);
   const [wrongAnswer, setWrongAnswer] = useState(false);
 

@@ -13,6 +13,7 @@ import { substituteRolesInString } from "~/app/hooks/expr";
 import DefinitionStep from "~/app/_components/definition/DefinitionStep";
 import ProgressBar from "~/app/_components/exercises/shared/ProgressBar";
 import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
+import MatchExercise from "~/app/_components/exercises/match/MatchExercise";
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -292,6 +293,17 @@ export default function ExercisePage() {
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
+              ) : step.exercise?.type === "match" ? (
+                <MatchExercise
+                  description={step.description}
+                  prompt={step.exercise.prompt}
+                  hint={step.exercise.hint}
+                  definitions={definitions}
+                  onAnswerAction={(isCorrect) =>
+                    onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                  pairs={step.exercise.pairs!}
+                />
               ) : step.exercise?.type === "calculate" ? (
                 <CalculateExercise
                   description={step.description}
@@ -307,18 +319,22 @@ export default function ExercisePage() {
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
-              ) : !step.exercise && step.description? (
-                  <ExerciseDescription description={step.description} />
+              ) : !step.exercise && step.description ? (
+                <ExerciseDescription description={step.description} />
               ) : (
                 <div>Something went wrong while rendering</div>
               )}
 
               <Button
-                variant={!step.exercise || results[exerciseIndex] ? "submit" : "continue"}
+                variant={
+                  !step.exercise || results[exerciseIndex]
+                    ? "submit"
+                    : "continue"
+                }
                 className="w-50 transition delay-150 select-none"
                 onClick={() => {
                   if (!step.exercise) {
-                    setResults(prev => ({ ...prev, [exerciseIndex]: true }));
+                    setResults((prev) => ({ ...prev, [exerciseIndex]: true }));
                   }
                   if (isLastExercise) {
                     handleFinish();
@@ -327,7 +343,11 @@ export default function ExercisePage() {
                   }
                 }}
               >
-                {isLastExercise ? "Finish" : !step.exercise || results[exerciseIndex] ? "Continue" : "Skip"}
+                {isLastExercise
+                  ? "Finish"
+                  : !step.exercise || results[exerciseIndex]
+                    ? "Continue"
+                    : "Skip"}
               </Button>
             </div>
           );
