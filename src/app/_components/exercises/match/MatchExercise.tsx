@@ -1,7 +1,16 @@
+import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
+import type { Expr } from "~/app/hooks/parser";
+import type { SelectedDefinitions } from "~/app/exercise/page";
+import { useState } from "react";
 
 type MatchExerciseProps = {
-
-}
+  description: string;
+  prompt: string;
+  hint?: string;
+  answer: Expr;
+  onAnswerAction?: (isCorrect: boolean) => void;
+  definitions: SelectedDefinitions;
+};
 
 /**
  * A matching exercise where the student pairs expressions to their corresponding labels or roles.
@@ -15,11 +24,27 @@ type MatchExerciseProps = {
  * - Unlike `select`, there are multiple simultaneous decisions, not one isolated question.
  * - Unlike `calculate`, no computation is required — only conceptual understanding.
  */
-export default function MatchExercise({}: MatchExerciseProps) {
+export default function MatchExercise({ description, prompt, hint, answer, onAnswerAction, definitions }: MatchExerciseProps) {
+  const [locked, setLocked] = useState(false);
+  const [wrongAnswer, setWrongAnswer] = useState(false);
+
+  const checkAnswer = () => {
+
+  }
 
   return (
-    <div>
+    <ExerciseShell
+      className=""
+      description={description}
+      prompt={prompt}
+      hint={hint}
+      definitions={definitions}
+      submitState={locked ? "correct" : wrongAnswer ? "incorrect" : "idle"}
+      onSubmit={checkAnswer}
+    >
+      <div>
 
-    </div>
+      </div>
+    </ExerciseShell>
   );
 }

@@ -192,6 +192,7 @@ export default function ExercisePage() {
     .filter(({ step }) =>
       !step.exercise ||
       (step.exercise?.type === "select" && step.exercise.options) ||
+      (step.exercise?.type === "match" && step.exercise.pairs) ||
       (step.exercise?.type === "construct" && step.exercise.palette) ||
       (step.exercise?.type === "calculate"));
 
