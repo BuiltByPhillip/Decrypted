@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { type PaletteItem } from "~/app/hooks/parser";
-import useDraggable from "./useDraggable";
+import useDraggable from "~/app/_components/exercises/shared/dnd/useDraggable";
 import ExprBlock from "./ExprBlock";
 import DisintegrateToken from "./DisintegrateToken";
 

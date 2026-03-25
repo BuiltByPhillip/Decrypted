@@ -12,8 +12,8 @@ import {
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
 import DragGhost from "~/app/_components/exercises/construct/DragGhost";
-import TrashContainer from "~/app/_components/exercises/construct/TrashContainer";
-import DraggableWindow from "~/app/_components/exercises/construct/DraggableWindow";
+import TrashContainer from "~/app/_components/exercises/shared/dnd/TrashContainer";
+import DraggableWindow from "~/app/_components/exercises/shared/dnd/DraggableWindow";
 import Button from "~/components/Button";
 import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
 import type {SelectedDefinitions} from "~/app/exercise/page";
