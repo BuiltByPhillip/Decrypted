@@ -11,7 +11,10 @@ import {
   searchPalette,
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
-import DragGhost from "~/app/_components/exercises/construct/DragGhost";
+import DragGhost from "~/app/_components/exercises/shared/dnd/DragGhost";
+import { useDragSession } from "~/app/_components/exercises/shared/dnd/useDragSession";
+import DisintegrateToken from "~/app/_components/exercises/construct/DisintegrateToken";
+import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
 import TrashContainer from "~/app/_components/exercises/shared/dnd/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/shared/dnd/DraggableWindow";
 import Button from "~/components/Button";
@@ -33,7 +36,6 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
   const hoveredGapRef = useRef<number | null>(null);
 
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
-  const [dragCursorPos, setDragCursorPos] = useState<{ x: number; y: number } | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [isDragDisintegrating, setIsDragDisintegrating] = useState(false);
 
@@ -42,18 +44,8 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     onTokensChangeAction?.(next)
   }
 
-  const dragIdRef = useRef(0);
-  const [dragState, setDragState] = useState<{
-    id: number; // unique per drag — used as React key to force DragGhost remount
-    item: PaletteItem;
-    x: number;
-    y: number;
-    offsetX: number;
-    offsetY: number;
-    tokenIndex?: number; // set when dragging an existing token
-  } | null>(null);
-
-
+  const { dragState, dragCursorPos, startDrag, moveDrag, endDrag } = useDragSession<PaletteItem>();
+  const sourceTokenIndexRef = useRef<number | undefined>(undefined);
 
   type PaletteId = "palette" | "values";
   const [stackOrder, setStackOrder] = useState<PaletteId[]>(["palette", "values"]);
@@ -79,12 +71,13 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
   const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
     if (locked) return;
     setIsDragDisintegrating(false);
-    setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY });
+    startDrag(item, x, y, offsetX, offsetY);
   };
 
   const handleDragDisintegrateComplete = () => {
     setIsDragDisintegrating(false);
-    setDragState(null);
+    sourceTokenIndexRef.current = undefined;
+    endDrag();
     // Token was already removed from `tokens` when drag started — just finalize
     updateTokens(tokens);
   };
@@ -96,13 +89,14 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     setTokens(filtered);
     // Notify parent immediately so error/correct colors are cleared before indices shift.
     onTokensChangeAction?.(filtered);
-    setDragCursorPos({ x, y });
+    moveDrag(x, y)
     setIsDragDisintegrating(false);
-    setDragState({ id: ++dragIdRef.current, item, x, y, offsetX, offsetY, tokenIndex: index });
+    sourceTokenIndexRef.current = index;
+    startDrag(item, x, y, offsetX, offsetY);
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col relative w-full h-full">
+    <div ref={containerRef} className="relative flex h-full w-full flex-col">
       <DraggableWindow
         defaultPosition={{ x: 0, y: 180 }}
         zIndex={getZIndex("palette")}
@@ -135,29 +129,25 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
       {dragState && (
         <DragGhost
           key={dragState.id}
-          paletteItem={dragState.item}
           startX={dragState.x}
           startY={dragState.y}
           offsetX={dragState.offsetX}
           offsetY={dragState.offsetY}
           onMove={(x, y) => {
             setIsOverTrash(!!checkTrash(x, y));
-            setDragCursorPos({ x, y });
+            moveDrag(x, y);
           }}
-          disintegrating={isDragDisintegrating}
-          onDisintegrateCompleteAction={handleDragDisintegrateComplete}
           onDrop={(x, y) => {
             setIsOverTrash(false);
-            setDragCursorPos(null);
             const gapIndex = hoveredGapRef.current;
             const inTrash = !!checkTrash(x, y);
-            const srcIndex = dragState.tokenIndex;
+            const srcIndex = sourceTokenIndexRef.current;
 
             if (inTrash) {
               if (srcIndex !== undefined) {
                 // Keep dragState alive so the ghost stays visible for the disintegration
                 setIsDragDisintegrating(true);
-                return; // skip setDragState(null) below
+                return; // skip endDrag below
               }
               // Palette items dropped on trash are discarded — nothing to do
             } else if (gapIndex !== null) {
@@ -172,31 +162,51 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
               setTokens(next);
             }
 
-            setDragState(null);
+            sourceTokenIndexRef.current = undefined;
+            endDrag();
           }}
-        />
+        >
+          {isDragDisintegrating ? (
+            <DisintegrateToken
+              item={dragState.item}
+              active={true}
+              onCompleteAction={handleDragDisintegrateComplete}
+            />
+          ) : (
+            <ExprBlock item={dragState.item} />
+          )}
+        </DragGhost>
       )}
 
-      <div className="flex flex-col items-center pt-10 w-full">
-        <div className="flex justify-end md:w-10/10 lg:w-9/10 xl:w-7/10 h-70 overflow-visible">
-          <TrashContainer ref={trashRef} isDragging={!!dragState} isHovered={isOverTrash} className="" />
+      <div className="flex w-full flex-col items-center pt-10">
+        <div className="flex h-70 justify-end overflow-visible md:w-10/10 lg:w-9/10 xl:w-7/10">
+          <TrashContainer
+            ref={trashRef}
+            isDragging={!!dragState}
+            isHovered={isOverTrash}
+            className=""
+          />
         </div>
-        
+
         <div className="flex flex-col pt-5">
           <Button
             variant="ghostMuted"
             className="flex justify-end pr-3 select-none"
             size="none"
-            onClick={() => { if (!locked) updateTokens([]) }}
+            onClick={() => {
+              if (!locked) updateTokens([]);
+            }}
           >
             Clear expression
           </Button>
-          <div className="flex items-center justify-center select-none border border-muted w-150 h-30 rounded-2xl overflow-hidden px-3">
+          <div className="border-muted flex h-30 w-150 items-center justify-center overflow-hidden rounded-2xl border px-3 select-none">
             <TokenContainer
               tokens={tokens}
               isDragging={!!dragState}
               dragPos={dragCursorPos}
-              onGapHover={(index) => { hoveredGapRef.current = index; }}
+              onGapHover={(index) => {
+                hoveredGapRef.current = index;
+              }}
               onTokenStartDrag={onTokenStartDrag}
               errorRange={errorRange}
               isCorrect={isCorrect}
