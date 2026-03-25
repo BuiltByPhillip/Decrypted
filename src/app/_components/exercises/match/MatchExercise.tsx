@@ -1,8 +1,8 @@
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
-import type { Expr } from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import { useState } from "react";
 import MatchCard from "~/app/_components/exercises/match/MatchCard";
+import { ArrowRight } from "lucide-react";
 
 type MatchExerciseProps = {
   description: string;
@@ -45,16 +45,32 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
     >
       <div>
         {/* Draggable objects */}
-        <div className="grid grid-cols-4 gap-4 border border-muted rounded-2xl p-3">
+        <div className="border-muted grid grid-cols-4 gap-4 rounded-2xl border p-3">
           {pairs.map((pair) => (
-            <MatchCard key={pair.left} className="" label={pair.left} definitions={definitions}/>
+            <MatchCard
+              key={pair.left}
+              className=""
+              label={pair.left}
+              definitions={definitions}
+            />
           ))}
         </div>
 
         {/* Droppable container and right pair */}
         <div>
-          {pairs.map((pair) => (
-            <MatchCard key={pair.right} className="" label={pair.right} definitions={definitions}/>
+          {pairs.map((pair, index) => (
+            <div className="grid grid-cols-2 gap-2">
+              <MatchCard
+                key={pair.right}
+                className=""
+                label={pair.right}
+                definitions={definitions}
+              />
+              <div
+                key={index}
+                className="border-muted rounded-2xl border border-dotted"
+              ></div>
+            </div>
           ))}
         </div>
       </div>
