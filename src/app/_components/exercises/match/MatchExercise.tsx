@@ -45,16 +45,16 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
     >
       <div>
         {/* Draggable objects */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4 border border-muted rounded-2xl p-3">
           {pairs.map((pair) => (
-            <MatchCard key={pair.left} className="" label={pair.left}/>
+            <MatchCard key={pair.left} className="" label={pair.left} definitions={definitions}/>
           ))}
         </div>
 
         {/* Droppable container and right pair */}
         <div>
           {pairs.map((pair) => (
-            <MatchCard key={pair.right} className="" label={pair.right}/>
+            <MatchCard key={pair.right} className="" label={pair.right} definitions={definitions}/>
           ))}
         </div>
       </div>
