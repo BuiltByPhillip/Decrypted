@@ -5,7 +5,7 @@ import type { SelectedDefinitions } from "~/app/exercise/page";
 import { useRef, useState } from "react";
 import MatchCard from "~/app/_components/exercises/match/MatchCard";
 import { useDragSession } from "~/app/_components/exercises/shared/dnd/useDragSession";
-import DragGhost from "~/app/_components/exercises/shared/dnd/DragGhost";
+import DragElement from "~/app/_components/exercises/shared/dnd/DragElement";
 
 type MatchExerciseProps = {
   description: string;
@@ -20,13 +20,16 @@ type MatchExerciseProps = {
  * A matching exercise where the student pairs expressions to their corresponding labels or roles.
  *
  * The educational goal is to test whether students understand what each expression *means*
- * in the context of the protocol — not just whether they can construct or compute it.
+ * in the context of the protocol - not just whether they can construct or compute it.
  * For example, matching `g^a mod p` to "Alice's public key" in Diffie-Hellman.
  *
  * This is distinct from the other exercise types:
- * - Unlike `construct`, the expression is already given — the student identifies its meaning.
+ * - Unlike `construct`, the expression is already given - the student identifies its meaning.
  * - Unlike `select`, there are multiple simultaneous decisions, not one isolated question.
- * - Unlike `calculate`, no computation is required — only conceptual understanding.
+ * - Unlike `calculate`, no computation is required - only conceptual understanding.
+ *
+ * Drag behaviour: uses DragElement so the actual card moves rather than a ghost clone.
+ * Each slot always renders a dashed placeholder underneath so layout never shifts.
  */
 export default function MatchExercise({ description, prompt, hint, pairs, onAnswerAction, definitions }: MatchExerciseProps) {
   const [locked, setLocked] = useState(false);
@@ -35,6 +38,10 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
 
   const slotRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // Maps each item label to its card wrapper div (palette or slot).
+  // DragElement uses this to find the element to move.
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
   const { dragState, startDrag, moveDrag, endDrag } = useDragSession<string>();
 
   const findHoveredSlot = (x: number, y: number): string | null => {
@@ -49,21 +56,11 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
   const handleStartDrag = (label: string, e: React.MouseEvent<HTMLDivElement>) => {
     if (locked) return;
+    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
-
-    // If this item is already assigned to a slot, remove the assignment so it can be reassigned
-    const existingSlot = Object.entries(assignments).find(([, v]) => v === label)?.[0];
-    if (existingSlot) {
-      setAssignments(prev => {
-        const next = { ...prev };
-        delete next[existingSlot];
-        return next;
-      });
-    }
-
-    startDrag(label, e.clientX, e.clientY, offsetX, offsetY);
+    startDrag(label, e.clientX, e.clientY, e.clientX - rect.left, e.clientY - rect.top);
+    // Note: we do NOT remove the item from assignments here. The card must stay in the DOM
+    // so DragElement can move it. The original slot is resolved at drop time.
   };
 
   const checkAnswer = () => {
@@ -81,10 +78,8 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
     }
   };
 
-  // Items that have not yet been assigned to any slot
-  const unassignedItems = pairs.map(p => p.left).filter(
-    left => !Object.values(assignments).includes(left)
-  );
+  const assignedValues = new Set(Object.values(assignments));
+  const unassignedItems = pairs.map(p => p.left).filter(left => !assignedValues.has(left));
 
   return (
     <ExerciseShell
@@ -96,47 +91,62 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       submitState={locked ? "correct" : wrongAnswer ? "incorrect" : "idle"}
       onSubmit={checkAnswer}
     >
-      {/* Draggable source cards — only shows unassigned items */}
+      {/* Source palette - unassigned cards */}
       <div className="border-muted grid grid-cols-4 gap-4 rounded-2xl border p-3">
         {pairs.map((pair) => (
-          unassignedItems.includes(pair.left) ? (
-            <MatchCard
-              key={pair.left}
-              label={pair.left}
-              className="cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
-              onMouseDown={(e) => handleStartDrag(pair.left, e)}
-              definitions={definitions}
-            />
-          ) : (
-            // Placeholder so the grid doesn't collapse when an item is dragged out
-            <div key={pair.left} className="h-20 w-full rounded-2xl border border-dashed border-muted opacity-30" />
-          )
+          <div key={pair.left} className="relative h-20 w-full">
+            {/* Placeholder: always in flow so the grid slot never collapses when the card is dragging */}
+            <div className="absolute inset-0 rounded-2xl border border-dashed border-muted opacity-30" />
+            {unassignedItems.includes(pair.left) && (
+              <div
+                ref={el => { cardRefs.current[pair.left] = el; }}
+                className="absolute inset-0"
+              >
+                <MatchCard
+                  label={pair.left}
+                  className="cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
+                  onMouseDown={(e) => handleStartDrag(pair.left, e)}
+                  definitions={definitions}
+                />
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
-      {/* Drop slots — each row has the right label and an empty/filled slot */}
+      {/* Drop slots */}
       <div className="flex flex-col gap-2 pt-7">
         {pairs.map((pair) => {
           const assigned = assignments[pair.right];
+          const isBeingDraggedFromSlot = !!assigned && dragState?.item === assigned;
           const isHovered = hoveredSlot === pair.right && !!dragState;
+
           return (
             <div key={pair.right} className="grid grid-cols-2 gap-2">
               <MatchCard label={pair.right} definitions={definitions} />
               <div
                 ref={el => { slotRefs.current[pair.right] = el; }}
-                className={`flex h-20 w-full items-center justify-center rounded-2xl border border-dashed transition duration-200 ${
-                  isHovered ? "border-amber bg-amber/10 opacity-100" :
-                  assigned ? "border-muted opacity-100" :
-                  "border-muted opacity-40"
-                }`}
+                className="relative h-20 w-full"
               >
+                {/* Drop zone indicator */}
+                <div className={`absolute inset-0 rounded-2xl border border-dashed transition duration-200 ${
+                  isHovered                            ? "border-amber bg-amber/10 opacity-100" :
+                  assigned && !isBeingDraggedFromSlot ? "border-muted opacity-100" :
+                                                        "border-muted opacity-40"
+                }`} />
+                {/* Assigned card: kept in DOM during drag so DragElement can move it */}
                 {assigned && (
-                  <MatchCard
-                    label={assigned}
-                    className="cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
-                    onMouseDown={(e) => handleStartDrag(assigned, e)}
-                    definitions={definitions}
-                  />
+                  <div
+                    ref={el => { cardRefs.current[assigned] = el; }}
+                    className="absolute inset-0"
+                  >
+                    <MatchCard
+                      label={assigned}
+                      className="cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
+                      onMouseDown={(e) => handleStartDrag(assigned, e)}
+                      definitions={definitions}
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -144,29 +154,32 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
         })}
       </div>
 
-      {/* Drag ghost — follows the cursor */}
+      {/* DragElement moves the actual card element instead of rendering a ghost clone */}
       {dragState && (
-        <DragGhost
+        <DragElement
           key={dragState.id}
-          startX={dragState.x}
-          startY={dragState.y}
+          element={cardRefs.current[dragState.item] ?? null}
           offsetX={dragState.offsetX}
           offsetY={dragState.offsetY}
+          resizeToHover={true}
+          hoverElement={hoveredSlot ? (slotRefs.current[hoveredSlot] ?? null) : null}
           onMove={(x, y) => {
             moveDrag(x, y);
             setHoveredSlot(findHoveredSlot(x, y));
           }}
           onDrop={(x, y) => {
             const slot = findHoveredSlot(x, y);
-            if (slot) {
-              setAssignments(prev => ({ ...prev, [slot]: dragState.item }));
-            }
+            const originalSlot = Object.entries(assignments).find(([, v]) => v === dragState.item)?.[0];
+            setAssignments(prev => {
+              const next = { ...prev };
+              if (originalSlot) delete next[originalSlot];
+              if (slot) next[slot] = dragState.item;
+              return next;
+            });
             setHoveredSlot(null);
             endDrag();
           }}
-        >
-          <MatchCard label={dragState.item} className="opacity-90 shadow-lg" definitions={definitions}/>
-        </DragGhost>
+        />
       )}
     </ExerciseShell>
   );
