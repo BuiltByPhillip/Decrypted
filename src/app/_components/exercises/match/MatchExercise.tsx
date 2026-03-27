@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import MatchCard from "~/app/_components/exercises/match/MatchCard";
 import { useDragSession } from "~/app/_components/exercises/shared/dnd/useDragSession";
 import DragElement from "~/app/_components/exercises/shared/dnd/DragElement";
+import Button from "~/components/Button";
 
 type MatchExerciseProps = {
   description: string;
@@ -103,6 +104,16 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       submitState={locked ? "correct" : wrongAnswer ? "incorrect" : "idle"}
       onSubmit={checkAnswer}
     >
+      {/* Reset button */}
+      <Button
+        variant="ghostMuted"
+        className="flex w-full justify-end pr-3 select-none"
+        size="none"
+        onClick={() => { if (!locked) setAssignments({}); }}
+      >
+        Reset all
+      </Button>
+
       {/* Source palette - unassigned cards */}
       <div className="border-muted grid grid-cols-4 gap-4 rounded-2xl border p-3">
         {pairs.map((pair) => (
@@ -142,7 +153,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
               >
                 {/* Drop zone indicator */}
                 <div className={`absolute inset-0 rounded-2xl border border-dashed transition duration-200 ${
-                  isHovered                            ? "border-amber bg-amber/10 opacity-100" :
+                  isHovered                            ? "border-muted bg-muted-foreground/10 opacity-100" :
                   assigned && !isBeingDraggedFromSlot ? "border-muted opacity-100" :
                                                         "border-muted opacity-40"
                 }`} />
