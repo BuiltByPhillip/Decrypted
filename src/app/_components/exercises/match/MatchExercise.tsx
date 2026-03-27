@@ -38,6 +38,9 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [hoveredPaletteEl, setHoveredPaletteEl] = useState<HTMLDivElement | null>(null);
+  const [shuffledPairs] = useState(() => [...pairs].sort(() => Math.random() - 0.5));
+
+
 
   const slotRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const paletteRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -77,8 +80,8 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   };
 
   const checkAnswer = () => {
-    if (Object.keys(assignments).length !== pairs.length) return;
-    const allCorrect = pairs.every(p => assignments[p.right] === p.left);
+    if (Object.keys(assignments).length !== shuffledPairs.length) return;
+    const allCorrect = shuffledPairs.every(p => assignments[p.right] === p.left);
     if (allCorrect) {
       setLocked(true);
       onAnswerAction?.(true);
@@ -92,7 +95,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   };
 
   const assignedValues = new Set(Object.values(assignments));
-  const unassignedItems = pairs.map(p => p.left).filter(left => !assignedValues.has(left));
+  const unassignedItems = shuffledPairs.map(p => p.left).filter(left => !assignedValues.has(left));
 
   return (
     <ExerciseShell
@@ -116,7 +119,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
       {/* Source palette - unassigned cards */}
       <div className="border-muted grid grid-cols-4 gap-4 rounded-2xl border p-3">
-        {pairs.map((pair) => (
+        {shuffledPairs.map((pair) => (
           <div key={pair.left} className="relative h-20 w-full">
             {/* Placeholder: always in flow so the grid slot never collapses when the card is dragging */}
             <div ref={el => { paletteRefs.current[pair.left] = el; }} className="absolute inset-0 rounded-2xl border border-dashed border-muted opacity-30" />
@@ -139,7 +142,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
       {/* Drop slots */}
       <div className="flex flex-col gap-2 pt-7">
-        {pairs.map((pair, i) => {
+        {shuffledPairs.map((pair, i) => {
           const assigned = assignments[pair.right];
           const isBeingDraggedFromSlot = !!assigned && dragState?.item === assigned;
           const isHovered = hoveredSlot === pair.right && !!dragState;
