@@ -152,10 +152,10 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
                 className="relative h-20 w-full"
               >
                 {/* Drop zone indicator */}
-                <div className={`absolute inset-0 rounded-2xl border border-dashed transition duration-200 ${
-                  isHovered                            ? "border-muted bg-muted-foreground/10 opacity-100" :
+                <div className={`absolute inset-0 rounded-2xl border transition duration-200 ${
                   assigned && !isBeingDraggedFromSlot ? "border-muted opacity-100" :
-                                                        "border-muted opacity-40"
+                  isHovered                           ? "border-dashed border-muted bg-muted-foreground/10 opacity-100" :
+                                                        "border-dashed border-muted opacity-40"
                 }`} />
                 {/* Assigned card: kept in DOM during drag so DragElement can move it */}
                 {assigned && (
