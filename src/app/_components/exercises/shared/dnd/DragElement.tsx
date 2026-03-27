@@ -53,7 +53,6 @@ export default function DragElement({ element, offsetX, offsetY, onDrop, onMove,
     element.style.width = `${originalWidth}px`;
     element.style.zIndex = "50";
     element.style.pointerEvents = "none";
-    if (resizeToHover) element.style.transition = "width 0.15s ease, height 0.15s ease";
 
     const mousemove = (ev: MouseEvent) => {
       element.style.left = `${ev.clientX - offsetX}px`;
@@ -62,10 +61,12 @@ export default function DragElement({ element, offsetX, offsetY, onDrop, onMove,
       if (resizeToHover) {
         const target = hoverElementRef.current;
         if (target) {
+          element.style.transition = "width 0.15s ease, height 0.15s ease";
           const targetRect = target.getBoundingClientRect();
           element.style.width = `${targetRect.width}px`;
           element.style.height = `${targetRect.height}px`;
         } else {
+          element.style.transition = "width 0.3s ease-out, height 0.3s ease-out";
           element.style.width = `${originalWidth}px`;
           element.style.height = `${originalHeight}px`;
         }

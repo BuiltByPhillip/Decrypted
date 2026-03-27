@@ -36,8 +36,10 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   const [wrongAnswer, setWrongAnswer] = useState(false);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
+  const [hoveredPaletteEl, setHoveredPaletteEl] = useState<HTMLDivElement | null>(null);
 
   const slotRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const paletteRefs = useRef<Record<string, HTMLDivElement | null>>({});
   // Maps each item label to its card wrapper div (palette or slot).
   // DragElement uses this to find the element to move.
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -49,6 +51,16 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       const rect = ref?.getBoundingClientRect();
       if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
         return key;
+      }
+    }
+    return null;
+  };
+
+  const findHoveredPaletteEl = (x: number, y: number): HTMLDivElement | null => {
+    for (const ref of Object.values(paletteRefs.current)) {
+      const rect = ref?.getBoundingClientRect();
+      if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        return ref ?? null;
       }
     }
     return null;
@@ -96,7 +108,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
         {pairs.map((pair) => (
           <div key={pair.left} className="relative h-20 w-full">
             {/* Placeholder: always in flow so the grid slot never collapses when the card is dragging */}
-            <div className="absolute inset-0 rounded-2xl border border-dashed border-muted opacity-30" />
+            <div ref={el => { paletteRefs.current[pair.left] = el; }} className="absolute inset-0 rounded-2xl border border-dashed border-muted opacity-30" />
             {unassignedItems.includes(pair.left) && (
               <div
                 ref={el => { cardRefs.current[pair.left] = el; }}
@@ -162,10 +174,12 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
           offsetX={dragState.offsetX}
           offsetY={dragState.offsetY}
           resizeToHover={true}
-          hoverElement={hoveredSlot ? (slotRefs.current[hoveredSlot] ?? null) : null}
+          hoverElement={hoveredSlot ? (slotRefs.current[hoveredSlot] ?? null) : hoveredPaletteEl}
           onMove={(x, y) => {
             moveDrag(x, y);
-            setHoveredSlot(findHoveredSlot(x, y));
+            const slot = findHoveredSlot(x, y);
+            setHoveredSlot(slot);
+            setHoveredPaletteEl(slot ? null : findHoveredPaletteEl(x, y));
           }}
           onDrop={(x, y) => {
             const slot = findHoveredSlot(x, y);
@@ -177,6 +191,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
               return next;
             });
             setHoveredSlot(null);
+            setHoveredPaletteEl(null);
             endDrag();
           }}
         />
