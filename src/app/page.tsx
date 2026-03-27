@@ -84,12 +84,12 @@ step:
   description: Bob chooses secret {bob_secret}
   exercise:
       type: match
-      prompt: Match each candidate value to why it is or isn't a valid choice for {bob_secret}
+      prompt: Match each step in the Diffie-Hellman protocol with the right formula
       pairs:
-          - 0 -> Always produces 1 as the public key
-          - 1 -> Always produces {generator} mod {prime}
-          - {prime}-1 -> Public key is always 1, secret is exposed
-          - {prime}-3 -> Falls within the safe range
+          - {generator}^{alice_secret} mod {prime} -> Alice's public key
+          - {generator}^{bob_secret} mod {prime} -> Bob's public key
+          - B^{alice_secret} mod {prime} -> Alice's shared secret
+          - A^{bob_secret} mod {prime} -> Bob's shared secret
 step:
     description: Bob computes his public key B
     exercise:
