@@ -142,7 +142,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
       {/* Drop slots */}
       <div className="flex flex-col gap-2 pt-7">
-        {shuffledPairs.map((pair, i) => {
+        {pairs.map((pair, i) => {
           const assigned = assignments[pair.right];
           const isBeingDraggedFromSlot = !!assigned && dragState?.item === assigned;
           const isHovered = hoveredSlot === pair.right && !!dragState;
