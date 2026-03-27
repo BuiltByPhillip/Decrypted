@@ -139,7 +139,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
       {/* Drop slots */}
       <div className="flex flex-col gap-2 pt-7">
-        {pairs.map((pair) => {
+        {pairs.map((pair, i) => {
           const assigned = assignments[pair.right];
           const isBeingDraggedFromSlot = !!assigned && dragState?.item === assigned;
           const isHovered = hoveredSlot === pair.right && !!dragState;
@@ -162,11 +162,20 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
                   <div
                     ref={el => { cardRefs.current[assigned] = el; }}
                     className="absolute inset-0"
+                    style={
+                      locked      ? { animation: "token-ripple 0.4s ease-in-out", animationDelay: `${i * 80}ms`, animationFillMode: "both" } :
+                      wrongAnswer ? { animation: "shake 0.5s ease-in-out" } :
+                      undefined
+                    }
                   >
                     <MatchCard
                       label={assigned}
-                      className="cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
-                      onMouseDown={(e) => handleStartDrag(assigned, e)}
+                      className={
+                        locked      ? "text-success border-success border-2 cursor-default" :
+                        wrongAnswer ? "text-danger border-danger border-2" :
+                        "cursor-grab active:cursor-grabbing hover:-translate-y-1 hover:scale-103 hover:opacity-100"
+                      }
+                      onMouseDown={locked || wrongAnswer ? undefined : (e) => handleStartDrag(assigned, e)}
                       definitions={definitions}
                     />
                   </div>
