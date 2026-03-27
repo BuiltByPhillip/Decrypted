@@ -2,7 +2,7 @@
 
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MatchCard from "~/app/_components/exercises/match/MatchCard";
 import { useDragSession } from "~/app/_components/exercises/shared/dnd/useDragSession";
 import DragElement from "~/app/_components/exercises/shared/dnd/DragElement";
@@ -41,6 +41,9 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   const [shuffledPairs] = useState(() => [...pairs].sort(() => Math.random() - 0.5));
 
 
+
+  const wrongAnswerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (wrongAnswerTimer.current) clearTimeout(wrongAnswerTimer.current); }, []);
 
   const slotRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const paletteRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -87,7 +90,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       onAnswerAction?.(true);
     } else {
       setWrongAnswer(true);
-      setTimeout(() => {
+      wrongAnswerTimer.current = setTimeout(() => {
         setAssignments({});
         setWrongAnswer(false);
       }, 550);
