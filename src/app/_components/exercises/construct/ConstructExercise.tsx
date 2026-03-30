@@ -18,7 +18,7 @@ type ConstructExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, definitions, prompt, description, hint, onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, palette, definitions, prompt, description, hint, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
@@ -84,7 +84,7 @@ export default function ConstructExercise({ answer, definitions, prompt, descrip
         onSubmit={checkAnswer}
         feedback={submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
       >
-        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked}/>
+        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked} customOperatorItems={palette.filter(p => p.kind === "operator")}/>
       </ExerciseShell>
 
 )

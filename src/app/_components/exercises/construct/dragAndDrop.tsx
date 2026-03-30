@@ -27,10 +27,11 @@ type DragAndDropProps = {
   isCorrect?: boolean | null;
   definitions?: SelectedDefinitions;
   locked?: boolean;
+  customOperatorItems?: PaletteItem[];
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions, locked }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions, locked, customOperatorItems = [] }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -106,7 +107,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         <ExprPalette
           category="Palette"
           defaultItems={DEFAULT_PALETTE_ITEMS}
-          searchFn={searchPalette}
+          searchFn={(q) => searchPalette(q, customOperatorItems)}
           onStartDrag={onStartDrag}
           searchPlaceholder="Search..."
         />

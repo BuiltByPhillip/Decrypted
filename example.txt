@@ -11,7 +11,7 @@ custom:
     operator:
         name: SET
         type: BINARY
-        commutative: true (Only matters for binary operators)
+        commutative: true
         precedence: 4
 define:
     type: select

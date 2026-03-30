@@ -61,7 +61,7 @@ const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
 const NON_SET_BINARY_SYMBOLS = BINARY_SYMBOLS.filter(op => !SET_BINARY_SET.has(op));
 
 // Search function for operators
-export function searchOperators(query: string): Item[] {
+export function searchOperators(query: string, customItems: Item[] = []): Item[] {
   const q = query.toLowerCase();
   const results: Item[] = [];
 
@@ -70,6 +70,11 @@ export function searchOperators(query: string): Item[] {
     if (item.op.includes(q)) { results.push(item); return; }
     const symbol = operatorSymbol[item.op];
     if (symbol && symbol.includes(q)) results.push(item);
+  });
+
+  customItems.forEach(item => {
+    if (item.kind !== "operator") return;
+    if (item.op.toLowerCase().includes(q)) results.push(item);
   });
 
   PAREN_SEARCH_TERMS.forEach(({ item, terms }) => {
@@ -98,8 +103,8 @@ export function searchSets(query: string): Item[] {
 }
 
 // Search function for the combined Palette (operators + symbols + sets)
-export function searchPalette(query: string): Item[] {
-  return [...searchOperators(query), ...searchSymbols(query), ...searchSets(query)];
+export function searchPalette(query: string, customItems: Item[] = []): Item[] {
+  return [...searchOperators(query, customItems), ...searchSymbols(query), ...searchSets(query)];
 }
 
 // Search function for values (numbers and variables)
