@@ -320,22 +320,24 @@ export function tokenize(input: string): Token[] {
   return inner(0, [])
 }
 
-export function parseExpression(input: string): Expr {
+export function parseExpression(input: string, customOperators: CustomOperator[] = []): Expr {
   const tokens = tokenize(input);
-  const parser = new ExpressionParser(tokens);
+  const parser = new ExpressionParser(tokens, customOperators);
   return parser.parse();
 }
 
 class ExpressionParser {
   private readonly tokens: Token[];
   private current: number = 0;
+  private readonly customOperators: CustomOperator[];
 
   peek(): Token { return this.tokens[this.current]!; }
   advance(): Token { return this.tokens[this.current++]!; }
   isAtEnd(): boolean { return this.peek().type === "EOF"}
 
-  constructor(tokens: Token[]) {
+  constructor(tokens: Token[], customOperators: CustomOperator[] = []) {
     this.tokens = tokens;
+    this.customOperators = customOperators;
   }
 
   parse(): Expr {
@@ -513,7 +515,7 @@ export function parse(input: string, startIndex: number): Code {
       continue
     }
     else if (line.startsWith("step")) {
-      const [step, nextI] = stepParse(lines, i);
+      const [step, nextI] = stepParse(lines, i, code.customOperators);
       i = nextI
       code.step.push(step)
       continue
@@ -695,7 +697,7 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
   return definition;
 }
 
-function stepParse(lines: string[], startIndex: number): [Step, number] {
+function stepParse(lines: string[], startIndex: number, customOperators: CustomOperator[] = []): [Step, number] {
   let i: number = startIndex + 1;
 
   let currentStep: Step = { description: "" }
@@ -723,7 +725,7 @@ function stepParse(lines: string[], startIndex: number): [Step, number] {
         throw new Error(`Line ${i + 1} - Line is undefined`);
       }
 
-      const [exercise, nextI] = exerciseParse(lines, i+1)
+      const [exercise, nextI] = exerciseParse(lines, i+1, customOperators)
       i = nextI
       currentStep.exercise = exercise
       continue
@@ -739,7 +741,7 @@ function stepParse(lines: string[], startIndex: number): [Step, number] {
   return [currentStep, i]
 }
 
-function exerciseParse(lines: string[], startIndex: number): [Exercise, number] {
+function exerciseParse(lines: string[], startIndex: number, customOperators: CustomOperator[] = []): [Exercise, number] {
   let i: number = startIndex;
   let pendingExercise: Partial<Exercise> = {};
 
@@ -797,7 +799,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
       pendingExercise.options = options.map(opt => {
         try {
           const tokens = tokenize(opt);
-          const parser = new ExpressionParser(tokens);
+          const parser = new ExpressionParser(tokens, customOperators);
           return parser.parse();
         } catch (e) {
           throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
@@ -812,7 +814,7 @@ function exerciseParse(lines: string[], startIndex: number): [Exercise, number] 
       const answerText = line.replace("answer:", "").trim()
       try {
         const tokens = tokenize(answerText)
-        const parser = new ExpressionParser(tokens)
+        const parser = new ExpressionParser(tokens, customOperators)
         pendingExercise.answer = [parser.parse()]
       } catch (e) {
         throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
