@@ -553,3 +553,314 @@ step:
     expect(result.step[0]?.exercise?.answer).toBeUndefined();
   });
 });
+
+// ─── custom operator block parsing ───────────────────────────────────────────
+
+describe("customParse - parseOperatorDef", () => {
+  const binaryDsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        commutative: true
+        precedence: 3
+define:
+    generator \\elem {g, x}`;
+
+  const unaryDsl = `protocol: Test
+custom:
+    operator:
+        name: HASH
+        type: UNARY
+        commutative: false
+        precedence: 4`;
+
+  it("parses a BINARY custom operator without throwing", () => {
+    expect(() => parse(binaryDsl, 0)).not.toThrow();
+  });
+
+  it("stores the custom operator in code.customOperators", () => {
+    const result = parse(binaryDsl, 0);
+    expect(result.customOperators).toHaveLength(1);
+  });
+
+  it("parses the operator name correctly", () => {
+    const result = parse(binaryDsl, 0);
+    expect(result.customOperators[0]?.name).toBe("SET");
+  });
+
+  it("parses the operator type correctly", () => {
+    const result = parse(binaryDsl, 0);
+    expect(result.customOperators[0]?.type).toBe("BINARY");
+  });
+
+  it("parses commutative: true correctly", () => {
+    const result = parse(binaryDsl, 0);
+    expect(result.customOperators[0]?.commutative).toBe(true);
+  });
+
+  it("parses commutative: false correctly", () => {
+    const result = parse(unaryDsl, 0);
+    expect(result.customOperators[0]?.commutative).toBe(false);
+  });
+
+  it("parses the precedence correctly", () => {
+    const result = parse(binaryDsl, 0);
+    expect(result.customOperators[0]?.precedence).toBe(3);
+  });
+
+  it("parses a UNARY custom operator", () => {
+    const result = parse(unaryDsl, 0);
+    expect(result.customOperators[0]?.type).toBe("UNARY");
+  });
+
+  it("defaults commutative to false when omitted", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: XOP
+        type: BINARY
+        precedence: 2`;
+    const result = parse(dsl, 0);
+    expect(result.customOperators[0]?.commutative).toBe(false);
+  });
+
+  it("parses multiple custom operators", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        precedence: 3
+    operator:
+        name: HASH
+        type: UNARY
+        precedence: 4`;
+    const result = parse(dsl, 0);
+    expect(result.customOperators).toHaveLength(2);
+    expect(result.customOperators[0]?.name).toBe("SET");
+    expect(result.customOperators[1]?.name).toBe("HASH");
+  });
+
+  it("throws when name is missing", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        type: BINARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/name/i);
+  });
+
+  it("throws when type is missing", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when precedence is missing", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY`;
+    expect(() => parse(dsl, 0)).toThrow(/precedence/i);
+  });
+
+  it("throws on invalid type value", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: TERNARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on non-numeric precedence", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        precedence: fast`;
+    expect(() => parse(dsl, 0)).toThrow(/number/i);
+  });
+
+  it("throws on negative precedence", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        precedence: -1`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on duplicate name field", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        name: SET2
+        type: BINARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("throws on duplicate type field", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        type: UNARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("throws on duplicate precedence field", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        precedence: 3
+        precedence: 4`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("code.customOperators is empty when no custom block is present", () => {
+    const result = parse(`protocol: Test`, 0);
+    expect(result.customOperators).toHaveLength(0);
+  });
+});
+
+// ─── custom operator expression parsing ──────────────────────────────────────
+
+describe("custom operator expression parsing", () => {
+  const binaryOps = [{ name: "SET", type: "BINARY" as const, commutative: true, precedence: 3 }];
+  const unaryOps  = [{ name: "HASH", type: "UNARY" as const, commutative: false, precedence: 4 }];
+
+  it("parses a BINARY custom operator as infix: a SET b", () => {
+    const result = parseExpression("a SET b", binaryOps);
+    expect(result).toMatchObject({
+      kind: "binary",
+      op: "SET",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("parses a UNARY custom operator as prefix: HASH x", () => {
+    const result = parseExpression("HASH x", unaryOps);
+    expect(result).toMatchObject({
+      kind: "unary",
+      op: "HASH",
+      operand: { kind: "var", name: "x" },
+    });
+  });
+
+  it("custom BINARY operator respects its precedence (lower than ^)", () => {
+    // SET has precedence 3 (same as *), ^ has precedence 5 — so a ^ b SET c ^ d
+    // should parse as (a^b) SET (c^d)
+    const result = parseExpression("a ^ b SET c ^ d", binaryOps);
+    expect(result).toMatchObject({
+      kind: "binary",
+      op: "SET",
+      left: { kind: "binary", op: "pow" },
+      right: { kind: "binary", op: "pow" },
+    });
+  });
+
+  it("custom BINARY operator with lower precedence than + groups loosely", () => {
+    // precedence 0 means weaker than and/or
+    const weakOps = [{ name: "WEAK", type: "BINARY" as const, commutative: false, precedence: 0 }];
+    const result = parseExpression("a + b WEAK c + d", weakOps);
+    expect(result).toMatchObject({
+      kind: "binary",
+      op: "WEAK",
+      left: { kind: "binary", op: "add" },
+      right: { kind: "binary", op: "add" },
+    });
+  });
+
+  it("unknown VAR name is NOT treated as a custom operator", () => {
+    // Without registering SET, it should be parsed as a plain variable
+    const result = parseExpression("SET", []);
+    expect(result).toMatchObject({ kind: "var", name: "SET" });
+  });
+
+  it("custom BINARY operator appears in palette as operator kind", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        commutative: false
+        precedence: 3
+step:
+    description: Test
+    exercise:
+        type: construct
+        prompt: Use SET
+        palette: {generator}, SET
+        answer: g SET h
+define:
+    generator \\elem {g, h}`;
+    expect(() => parse(dsl, 0)).not.toThrow();
+    const result = parse(dsl, 0);
+    const palette = result.step[0]?.exercise?.palette;
+    const setItem = palette?.find(p => p.kind === "operator" && p.op === "SET");
+    expect(setItem).toBeDefined();
+  });
+
+  it("answer expression using custom BINARY operator parses correctly via full DSL", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        commutative: false
+        precedence: 3
+step:
+    description: Test
+    exercise:
+        type: construct
+        prompt: Use SET
+        palette: a, b, SET
+        answer: a SET b`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({
+      kind: "binary",
+      op: "SET",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
+
+  it("answer expression using custom UNARY operator parses correctly via full DSL", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: HASH
+        type: UNARY
+        commutative: false
+        precedence: 4
+step:
+    description: Test
+    exercise:
+        type: construct
+        prompt: Use HASH
+        palette: x, HASH
+        answer: HASH x`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({
+      kind: "unary",
+      op: "HASH",
+      operand: { kind: "var", name: "x" },
+    });
+  });
+});

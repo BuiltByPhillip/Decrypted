@@ -10,6 +10,7 @@ import {
   exprDiff,
   exprListContains,
   findDiffPair,
+  COMMUTATIVE_OPS,
 } from "../app/hooks/expr";
 import { parseExpression } from "../app/hooks/parser";
 import type { Expr, PaletteItem } from "../app/hooks/parser";
@@ -695,5 +696,99 @@ describe("findDiffPair", () => {
     const user: Expr = { kind: "var", name: "x" };
     const answer: Expr = { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
     expect(findDiffPair(user, answer)).toEqual([user, answer]);
+  });
+});
+
+// ─── custom operator support in expr utilities ────────────────────────────────
+
+describe("exprEquals with custom operators", () => {
+  it("two identical custom binary expressions are equal", () => {
+    const a: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprEquals(a, b)).toBe(true);
+  });
+
+  it("custom binary expressions with different op names are not equal", () => {
+    const a: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "XOR", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("commutative custom operator: a SET b equals b SET a after registering", () => {
+    COMMUTATIVE_OPS.add("SET");
+    const a: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(a, b)).toBe(true);
+    COMMUTATIVE_OPS.delete("SET"); // clean up so other tests are unaffected
+  });
+
+  it("non-commutative custom operator: a FUNC b does NOT equal b FUNC a", () => {
+    // FUNC is not in COMMUTATIVE_OPS
+    const a: Expr = { kind: "binary", op: "FUNC", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const b: Expr = { kind: "binary", op: "FUNC", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("two identical custom unary expressions are equal", () => {
+    const a: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "x" } };
+    expect(exprEquals(a, b)).toBe(true);
+  });
+
+  it("custom unary expressions with different operands are not equal", () => {
+    const a: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "y" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("custom unary expressions with different ops are not equal", () => {
+    const a: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "x" } };
+    const b: Expr = { kind: "unary", op: "MAC", operand: { kind: "var", name: "x" } };
+    expect(exprEquals(a, b)).toBe(false);
+  });
+});
+
+describe("exprToString with custom operators", () => {
+  it("renders a custom binary operator infix with spaces", () => {
+    const e: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprToString(e)).toBe("a SET b");
+  });
+
+  it("renders a custom unary operator as prefix", () => {
+    const e: Expr = { kind: "unary", op: "HASH", operand: { kind: "var", name: "x" } };
+    expect(exprToString(e)).toBe("HASHx");
+  });
+
+  it("renders nested custom binary operators", () => {
+    const inner: Expr = { kind: "binary", op: "SET", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const outer: Expr = { kind: "binary", op: "SET", left: inner, right: { kind: "var", name: "c" } };
+    expect(exprToString(outer)).toBe("a SET b SET c");
+  });
+});
+
+describe("custom operator parsing and equality round-trip", () => {
+  const setOp = [{ name: "SET", type: "BINARY" as const, commutative: true, precedence: 3 }];
+  const hashOp = [{ name: "HASH", type: "UNARY" as const, commutative: false, precedence: 4 }];
+
+  it("parsed BINARY custom expression equals itself", () => {
+    const expr = parseExpression("a SET b", setOp);
+    expect(exprEquals(expr, expr)).toBe(true);
+  });
+
+  it("parsed UNARY custom expression equals itself", () => {
+    const expr = parseExpression("HASH x", hashOp);
+    expect(exprEquals(expr, expr)).toBe(true);
+  });
+
+  it("parsed custom binary expression does not equal a different structure", () => {
+    const a = parseExpression("a SET b", setOp);
+    const b = parseExpression("a SET c", setOp);
+    expect(exprEquals(a, b)).toBe(false);
+  });
+
+  it("HASH applied to different values produces different expressions", () => {
+    const a = parseExpression("HASH x", hashOp);
+    const b = parseExpression("HASH y", hashOp);
+    expect(exprEquals(a, b)).toBe(false);
   });
 });
