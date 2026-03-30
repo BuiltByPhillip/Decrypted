@@ -7,9 +7,8 @@ Types of exercises:
 Example syntax for Diffie-Hellman
 
 protocol: Diffie-Hellman
-participants: Alice, Bob
 custom:
-    function:
+    operator:
         name: SET
         type: BINARY
         commutative: true (Only matters for binary operators)

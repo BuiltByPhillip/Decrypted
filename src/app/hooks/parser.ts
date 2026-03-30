@@ -2,6 +2,7 @@ import { exprListContains } from "~/app/hooks/expr";
 
 export type Code = {
   information: Information;
+  customOperators: CustomOperator[];
   step: Step[];
 }
 
@@ -119,7 +120,7 @@ export type ConstantSymbol = typeof CONSTANT_SYMBOLS[number];
 // op can be null when the operator has been removed (symbol slot)
 export type UnaryExpr = {
   kind: "unary";
-  op: UnarySymbol | null;
+  op: UnarySymbol | string | null;
   operand: Expr;
   tokenRange?: TokenRange
 };
@@ -128,12 +129,20 @@ export type UnaryExpr = {
 // op can be null when the operator has been removed (operator slot)
 export type BinaryExpr = {
   kind: "binary";
-  op: BinaryOp | BinarySymbol | null;
+  op: BinaryOp | BinarySymbol | string | null;
   left: Expr;
   right: Expr;
   tokenRange?: TokenRange;
   opTokenIndex?: number;
 };
+
+export type CustomOperator = {
+  name: string;
+  type: "BINARY" | "UNARY";
+  commutative: boolean;
+  precedence: number;
+};
+
 
 // Combined expression type
 export type Expr = LeafExpr | UnaryExpr | BinaryExpr
@@ -338,12 +347,12 @@ class ExpressionParser {
   }
 
   private precedence(op: string): number {
-    if (op === "and" || op === "or") return 0; // weakest
-    if (op === "<" || op === ">" || op === "=") return 1;
-    if ((BINARY_SYMBOLS as readonly string[]).includes(op)) return 1; // same level as comparisons
-    if (op === "+" || op === "-") return 2;
-    if (op === "*" || op === "mod" || op === "/") return 3;
-    if (op === "^") return 4;  // strongest
+    if (op === "and" || op === "or") return 1;
+    if (op === "<" || op === ">" || op === "=") return 2;
+    if ((BINARY_SYMBOLS as readonly string[]).includes(op)) return 2; // same level as comparisons
+    if (op === "+" || op === "-") return 3;
+    if (op === "*" || op === "mod" || op === "/") return 4;
+    if (op === "^") return 5;  // strongest
     return 0;
   }
 
@@ -475,6 +484,7 @@ export function parse(input: string, startIndex: number): Code {
   const lines: string[] = input.split("\n");
   let code: Code = {
     information: { name: "", definition: []},
+    customOperators: [],
     step: []
   }
 
@@ -489,6 +499,12 @@ export function parse(input: string, startIndex: number): Code {
 
     if (line.startsWith("protocol:")) {
       code.information.name = line.replace("protocol:", "").trim();
+    }
+    if (line.startsWith("custom:")) {
+      const [operators, nextI] = customParse(lines, i)
+      code.customOperators.push(...operators);
+      i = nextI;
+      continue
     }
     else if (line.startsWith("define:")) {
       const [definition, nextI] = defineParse(lines, i)
@@ -514,6 +530,92 @@ export function parse(input: string, startIndex: number): Code {
   return code;
 }
 
+function customParse(lines: string[], startIndex: number): [CustomOperator[], number] {
+  let i: number = startIndex + 1;
+  let operators: CustomOperator[] = [];
+
+  while (i < lines.length) {
+    const line: string | undefined = lines[i]?.trim();
+
+    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("define:")) {
+      break;
+    }
+
+    if (line.startsWith("operator:")) {
+      const [operator, nextI] = parseOperatorDef(lines, i);
+      operators.push(operator);
+      i = nextI;
+      continue;
+    }
+
+    i++;
+  }
+
+  return [operators, i];
+}
+
+function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator, number] {
+  let i: number = startIndex + 1;
+  let customOp: Partial<CustomOperator> = {};
+
+  while (i < lines.length) {
+    const line: string | undefined = lines[i]?.trim();
+
+    if (!line || line.startsWith("operator:") || line.startsWith("define:") || line.startsWith("step") || line.startsWith("protocol:")) {
+      break;
+    }
+
+    if (line.startsWith("name:")) {
+      if (customOp.name !== undefined) throw new Error(`Line ${i + 1} - Name defined multiple times`);
+      customOp.name = line.replace("name:", "").trim();
+    } else if (line.startsWith("type:")) {
+      if (customOp.type !== undefined) throw new Error(`Line ${i + 1} - Type defined multiple times`);
+      const typeValue = line.replace("type:", "").trim().toUpperCase();
+      switch (typeValue) {
+        case "BINARY":
+        case "UNARY":
+          customOp.type = typeValue;
+          break;
+        default:
+          throw new Error(`Line ${i + 1} - Invalid custom operator type: '${typeValue}'`);
+      }
+    } else if (line.startsWith("commutative:")) {
+      if (customOp.commutative !== undefined) throw new Error(`Line ${i + 1} - Commutative defined multiple times`);
+      const commutativeValue = line.replace("commutative:", "").trim().toLowerCase();
+      switch (commutativeValue) {
+        case "true":
+          customOp.commutative = true;
+          break;
+        case "false":
+          customOp.commutative = false;
+          break;
+        default:
+          throw new Error(`Line ${i + 1} - Commutative must be 'true' or 'false'`);
+      }
+    } else if (line.startsWith("precedence:")) {
+      if (customOp.precedence !== undefined) throw new Error(`Line ${i + 1} - Precedence defined multiple times`);
+      const raw = line.replace("precedence:", "").trim();
+      if (!/^\d+$/.test(raw)) {
+        throw new Error(`Line ${i + 1} - Precedence must be a number`);
+      }
+      const precValue = parseInt(raw, 10);
+      if (precValue < 0) {
+        throw new Error(`Line ${i + 1} - Precedence must be a non-negative number`);
+      }
+      customOp.precedence = precValue;
+    }
+
+    i++;
+  }
+
+  if (!customOp.name) throw new Error(`Line ${startIndex + 1} - Operator must have a name`);
+  if (customOp.type === undefined) throw new Error(`Line ${startIndex + 1} - Operator must have a type`);
+  if (customOp.precedence === undefined) throw new Error(`Line ${startIndex + 1} - Operator must have a precedence`);
+  if (customOp.commutative === undefined) customOp.commutative = false; // default
+
+  return [customOp as CustomOperator, i];
+}
+
 function defineParse(lines: string[], startIndex: number): [Definition[], number] {
   let i: number = startIndex + 1;
   let definitions: Definition[] = [];
@@ -522,7 +624,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
 
-    if (!line || line.startsWith("step") || line.startsWith("protocol")) {
+    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("custom:")) {
       break; // End of define block
     }
 
