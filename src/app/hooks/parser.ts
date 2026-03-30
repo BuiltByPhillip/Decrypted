@@ -526,7 +526,7 @@ export function parse(input: string, startIndex: number): Code {
     if (line.startsWith("protocol:")) {
       code.information.name = line.replace("protocol:", "").trim();
     }
-    if (line.startsWith("custom:")) {
+    else if (line.startsWith("custom:")) {
       const [operators, nextI] = customParse(lines, i)
       code.customOperators.push(...operators);
       for (const op of operators) {
