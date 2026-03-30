@@ -41,7 +41,7 @@ export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr
 }
 
 /** Operators where order doesn't matter: a + b === b + a */
-const COMMUTATIVE_OPS = new Set(["equal", "add", "mul", "and", "or"]);
+export const COMMUTATIVE_OPS = new Set(["equal", "add", "mul", "and", "or"]);
 
 /**
  * Checks if two expressions are structurally and mathematically equal.
@@ -217,7 +217,7 @@ export function exprToString(e: Expr): string {
     case "slot":
       return "_";
     case "unary":
-      const unaryOpStr = e.op === null ? "_" : symbolDisplay[e.op];
+      const unaryOpStr = e.op === null ? "_" : (symbolDisplay[e.op] ?? e.op);
       return `${unaryOpStr}${exprToString(e.operand)}`;
     case "binary":
       const opStr = e.op === null ? " _ " : (OP_TO_STRING[e.op] ?? ` ${e.op} `);

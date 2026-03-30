@@ -1,4 +1,4 @@
-import { exprListContains } from "~/app/hooks/expr";
+import { exprListContains, COMMUTATIVE_OPS } from "~/app/hooks/expr";
 
 export type Code = {
   information: Information;
@@ -151,7 +151,7 @@ export type PaletteItem =
   | { kind: "var"; name: string }
   | { kind: "role"; name: string }
   | { kind: "int"; value: number }
-  | { kind: "operator"; op: BinaryOp }
+  | { kind: "operator"; op: BinaryOp | string }
   | { kind: "binarySymbol"; op: BinarySymbol }
   | { kind: "unarySymbol"; op: UnarySymbol }
   | { kind: "constantSymbol"; op: ConstantSymbol }
@@ -349,6 +349,9 @@ class ExpressionParser {
   }
 
   private precedence(op: string): number {
+    const custom: CustomOperator | undefined = this.customOperators.find(c => c.name === op);
+    if (custom) return custom.precedence;
+
     if (op === "and" || op === "or") return 1;
     if (op === "<" || op === ">" || op === "=") return 2;
     if ((BINARY_SYMBOLS as readonly string[]).includes(op)) return 2; // same level as comparisons
@@ -368,8 +371,14 @@ class ExpressionParser {
     switch (token.type) {
       case "NUMBER":
         return { kind: "int", value: Number(token.value), tokenRange: { start, end: this.current} }
-      case "VAR":
+      case "VAR": {
+        const custom = this.customOperators.find(op => op.name === token.value && op.type === "UNARY");
+        if (custom) {
+          const operand = this.parsePrimary();
+          return { kind: "unary", op: custom.name, operand, tokenRange: { start, end: this.current } };
+        }
         return { kind: "var", name: token.value, tokenRange: { start, end: this.current} }
+      }
       case "PLACEHOLDER":
         // token.value is $1, $2, etc. - therefore we remove $
         return { kind: "placeholder", index: Number(token.value.slice(1)), tokenRange: { start, end: this.current} }
@@ -418,6 +427,16 @@ class ExpressionParser {
         const right: Expr = this.parseExpression(this.precedence(op) + 1);
         left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current }, opTokenIndex };
       }
+      else if (next.type === "VAR") {
+        const custom = this.customOperators.find(op => op.name === next.value && op.type ===
+          "BINARY");
+        if (custom && custom.precedence >= minPrecedence) {
+          const opTokenIndex = this.current;
+          this.advance();
+          const right = this.parseExpression(custom.precedence + 1);
+          left = { kind: "binary", op: custom.name, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current }, opTokenIndex };
+        } else break;
+      }
       else {
         break;
       }
@@ -449,7 +468,7 @@ class ExpressionParser {
   }
 }
 
-function parsePaletteItem(input: string): PaletteItem {
+function parsePaletteItem(input: string, customOperators: CustomOperator[] = []): PaletteItem {
   const s = input.trim();
 
   // Operators
@@ -472,6 +491,11 @@ function parsePaletteItem(input: string): PaletteItem {
   // Role reference like {generator}
   if (s.startsWith("{") && s.endsWith("}")) {
     return { kind: "role", name: s.slice(1, -1) };
+  }
+  // Custom operator
+  const custom = customOperators.find(op => op.name === s);
+  if (custom) {
+    return { kind: "operator", op: custom.name };
   }
   // Variable
   if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(s)) {
@@ -505,6 +529,9 @@ export function parse(input: string, startIndex: number): Code {
     if (line.startsWith("custom:")) {
       const [operators, nextI] = customParse(lines, i)
       code.customOperators.push(...operators);
+      for (const op of operators) {
+        if (op.commutative) COMMUTATIVE_OPS.add(op.name);
+      }
       i = nextI;
       continue
     }
@@ -776,7 +803,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
         throw new Error(`Line ${i + 1} - Palette defined multiple times`);
       pendingExercise.palette = line.replace("palette:", "").trim()
         .split(",")
-        .map(p => parsePaletteItem(p.trim()))
+        .map(p => parsePaletteItem(p.trim(), customOperators))
     }
     else if (line.startsWith("pairs:")) {
       if (pendingExercise.pairs)
