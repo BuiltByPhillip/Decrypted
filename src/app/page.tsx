@@ -53,6 +53,12 @@ export default function Home() {
             variant="secondary"
             onClick={() => {
               setCode(`protocol: Diffie-Hellman
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        commutative: true
+        precedence: 4
 define:
       generator \\elem  {g, x, a, b}
       prime \\elem {p, n, m, q}
