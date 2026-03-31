@@ -1,7 +1,7 @@
 "use client"
 
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
-import {type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
+import {type CustomOperator, type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
@@ -15,10 +15,11 @@ type ConstructExerciseProps = {
   hint?: string;
   definitions?: SelectedDefinitions;
   answer: Expr;
+  customOperators?: CustomOperator[];
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, palette, definitions, prompt, description, hint, onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, palette, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
@@ -52,7 +53,7 @@ export default function ConstructExercise({ answer, palette, definitions, prompt
       return;
     }
     try {
-      const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "));
+      const userExpr = parseExpression(tokens.map(paletteItemToString).join(" "), customOperators);
       const resolved = definitions ? substituteRoles(answer, definitions) : answer;
       const isMatch = exprEquals(userExpr, resolved);
       const isDuplicate = submittedAnswer?.status === "valid" && exprEquals(userExpr, submittedAnswer.expr);
@@ -84,7 +85,7 @@ export default function ConstructExercise({ answer, palette, definitions, prompt
         onSubmit={checkAnswer}
         feedback={submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
       >
-        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked} customOperatorItems={palette.filter(p => p.kind === "operator")}/>
+        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked} customOperatorItems={customOperators.map(op => ({ kind: "operator" as const, op: op.name }))}/>
       </ExerciseShell>
 
 )

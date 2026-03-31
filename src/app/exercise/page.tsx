@@ -289,6 +289,7 @@ export default function ExercisePage() {
                       : undefined
                   }
                   definitions={definitions}
+                  customOperators={code.customOperators}
                   onAnswerAction={(isCorrect) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
