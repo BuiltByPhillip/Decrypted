@@ -9,6 +9,16 @@ export default function page() {
 
   return (
     <main className="bg-pattern text-cream flex min-h-screen flex-col items-center justify-center">
+      <div className="flex flex-col pb-50">
+        <span className="text-soft-white text-4xl font-bold uppercase">
+          page is under construction
+        </span>
+
+        <span className="flex text-gray text-xl justify-center">
+          Click on 'Create exercise' to experience decrypted
+        </span>
+      </div>
+
       <div className="flex w-full justify-center gap-4">
         <Button
           variant="secondary"
@@ -18,11 +28,7 @@ export default function page() {
         >
           Create exercise
         </Button>
-        <Button
-          variant="primary"
-        >
-          Documentation
-        </Button>
+        <Button variant="primary">Documentation</Button>
       </div>
     </main>
   );
