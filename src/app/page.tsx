@@ -24,9 +24,12 @@ export default function Home() {
     }
   }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-pattern text-cream">
+    <main className="bg-pattern text-cream flex min-h-screen flex-col items-center justify-center">
       <div className="flex flex-col items-center">
-        <div className="w-240 h-128 rounded-2xl overflow-hidden" data-lenis-prevent>
+        <div
+          className="h-128 w-240 overflow-hidden rounded-2xl"
+          data-lenis-prevent
+        >
           <CodeMirror
             height="518px"
             value={code}
@@ -37,12 +40,14 @@ export default function Home() {
             className="h-full"
           />
         </div>
-        {error && (
-          <p className="mt-4 text-red-400 text-sm font-mono">{error}</p>
-        )}
+        {
+          <p className={`mt-4 font-mono text-sm text-red-400 ${error ? "" : "select-none"}`}>
+            {error ?? "\u00A0"}
+          </p>
+        }
         <div>
           <Button
-            className="bg-dark rounded-xl text-soft-white hover:shadow-[0_0_10px_theme(colors.muted)] px-3 py-1 transition duration-300 opacity-70 hover:cursor-pointer mt-10 border-2 border-medium hover:border-muted"
+            className="bg-dark text-soft-white hover:shadow-[0_0_10px_theme(colors.muted)] border-medium hover:border-muted mt-4 rounded-xl border-2 px-3 py-1 opacity-70 transition duration-300 hover:cursor-pointer"
             size="lg"
             onClick={() => handleClick()}
           >
@@ -122,7 +127,6 @@ step:
             (Temporary) Insert code
           </Button>
         </div>
-
       </div>
     </main>
   );
