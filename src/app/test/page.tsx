@@ -85,6 +85,10 @@ export default function TestPage() {
     },
   });
 
+  if (process.env.NODE_ENV !== "development") {
+    return new Response("Not Found", { status: 404 });
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-medium to-dark text-cream p-8">
       <h1 className="text-4xl font-bold mb-8">Parser Test Page</h1>
