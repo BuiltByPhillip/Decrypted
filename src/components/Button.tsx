@@ -13,16 +13,26 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-cream text-white hover:brightness-110",
-  secondary: "bg-medium text-white hover:brightness-125",
-  outline: "bg-transparent border-2 border-cream text-cream hover:bg-cream/20",
-  ghost: "bg-transparent text-cream hover:bg-white/10",
-  ghostMuted: "bg-transparent text-muted hover:underline",
-  option: "hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-103",
-  submit: "bg-green text-green-foreground transition ease-in-out delay-100 duration-300 hover:scale-105",
-  continue: "bg-dark text-muted border border-muted opacity-70 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-103",
-  definition: "bg-dark hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105",
-  category: "bg-dark/70 border border-muted min-w-30 min-h-10 rounded-2xl text-muted",
+  primary:
+    "bg-muted text-dark hover:shadow-[0_0_10px_var(--color-muted)] transition duration-300 select-none",
+  secondary:
+    "bg-dark text-muted hover:shadow-[0_0_10px_var(--color-muted)] transition duration-300 select-none",
+  outline:
+    "bg-transparent border-2 border-cream text-cream hover:bg-cream/20",
+  ghost:
+    "bg-transparent text-cream hover:bg-white/10",
+  ghostMuted:
+    "bg-transparent text-muted hover:underline",
+  option:
+    "hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-103",
+  submit:
+    "bg-green text-green-foreground transition ease-in-out delay-100 duration-300 hover:scale-105",
+  continue:
+    "bg-dark text-muted border border-muted opacity-70 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-103",
+  definition:
+    "bg-dark hover:brightness-90 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105",
+  category:
+    "bg-dark/70 border border-muted min-w-30 min-h-10 rounded-2xl text-muted",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

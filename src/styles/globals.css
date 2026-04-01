@@ -32,6 +32,7 @@ body::-webkit-scrollbar {
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
   --color-dark: #222831;
+  --color-dark-foreground: #CBD5E1;
   --color-medium: #393E46;
   --color-light: #948979;
   --color-cream: #DFD0B8;

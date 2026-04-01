@@ -35,7 +35,7 @@ export default function RootLayout({
         <header className="absolute top-0 left-0 z-10 flex w-full items-center px-4 py-3 lg:px-8 lg:py-4 xl:px-32">
           {/*<Logo className="h-30 w-30 shrink-0" /> */}
           <div className="flex flex-1 justify-center">
-            <a href="/" className="pointer-events-auto z-10">
+            <a href="/code" className="pointer-events-auto z-10">
               <span className="logo-shimmer text-3xl font-extrabold tracking-wide uppercase lg:text-4xl">
                 decrypted
               </span>
