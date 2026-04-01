@@ -41,7 +41,7 @@ export default function Home() {
           />
         </div>
         {
-          <p className={`mt-4 font-mono text-sm text-red-400 ${error ? "" : "select-none"}`}>
+          <p className={`mt-4 font-mono text-sm text-danger ${error ? "" : "select-none"}`}>
             {error ?? "\u00A0"}
           </p>
         }
@@ -87,7 +87,6 @@ step:
         type: construct
         prompt: Construct the expression for Alice to calculate her public key A
         hint: Bob uses the same expression to calculate B
-        palette: {generator}, {alice_secret}, {prime}, ^, mod, *
         answer: {generator} ^ {alice_secret} mod {prime}
 step:
     description: Alice sends A to Bob

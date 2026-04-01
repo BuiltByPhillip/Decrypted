@@ -387,32 +387,15 @@ step:
     exercise:
         type: construct
         prompt: Build the expression
-        palette: {generator}, {secret}, {prime}, ^, mod
         answer: {generator} ^ {secret} mod {prime}`;
 
   it("parses a construct exercise without throwing", () => {
     expect(() => parse(constructDsl, 0)).not.toThrow();
   });
 
-  it("parses the palette items", () => {
-    const result = parse(constructDsl, 0);
-    expect(result.step[0]?.exercise?.palette).toHaveLength(5);
-  });
-
   it("parses the answer expression", () => {
     const result = parse(constructDsl, 0);
     expect(result.step[0]?.exercise?.answer).toHaveLength(1);
-  });
-
-  it("throws when construct exercise has no palette", () => {
-    const dsl = `protocol: Test
-step:
-    description: Compute public key
-    exercise:
-        type: construct
-        prompt: Build the expression
-        answer: g ^ a mod p`;
-    expect(() => parse(dsl, 0)).toThrow();
   });
 
   it("throws when construct exercise has no answer", () => {
@@ -421,8 +404,7 @@ step:
     description: Compute public key
     exercise:
         type: construct
-        prompt: Build the expression
-        palette: g, a, p, ^, mod`;
+        prompt: Build the expression`;
     expect(() => parse(dsl, 0)).toThrow();
   });
 });
@@ -793,30 +775,6 @@ describe("custom operator expression parsing", () => {
     expect(result).toMatchObject({ kind: "var", name: "SET" });
   });
 
-  it("custom BINARY operator appears in palette as operator kind", () => {
-    const dsl = `protocol: Test
-custom:
-    operator:
-        name: SET
-        type: BINARY
-        commutative: false
-        precedence: 3
-step:
-    description: Test
-    exercise:
-        type: construct
-        prompt: Use SET
-        palette: {generator}, SET
-        answer: g SET h
-define:
-    generator \\elem {g, h}`;
-    expect(() => parse(dsl, 0)).not.toThrow();
-    const result = parse(dsl, 0);
-    const palette = result.step[0]?.exercise?.palette;
-    const setItem = palette?.find(p => p.kind === "operator" && p.op === "SET");
-    expect(setItem).toBeDefined();
-  });
-
   it("answer expression using custom BINARY operator parses correctly via full DSL", () => {
     const dsl = `protocol: Test
 custom:
@@ -830,7 +788,6 @@ step:
     exercise:
         type: construct
         prompt: Use SET
-        palette: a, b, SET
         answer: a SET b`;
     const result = parse(dsl, 0);
     expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({
@@ -854,7 +811,6 @@ step:
     exercise:
         type: construct
         prompt: Use HASH
-        palette: x, HASH
         answer: HASH x`;
     const result = parse(dsl, 0);
     expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({

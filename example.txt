@@ -37,7 +37,6 @@ step:
         type: construct
         prompt: Construct the expression for Alice to calculate her public key A
         hint: Bob uses the same expression to calculate B
-        palette: {generator}, {alice_secret}, {prime}, ^, mod, *
         answer: {generator} ^ {alice_secret} mod {prime}
 step:
     description: Alice sends A to Bob

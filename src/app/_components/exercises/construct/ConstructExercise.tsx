@@ -9,7 +9,6 @@ import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 
 type ConstructExerciseProps = {
-  palette: PaletteItem[];
   description: string;
   prompt: string;
   hint?: string;
@@ -19,7 +18,7 @@ type ConstructExerciseProps = {
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, palette, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);

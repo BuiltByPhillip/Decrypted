@@ -36,7 +36,6 @@ type Exercise = {
   type: ExerciseType;
   prompt: string;
   hint?: string;
-  palette?: PaletteItem[];
   options?: Expr[];
   pairs?: { left: string; right: string }[];
   answer?: Expr[];
@@ -468,44 +467,6 @@ class ExpressionParser {
   }
 }
 
-function parsePaletteItem(input: string, customOperators: CustomOperator[] = []): PaletteItem {
-  const s = input.trim();
-
-  // Operators
-  if (s === "+") return { kind: "operator", op: "add"};
-  if (s === "-") return { kind: "operator", op: "sub" };
-  if (s === "^") return { kind: "operator", op: "pow"}
-  if (s === "/") return { kind: "operator", op: "div" };
-  if (s === "mod") return { kind: "operator", op: "mod" };
-  if (s === "and") return { kind: "operator", op: "and" };
-  if (s === "or") return { kind: "operator", op: "or" };
-  if (s === "*") return { kind: "operator", op: "mul" };
-  if (s === "<") return { kind: "operator", op: "less" };
-  if (s === ">") return { kind: "operator", op: "greater" };
-  if (s === "=" || s === "==") return { kind: "operator", op: "equal" };
-
-  // Integer
-  if (/^\d+$/.test(s)) {
-    return { kind: "int", value: Number(s) };
-  }
-  // Role reference like {generator}
-  if (s.startsWith("{") && s.endsWith("}")) {
-    return { kind: "role", name: s.slice(1, -1) };
-  }
-  // Custom operator
-  const custom = customOperators.find(op => op.name === s);
-  if (custom) {
-    return { kind: "operator", op: custom.name };
-  }
-  // Variable
-  if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(s)) {
-    return { kind: "var", name: s };
-  }
-
-  throw new Error(`Invalid palette item: '${input}'`);
-
-}
-
 export function parse(input: string, startIndex: number): Code {
   const lines: string[] = input.split("\n");
   let code: Code = {
@@ -779,6 +740,10 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
+    if (!line || line.startsWith("step") || line.startsWith("description:") || line.startsWith("define:") || line.startsWith("custom:") || line.startsWith("protocol:")) {
+      break;
+    }
+
     if (line.startsWith("type:")) {
       if (pendingExercise.type)
         throw new Error(`Line ${i + 1} - Type defined multiple times`);
@@ -797,13 +762,6 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       if (pendingExercise.hint)
         throw new Error(`Line ${i + 1} - Hint defined multiple times`);
       pendingExercise.hint = line.replace("hint:", "").trim()
-    }
-    else if (line.startsWith("palette:")) {
-      if (pendingExercise.palette)
-        throw new Error(`Line ${i + 1} - Palette defined multiple times`);
-      pendingExercise.palette = line.replace("palette:", "").trim()
-        .split(",")
-        .map(p => parsePaletteItem(p.trim(), customOperators))
     }
     else if (line.startsWith("pairs:")) {
       if (pendingExercise.pairs)
@@ -848,7 +806,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       }
     }
     else {
-      return [finalizeExercise(pendingExercise, startIndex), i]
+      throw new Error(`Line ${i + 1} - Unrecognized exercise field: '${line.split(":")[0]}'`)
     }
     i++
   }
@@ -914,22 +872,20 @@ function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
   if (!fields.type) {
     throw new Error(`Line ${line + 1} - Exercise type must be specified`)
   }
+  const typeLabel = fields.type ? ` (type: ${fields.type})` : "";
   if (!fields.prompt) {
-    throw new Error(`Line ${line + 1} - Exercise must have a prompt`)
+    throw new Error(`Line ${line + 1}${typeLabel} - Exercise must have a prompt`)
   }
   if (!fields.answer && fields.type !== "match") {
-    throw new Error(`Line ${line + 1} - Exercise must have an answer`)
+    throw new Error(`Line ${line + 1}${typeLabel} - Exercise must have an answer`)
   }
 
   // Type-specific requirements
-  if (fields.type === "construct" && !fields.palette) {
-    throw new Error(`Line ${line + 1} - Exercise type construct must have a palette`)
-  }
   if (fields.type === "match" && !fields.pairs) {
-    throw new Error(`Line ${line + 1} - Exercise type match must have pairs`)
+    throw new Error(`Line ${line + 1}${typeLabel} - Exercise must have pairs`)
   }
   if (fields.type === "select" && !fields.options) {
-    throw new Error(`Line ${line + 1} - Exercise type select must have options`)
+    throw new Error(`Line ${line + 1}${typeLabel} - Exercise must have options`)
   }
 
   return fields as Exercise

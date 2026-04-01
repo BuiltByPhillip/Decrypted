@@ -194,7 +194,7 @@ export default function ExercisePage() {
       !step.exercise ||
       (step.exercise?.type === "select" && step.exercise.options) ||
       (step.exercise?.type === "match" && step.exercise.pairs) ||
-      (step.exercise?.type === "construct" && step.exercise.palette) ||
+      (step.exercise?.type === "construct") ||
       (step.exercise?.type === "calculate"));
 
   exercisesLengthRef.current = exercises.length;
@@ -279,7 +279,6 @@ export default function ExercisePage() {
                 />
               ) : step.exercise?.type === "construct" ? (
                 <ConstructExercise
-                  palette={step.exercise!.palette!}
                   answer={step.exercise.answer![0]!}
                   description={step.description}
                   prompt={step.exercise.prompt}
