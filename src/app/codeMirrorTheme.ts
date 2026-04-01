@@ -19,6 +19,12 @@ export const darkTheme = EditorView.theme({
   ".cm-focused": {
     outline: "none",
   },
+  ".cm-selectionBackground, ::selection": {
+    backgroundColor: "#393E46 !important",
+  },
+  ".cm-focused .cm-selectionBackground": {
+    backgroundColor: "#393E46 !important",
+  },
   ".cm-editor": {
     borderRadius: "1rem",
   },
