@@ -86,7 +86,7 @@ export default function TestPage() {
   });
 
   if (process.env.NODE_ENV !== "development") {
-    return new Response("Not Found", { status: 404 });
+    return null;
   }
 
   return (
