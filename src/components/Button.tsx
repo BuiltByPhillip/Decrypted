@@ -18,7 +18,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   secondary:
     "bg-dark text-muted hover:shadow-[0_0_10px_var(--color-muted)] transition duration-300 select-none",
   outline:
-    "bg-transparent border-2 border-cream text-cream hover:bg-cream/20",
+    "bg-transparent border-2 border-muted text-muted hover:bg-muted/10",
   ghost:
     "bg-transparent text-cream hover:bg-white/10",
   ghostMuted:

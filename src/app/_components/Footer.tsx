@@ -36,7 +36,7 @@ export default function Footer() {
               Source code
             </a>
             <a
-              href="/code"
+              href="/editor"
               className="text-muted hover:text-dark-foreground text-xs transition-colors duration-200"
             >
               Create exercise

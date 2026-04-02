@@ -89,6 +89,22 @@ body::-webkit-scrollbar {
   background-image: url("/topography.svg");
 }
 
+.green-shimmer {
+  background: linear-gradient(
+    90deg,
+    #22c55e 0%,
+    #86efac 25%,
+    #22c55e 50%,
+    #86efac 75%,
+    #22c55e 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 25s linear infinite;
+}
+
 .logo-shimmer {
   background: linear-gradient(
     90deg,
