@@ -5,45 +5,6 @@ import { useRouter } from "next/navigation";
 import Button from "~/components/Button";
 import Footer from "~/app/_components/Footer";
 
-// ─── Cipher Stream ────────────────────────────────────────────────────────────
-
-const HEX = "0123456789ABCDEF";
-const rand = () => HEX[Math.floor(Math.random() * 16)];
-const randByte = () => `${rand()}${rand()}`;
-const randRow = () => Array.from({ length: 4 }, randByte).join(" ");
-
-function CipherStream({ side, rows = 18 }: { side: "left" | "right"; rows?: number }) {
-  const [lines, setLines] = useState<string[]>(() => Array.from({ length: rows }, () => ""));
-
-  useEffect(() => {
-    setLines(Array.from({ length: rows }, randRow));
-    const id = setInterval(() => {
-      setLines((prev) =>
-        prev.map((line) => (Math.random() > 0.72 ? randRow() : line)),
-      );
-    }, 500);
-    return () => clearInterval(id);
-  }, [rows]);
-
-  return (
-    <div
-      aria-hidden="true"
-      className={`pointer-events-none absolute top-0 hidden h-full flex-col justify-around py-28 select-none xl:flex ${
-        side === "left" ? "left-10" : "right-10"
-      }`}
-    >
-      {lines.map((line, i) => (
-        <span
-          key={i}
-          className="font-mono text-[10px] tracking-widest text-soft-white opacity-[0.09] transition-opacity duration-500"
-        >
-          {line}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // ─── Feature data ─────────────────────────────────────────────────────────────
 
 const FEATURES = [
@@ -107,10 +68,7 @@ export default function LandingPage() {
     >
       {/* ── Hero ── */}
       <section className="bg-pattern relative flex min-h-screen flex-col items-center justify-center rounded-b-3xl">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <CipherStream side="left" />
-          <CipherStream side="right" />
-        </div>
+        
 
         {/* ambient glow */}
         <div
@@ -266,7 +224,16 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA strip ── */}
-      <section className="bg-pattern mx-4 mb-4 rounded-3xl lg:mx-8 xl:mx-16">
+      <section
+        className="relative mx-4 mb-4 overflow-hidden rounded-3xl lg:mx-8 xl:mx-16"
+        style={{ backgroundColor: "#141820" }}
+      >
+        {/* corner brackets */}
+        <span aria-hidden="true" className="border-green/20 absolute top-5 left-5 h-7 w-7 rounded-tl-sm border-t border-l" />
+        <span aria-hidden="true" className="border-green/20 absolute top-5 right-5 h-7 w-7 rounded-tr-sm border-t border-r" />
+        <span aria-hidden="true" className="border-green/20 absolute bottom-5 left-5 h-7 w-7 rounded-bl-sm border-b border-l" />
+        <span aria-hidden="true" className="border-green/20 absolute right-5 bottom-5 h-7 w-7 rounded-br-sm border-r border-b" />
+
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-8 py-20 text-center">
           <span className="text-green font-mono text-[10px] tracking-[0.32em] uppercase">
             Get started
