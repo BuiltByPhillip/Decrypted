@@ -1,19 +1,25 @@
 "use client"
 
 import type { Code, Expr } from "~/app/hooks/parser";
-import SelectExercise from "~/app/_components/exercises/select/SelectExercise";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyComponent = React.ComponentType<any>;
 import Button from "~/components/Button";
 import { useEffect, useState, useRef, useCallback } from "react";
+import React from "react";
 import { useLenis } from "~/components/SmoothScroll";
-import ConstructExercise from "~/app/_components/exercises/construct/ConstructExercise";
 import DefinitionContainer from "~/app/_components/definition/DefinitionContainer";
-import FinishScreen from "~/app/_components/exercises/FinishScreen";
-import CalculateExercise from "~/app/_components/exercises/calculate/CalculateExercise";
 import { substituteRolesInString } from "~/app/hooks/expr";
 import DefinitionStep from "~/app/_components/definition/DefinitionStep";
-import ProgressBar from "~/app/_components/exercises/shared/ProgressBar";
-import ExerciseDescription from "~/app/_components/exercises/shared/ExerciseDescription";
-import MatchExercise from "~/app/_components/exercises/match/MatchExercise";
+
+type ExerciseComponents = {
+  SelectExercise: AnyComponent | null;
+  ConstructExercise: AnyComponent | null;
+  MatchExercise: AnyComponent | null;
+  CalculateExercise: AnyComponent | null;
+  FinishScreen: AnyComponent | null;
+  ProgressBar: AnyComponent | null;
+  ExerciseDescription: AnyComponent | null;
+};
 
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
@@ -21,6 +27,15 @@ export type SelectedDefinitions = Record<string, Expr>
 export default function ExercisePage() {
   const [code, setCode] = useState<Code | null>(null);
   const [showExercises, setShowExercises] = useState(false);
+  const [exerciseComponents, setExerciseComponents] = useState<ExerciseComponents>({
+    SelectExercise: null,
+    ConstructExercise: null,
+    MatchExercise: null,
+    CalculateExercise: null,
+    FinishScreen: null,
+    ProgressBar: null,
+    ExerciseDescription: null,
+  });
   const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
   const [results, setResults] = useState<Record<number, boolean>>({});
   const [showFinish, setShowFinish] = useState(false);
@@ -39,12 +54,36 @@ export default function ExercisePage() {
   const showFinishRef = useRef(false);
   const exercisesLengthRef = useRef(0);
   const exercisesRef = useRef<typeof exercises>([]);
+  
 
   useEffect(() => {
     const rawData = sessionStorage.getItem("exerciseData");
     if (rawData) {
       setCode(JSON.parse(rawData) as Code);
     }
+  }, []);
+
+  /* Load exercise components in the background after definition phase renders */
+  useEffect(() => {
+    Promise.all([
+      import("~/app/_components/exercises/select/SelectExercise"),
+      import("~/app/_components/exercises/construct/ConstructExercise"),
+      import("~/app/_components/exercises/match/MatchExercise"),
+      import("~/app/_components/exercises/calculate/CalculateExercise"),
+      import("~/app/_components/exercises/FinishScreen"),
+      import("~/app/_components/exercises/shared/ProgressBar"),
+      import("~/app/_components/exercises/shared/ExerciseDescription"),
+    ]).then(([Select, Construct, Match, Calculate, Finish, Progress, Description]) => {
+      setExerciseComponents({
+        SelectExercise: Select.default,
+        ConstructExercise: Construct.default,
+        MatchExercise: Match.default,
+        CalculateExercise: Calculate.default,
+        FinishScreen: Finish.default,
+        ProgressBar: Progress.default,
+        ExerciseDescription: Description.default,
+      });
+    });
   }, []);
 
   // Scroll to an exercise by index
@@ -215,8 +254,8 @@ export default function ExercisePage() {
     <main className="bg-pattern relative flex flex-col items-center justify-center pb-20">
       {/* Progress bar fixed to right side */}
       {
-        showExercises ? <div className="fixed top-1/2 right-5 -translate-y-1/2 z-50">
-          <ProgressBar total={exercises.length} results={results} currentIndex={currentExerciseIndex} onSegmentClick={scrollToExercise} />
+        showExercises && exerciseComponents.ProgressBar ? <div className="fixed top-1/2 right-5 -translate-y-1/2 z-50">
+          <exerciseComponents.ProgressBar total={exercises.length} results={results} currentIndex={currentExerciseIndex} onSegmentClick={scrollToExercise} />
         </div> : null
       }
 
@@ -261,8 +300,8 @@ export default function ExercisePage() {
               ref={(el) => setExerciseRef(exerciseIndex, el)}
               className="flex min-h-screen w-full flex-col items-center justify-center gap-8"
             >
-              {step.exercise?.type === "select" ? (
-                <SelectExercise
+              {step.exercise?.type === "select" && exerciseComponents.SelectExercise ? (
+                <exerciseComponents.SelectExercise
                   options={step.exercise!.options!}
                   description={step.description}
                   prompt={step.exercise!.prompt}
@@ -273,12 +312,12 @@ export default function ExercisePage() {
                   }
                   definitions={definitions}
                   answers={step.exercise!.answer ?? []}
-                  onAnswerAction={(isCorrect) =>
+                  onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
-              ) : step.exercise?.type === "construct" ? (
-                <ConstructExercise
+              ) : step.exercise?.type === "construct" && exerciseComponents.ConstructExercise ? (
+                <exerciseComponents.ConstructExercise
                   answer={step.exercise.answer![0]!}
                   description={step.description}
                   prompt={step.exercise.prompt}
@@ -289,23 +328,23 @@ export default function ExercisePage() {
                   }
                   definitions={definitions}
                   customOperators={code.customOperators}
-                  onAnswerAction={(isCorrect) =>
+                  onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
-              ) : step.exercise?.type === "match" ? (
-                <MatchExercise
+              ) : step.exercise?.type === "match" && exerciseComponents.MatchExercise ? (
+                <exerciseComponents.MatchExercise
                   description={step.description}
                   prompt={step.exercise.prompt}
                   hint={step.exercise.hint}
                   definitions={definitions}
-                  onAnswerAction={(isCorrect) =>
+                  onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                   pairs={step.exercise.pairs!}
                 />
-              ) : step.exercise?.type === "calculate" ? (
-                <CalculateExercise
+              ) : step.exercise?.type === "calculate" && exerciseComponents.CalculateExercise ? (
+                <exerciseComponents.CalculateExercise
                   description={step.description}
                   prompt={step.exercise.prompt}
                   hint={
@@ -315,12 +354,12 @@ export default function ExercisePage() {
                   }
                   answer={step.exercise.answer![0]!}
                   definitions={definitions}
-                  onAnswerAction={(isCorrect) =>
+                  onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                 />
-              ) : !step.exercise && step.description ? (
-                <ExerciseDescription description={step.description} />
+              ) : !step.exercise && step.description && exerciseComponents.ExerciseDescription ? (
+                <exerciseComponents.ExerciseDescription description={step.description} />
               ) : (
                 <div>Something went wrong while rendering</div>
               )}
@@ -353,9 +392,9 @@ export default function ExercisePage() {
           );
         })}
 
-      {showFinish && (
+      {showFinish && exerciseComponents.FinishScreen && (
         <div ref={finishElementRef}>
-          <FinishScreen
+          <exerciseComponents.FinishScreen
             totalExercises={realExerciseIndices.length}
             results={remappedResults}
             onRestart={handleRestart}
