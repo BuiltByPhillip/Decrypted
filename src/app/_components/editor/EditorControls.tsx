@@ -56,41 +56,33 @@ export default function EditorControls() {
         <span className="bg-green/30 h-px flex-1" />
       </div>
 
-      {/* editor with glow + corners */}
+      {/* editor row */}
       <div className="relative">
-        {/* ambient glow */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -m-12 rounded-full"
-          style={{
-            background: "radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%)",
-          }}
-        />
+        {/* editor with glow + corners */}
+        <div className="relative">
+          {/* ambient glow */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -m-12 rounded-full"
+            style={{
+              background: "radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%)",
+            }}
+          />
 
-        <div className="relative p-6">
-          <span aria-hidden="true" className="border-green/60 absolute top-0 left-0 z-10 h-8 w-8 rounded-tl border-t border-l" />
-          <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />
-          <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />
-          <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />
-          <div className="h-128 w-240 overflow-hidden rounded-2xl" data-lenis-prevent>
-            <CodeWindow code={code} onChange={setCode} />
+          <div className="relative p-6">
+            <span aria-hidden="true" className="border-green/60 absolute top-0 left-0 z-10 h-8 w-8 rounded-tl border-t border-l" />
+            <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />
+            <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />
+            <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />
+            <div className="h-128 w-240 overflow-hidden rounded-2xl" data-lenis-prevent>
+              <CodeWindow code={code} onChange={setCode} />
+            </div>
           </div>
         </div>
-      </div>
 
-      <p className={`mt-4 font-mono text-sm text-danger ${error ? "" : "select-none"}`}>
-        {error ?? "\u00A0"}
-      </p>
-      <div>
+        {/* insert button absolutely to the right of the editor */}
         <Button
-          variant="submit"
-          className="mt-4 border-2 px-3 py-1"
-          size="lg"
-          onClick={handleClick}
-        >
-          Generate code
-        </Button>
-        <Button
+          className="absolute top-1/2 -translate-y-1/2 left-full ml-4"
           variant="secondary"
           onClick={() => {
             setCode(`protocol: Diffie-Hellman
@@ -162,6 +154,22 @@ step:
           (Temporary) Insert code
         </Button>
       </div>
+
+      {/* error + generate button centered below editor */}
+      <div className="mt-4 flex flex-col items-center">
+        <p className={`font-mono text-sm text-danger ${error ? "" : "select-none"}`}>
+          {error ?? "\u00A0"}
+        </p>
+        <Button
+          variant="submit"
+          className="mt-2 border-2 px-3 py-1"
+          size="lg"
+          onClick={handleClick}
+        >
+          Generate code
+        </Button>
+      </div>
     </>
   );
+
 }
