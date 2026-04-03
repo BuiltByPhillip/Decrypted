@@ -12,14 +12,13 @@ export default function LandingPage() {
     <div
       style={{
         backgroundColor: "#1a1f26",
-        backgroundImage: "radial-gradient(rgba(34,197,94,0.12) 1px, transparent 1px)",
+        backgroundImage:
+          "radial-gradient(rgba(34,197,94,0.12) 1px, transparent 1px)",
         backgroundSize: "28px 28px",
       }}
     >
       {/* ── Hero ── */}
       <section className="bg-pattern relative flex min-h-screen flex-col items-center justify-center rounded-b-3xl">
-        
-
         {/* ambient glow */}
         <div
           aria-hidden="true"
@@ -41,7 +40,7 @@ export default function LandingPage() {
           >
             <span className="bg-green h-px w-6 opacity-70" />
             <span className="text-muted font-mono text-[10px] tracking-[0.32em] uppercase">
-              Educational · Cryptographic · Interactive
+              Educational · Interactive · Learning
             </span>
             <span className="bg-green h-px w-6 opacity-70" />
           </div>
@@ -67,9 +66,9 @@ export default function LandingPage() {
               animationDelay: "0.38s",
             }}
           >
-            Write a protocol once. Decrypted turns it into an exercise
-            students can actually work through - including drag-and-drop,
-            multiple choice, and more.
+            Write a protocol once. Decrypted turns it into an exercise students
+            can actually work through - including drag-and-drop, multiple
+            choice, and more.
           </p>
 
           {/* CTAs */}
@@ -80,10 +79,10 @@ export default function LandingPage() {
               animationDelay: "0.52s",
             }}
           >
-            <HeroButtons/>
+            <HeroButtons />
           </div>
         </div>
-        <ScrollCue/>
+        <ScrollCue />
       </section>
 
       {/* ── Features ── */}
@@ -103,7 +102,7 @@ export default function LandingPage() {
           </div>
 
           {/* Cards */}
-          <FeatureCards/>
+          <FeatureCards />
         </div>
       </section>
 
@@ -113,10 +112,22 @@ export default function LandingPage() {
         style={{ backgroundColor: "#141820" }}
       >
         {/* corner brackets */}
-        <span aria-hidden="true" className="border-green/20 group-hover:border-green/80 absolute top-5 left-5 h-7 w-7 rounded-tl-sm border-t border-l transition-colors duration-300" />
-        <span aria-hidden="true" className="border-green/20 group-hover:border-green/80 absolute top-5 right-5 h-7 w-7 rounded-tr-sm border-t border-r transition-colors duration-300" />
-        <span aria-hidden="true" className="border-green/20 group-hover:border-green/80 absolute bottom-5 left-5 h-7 w-7 rounded-bl-sm border-b border-l transition-colors duration-300" />
-        <span aria-hidden="true" className="border-green/20 group-hover:border-green/80 absolute right-5 bottom-5 h-7 w-7 rounded-br-sm border-r border-b transition-colors duration-300" />
+        <span
+          aria-hidden="true"
+          className="border-green/20 group-hover:border-green/80 absolute top-5 left-5 h-7 w-7 rounded-tl-sm border-t border-l transition-colors duration-300"
+        />
+        <span
+          aria-hidden="true"
+          className="border-green/20 group-hover:border-green/80 absolute top-5 right-5 h-7 w-7 rounded-tr-sm border-t border-r transition-colors duration-300"
+        />
+        <span
+          aria-hidden="true"
+          className="border-green/20 group-hover:border-green/80 absolute bottom-5 left-5 h-7 w-7 rounded-bl-sm border-b border-l transition-colors duration-300"
+        />
+        <span
+          aria-hidden="true"
+          className="border-green/20 group-hover:border-green/80 absolute right-5 bottom-5 h-7 w-7 rounded-br-sm border-r border-b transition-colors duration-300"
+        />
 
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-8 py-20 text-center">
           <span className="text-green font-mono text-[10px] tracking-[0.32em] uppercase">
@@ -126,9 +137,10 @@ export default function LandingPage() {
             Ready to build your first exercise?
           </h2>
           <p className="text-muted max-w-sm text-sm leading-relaxed">
-            Open the editor and start writing. Your first exercise is closer than you think.
+            Open the editor and start writing. Your first exercise is closer
+            than you think.
           </p>
-          <CTAButton/>
+          <CTAButton />
         </div>
       </section>
 
