@@ -168,7 +168,7 @@ step:
         <Button
           variant="submit"
           size="lg"
-          className="mt-2"
+          className="mt-2 font-mono"
           onClick={handleClick}
         >
           Generate code
