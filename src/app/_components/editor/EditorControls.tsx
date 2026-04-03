@@ -18,7 +18,7 @@ function CodeWindowSkeleton() {
       }}
     >
       <div className="flex" style={{ backgroundColor: "rgba(57, 62, 70, 0.3)", marginRight: "16px", lineHeight: "1.4" }}>
-        <span style={{ color: "#94a3b8", paddingLeft: "4px", paddingRight: "8px" }}>1</span>
+        <span style={{ color: "#94a3b8", paddingLeft: "5px", paddingRight: "8px" }}>1</span>
         <span style={{ color: "#94a3b8", paddingLeft: "16px" }}>Enter your code here...</span>
       </div>
     </div>
@@ -26,6 +26,7 @@ function CodeWindowSkeleton() {
 }
 
 const CodeWindow = dynamic(() => import("~/app/_components/editor/CodeWindow"), {
+  ssr: false,
   loading: () => <CodeWindowSkeleton />,
 });
 
@@ -51,7 +52,7 @@ export default function EditorControls() {
       {/* label */}
       <div className="mb-4 flex w-full items-center gap-3">
         <span className="bg-green/30 h-px flex-1" />
-        <span className="text-muted font-mono text-[10px] tracking-[0.32em] uppercase">Protocol Editor</span>
+        <span className="text-muted font-mono text-[10px] tracking-[0.32em] uppercase">Exercise Editor</span>
         <span className="bg-green/30 h-px flex-1" />
       </div>
 
