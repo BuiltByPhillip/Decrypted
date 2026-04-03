@@ -8,7 +8,7 @@ export default function HeroButtons() {
   const router = useRouter();
 
   return (
-    <div>
+    <>
       <Button
         variant="submit"
         size="lg"
@@ -22,6 +22,6 @@ export default function HeroButtons() {
       >
         Documentation
       </Button>
-    </div>
+    </>
   );
 }
