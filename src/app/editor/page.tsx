@@ -1,4 +1,4 @@
-import CodeWindow from "~/app/_components/editor/CodeWindow";
+import EditorControls from "~/app/_components/editor/EditorControls";
 
 export default function CodePage() {
   return (
@@ -11,12 +11,7 @@ export default function CodePage() {
       }}
     >
       <div className="flex flex-col items-center">
-        <div
-          className="h-128 w-240 overflow-hidden rounded-2xl"
-          data-lenis-prevent
-        >
-          <CodeWindow />
-        </div>
+        <EditorControls />
       </div>
     </main>
   );
