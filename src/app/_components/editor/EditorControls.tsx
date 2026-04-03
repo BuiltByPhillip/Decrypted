@@ -9,17 +9,22 @@ import Button from "~/components/Button";
 function CodeWindowSkeleton() {
   return (
     <div
-      className="h-full w-full rounded-2xl"
+      className="h-full w-full overflow-hidden rounded-2xl border border-[#393E46] border-b-[#5a6070]"
       style={{
-        backgroundColor: "rgba(34, 40, 49, 0.7)",
         fontFamily: "ui-monospace, SFMono-Regular, monospace",
         fontSize: "13px",
-        paddingTop: "16px",
       }}
     >
-      <div className="flex" style={{ backgroundColor: "rgba(57, 62, 70, 0.3)", marginRight: "16px", lineHeight: "1.4" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 16px", borderBottom: "1px solid #393E46", backgroundColor: "rgba(28, 33, 41, 0.8)" }}>
+        <span style={{ backgroundColor: "#ED6A5F", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
+        <span style={{ backgroundColor: "#F6BE50", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
+        <span style={{ backgroundColor: "#61C555", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
+      </div>
+      <div className="flex-1" style={{ backgroundColor: "rgba(34, 40, 49, 1)" }}>
+      <div className="flex" style={{ backgroundColor: "rgba(57, 62, 70, 0.3)", marginRight: "16px", marginTop: "16px", lineHeight: "1.4" }}>
         <span style={{ color: "#94a3b8", paddingLeft: "5px", paddingRight: "8px" }}>1</span>
         <span style={{ color: "#94a3b8", paddingLeft: "16px" }}>Enter your code here...</span>
+      </div>
       </div>
     </div>
   );
