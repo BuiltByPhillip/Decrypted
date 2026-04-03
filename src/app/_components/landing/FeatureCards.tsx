@@ -50,11 +50,11 @@ export default function FeatureCards() {
       {FEATURES.map((f, i) => (
         <div
           key={f.num}
-          className="group border-medium bg-dark/60 hover:border-muted relative flex flex-col gap-4 overflow-hidden rounded-2xl border p-8 transition-all duration-300"
+          className="group border-medium bg-dark/60 hover:border-green hover:scale-103 relative flex flex-col gap-4 overflow-hidden rounded-2xl border p-8 transition-all duration-300"
           style={{
             opacity: cardsVisible ? 1 : 0,
             transform: cardsVisible ? "translateY(0)" : "translateY(32px)",
-            transitionProperty: "opacity, transform",
+            transitionProperty: "opacity, transform, scale",
             transitionDuration: "0.6s",
             transitionTimingFunction: "ease",
             transitionDelay: `${i * 150}ms`,
