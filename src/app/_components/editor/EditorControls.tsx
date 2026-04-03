@@ -162,8 +162,8 @@ step:
         </p>
         <Button
           variant="submit"
-          className="mt-2 border-2 px-3 py-1"
           size="lg"
+          className="mt-2"
           onClick={handleClick}
         >
           Generate code

@@ -46,7 +46,7 @@ export default function FeatureCards() {
   }, []);
 
   return (
-    <div ref={cardsRef} className="grid gap-5 sm:grid-cols-3">
+    <div ref={cardsRef} className="grid gap-5 sm:grid-cols-3 select-none">
       {FEATURES.map((f, i) => (
         <div
           key={f.num}
