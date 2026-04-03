@@ -1,62 +1,12 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import Button from "~/components/Button";
 import Footer from "~/app/_components/Footer";
-
-// ─── Feature data ─────────────────────────────────────────────────────────────
-
-const FEATURES = [
-  {
-    num: "01",
-    title: "Define",
-    body: "Describe your protocol in a simple DSL - roles, variables, steps. No config files, no boilerplate. Just write what you mean.",
-    tag: "Write once.",
-  },
-  {
-    num: "02",
-    title: "Teach",
-    body: "Your DSL becomes an interactive exercise - drag-and-drop expression building, multiple choice, and more. Students engage with the material rather than just reading it.",
-    tag: "Scaffold learning.",
-  },
-  {
-    num: "03",
-    title: "Verify",
-    body: "Students get immediate feedback on every attempt. Right or wrong, they know straight away - no waiting, no guessing.",
-    tag: "Close the loop.",
-  },
-];
+import HeroButtons from "~/app/_components/landing/HeroButtons";
+import ScrollCue from "~/app/_components/landing/ScrollCue";
+import FeatureCards from "~/app/_components/landing/FeatureCards";
+import CTAButton from "~/app/_components/landing/CTAButton";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
-  const cardsRef = useRef<HTMLDivElement>(null);
-  const [cardsVisible, setCardsVisible] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(true);
-    window.addEventListener("scroll", onScroll, { once: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const el = cardsRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setCardsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <div
@@ -130,42 +80,10 @@ export default function LandingPage() {
               animationDelay: "0.52s",
             }}
           >
-            <Button
-              variant="submit"
-              size="lg"
-              onClick={() => router.push("/editor")}
-            >
-              Create exercise
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => router.push("/documentation")}
-            >
-              Documentation
-            </Button>
+            <HeroButtons/>
           </div>
         </div>
-
-        {/* scroll cue */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-0"
-          style={{
-            animation: "fade-up 0.5s ease forwards",
-            animationDelay: "0.8s",
-          }}
-        >
-          <div
-            className={`flex flex-col items-center gap-2 ${scrolled ? "" : "animate-bounce"}`}
-            style={{ animationDelay: "1.4s" }}
-          >
-            <span className="text-medium font-mono text-[9px] tracking-[0.3em] uppercase">
-              scroll
-            </span>
-            <div className="from-medium h-8 w-px bg-gradient-to-b to-transparent" />
-          </div>
-        </div>
+        <ScrollCue/>
       </section>
 
       {/* ── Features ── */}
@@ -184,42 +102,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* cards */}
-          <div ref={cardsRef} className="grid gap-5 sm:grid-cols-3">
-            {FEATURES.map((f, i) => (
-              <div
-                key={f.num}
-                className="group border-medium bg-dark/60 hover:border-muted relative flex flex-col gap-4 overflow-hidden rounded-2xl border p-8 transition-all duration-300"
-                style={{
-                  opacity: cardsVisible ? 1 : 0,
-                  transform: cardsVisible ? "translateY(0)" : "translateY(32px)",
-                  transitionProperty: "opacity, transform",
-                  transitionDuration: "0.6s",
-                  transitionTimingFunction: "ease",
-                  transitionDelay: `${i * 150}ms`,
-                }}
-              >
-                {/* green accent bar - grows on group hover via CSS */}
-                <div
-                  className="bg-green absolute top-8 left-0 w-0.5 rounded-r-full opacity-40 transition-all duration-500 group-hover:h-12 group-hover:opacity-100"
-                  style={{ height: "1.5rem" }}
-                />
-
-                <span className="text-medium absolute top-6 right-7 font-mono text-3xl font-bold tracking-widest">
-                  {f.num}
-                </span>
-                <h3 className="text-soft-white text-xl font-extrabold">
-                  {f.title}
-                </h3>
-                <p className="text-muted flex-1 text-sm leading-relaxed">
-                  {f.body}
-                </p>
-                <span className="text-green font-mono text-[11px] tracking-wider">
-                  {f.tag}
-                </span>
-              </div>
-            ))}
-          </div>
+          {/* Cards */}
+          <FeatureCards/>
         </div>
       </section>
 
@@ -244,13 +128,7 @@ export default function LandingPage() {
           <p className="text-muted max-w-sm text-sm leading-relaxed">
             Open the editor and start writing. Your first exercise is closer than you think.
           </p>
-          <Button
-            variant="submit"
-            size="lg"
-            onClick={() => router.push("/editor")}
-          >
-            Open the editor
-          </Button>
+          <CTAButton/>
         </div>
       </section>
 
