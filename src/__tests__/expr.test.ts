@@ -11,6 +11,7 @@ import {
   exprListContains,
   findDiffPair,
   COMMUTATIVE_OPS,
+  tokenToPaletteItem,
 } from "../app/hooks/expr";
 import { parseExpression } from "../app/hooks/parser";
 import type { Expr, PaletteItem } from "../app/hooks/parser";
@@ -790,5 +791,85 @@ describe("custom operator parsing and equality round-trip", () => {
     const a = parseExpression("HASH x", hashOp);
     const b = parseExpression("HASH y", hashOp);
     expect(exprEquals(a, b)).toBe(false);
+  });
+});
+
+// ─── tokenToPaletteItem ───────────────────────────────────────────────────────
+
+describe("tokenToPaletteItem", () => {
+  it("converts a NUMBER token to an int palette item", () => {
+    expect(tokenToPaletteItem({ type: "NUMBER", value: "42" })).toEqual({ kind: "int", value: 42 });
+  });
+
+  it("converts a single-digit NUMBER token", () => {
+    expect(tokenToPaletteItem({ type: "NUMBER", value: "7" })).toEqual({ kind: "int", value: 7 });
+  });
+
+  it("converts a VAR token to a var palette item", () => {
+    expect(tokenToPaletteItem({ type: "VAR", value: "g" })).toEqual({ kind: "var", name: "g" });
+  });
+
+  it("converts a multi-char VAR token", () => {
+    expect(tokenToPaletteItem({ type: "VAR", value: "alice" })).toEqual({ kind: "var", name: "alice" });
+  });
+
+  it("converts an OPERATOR token to an operator palette item", () => {
+    expect(tokenToPaletteItem({ type: "OPERATOR", value: "mod" })).toEqual({ kind: "operator", op: "mod" });
+  });
+
+  it("converts a single-char OPERATOR token", () => {
+    expect(tokenToPaletteItem({ type: "OPERATOR", value: "^" })).toEqual({ kind: "operator", op: "^" });
+  });
+
+  it("converts LPAR token", () => {
+    expect(tokenToPaletteItem({ type: "LPAR", value: "(" })).toEqual({ kind: "LPAR" });
+  });
+
+  it("converts RPAR token", () => {
+    expect(tokenToPaletteItem({ type: "RPAR", value: ")" })).toEqual({ kind: "RPAR" });
+  });
+
+  it("converts a ROLE_REF token to a role palette item", () => {
+    expect(tokenToPaletteItem({ type: "ROLE_REF", value: "prime" })).toEqual({ kind: "role", name: "prime" });
+  });
+
+  it("converts a ROLE_REF with a compound name", () => {
+    expect(tokenToPaletteItem({ type: "ROLE_REF", value: "alice_secret" })).toEqual({ kind: "role", name: "alice_secret" });
+  });
+
+  it("converts a KEYWORD constant symbol", () => {
+    expect(tokenToPaletteItem({ type: "KEYWORD", value: "naturals" })).toEqual({ kind: "constantSymbol", op: "naturals" });
+  });
+
+  it("converts a KEYWORD unary symbol", () => {
+    expect(tokenToPaletteItem({ type: "KEYWORD", value: "forall" })).toEqual({ kind: "unarySymbol", op: "forall" });
+  });
+
+  it("converts a KEYWORD binary symbol", () => {
+    expect(tokenToPaletteItem({ type: "KEYWORD", value: "elem" })).toEqual({ kind: "binarySymbol", op: "elem" });
+  });
+
+  it("throws for an unknown KEYWORD", () => {
+    expect(() => tokenToPaletteItem({ type: "KEYWORD", value: "unknown" })).toThrow();
+  });
+
+  it("throws for a COMMA token", () => {
+    expect(() => tokenToPaletteItem({ type: "COMMA", value: "," })).toThrow();
+  });
+
+  it("throws for a PLACEHOLDER token", () => {
+    expect(() => tokenToPaletteItem({ type: "PLACEHOLDER", value: "$1" })).toThrow();
+  });
+
+  it("throws for an EOF token", () => {
+    expect(() => tokenToPaletteItem({ type: "EOF", value: "" })).toThrow();
+  });
+
+  it("throws for a LBRACE token", () => {
+    expect(() => tokenToPaletteItem({ type: "LBRACE", value: "{" })).toThrow();
+  });
+
+  it("throws for a RBRACE token", () => {
+    expect(() => tokenToPaletteItem({ type: "RBRACE", value: "}" })).toThrow();
   });
 });
