@@ -1,5 +1,16 @@
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import { type Expr, type PaletteItem, symbolDisplay } from "~/app/hooks/parser";
+import {
+  type Expr,
+  type PaletteItem,
+  symbolDisplay,
+  type Token,
+  CONSTANT_SYMBOLS,
+  UNARY_SYMBOLS,
+  BINARY_SYMBOLS,
+  type ConstantSymbol,
+  type UnarySymbol,
+  type BinarySymbol,
+} from "~/app/hooks/parser";
 
 /**
  * Replaces role references (e.g. `{generator}`, `{bob_secret}`) in an expression with the
@@ -340,6 +351,33 @@ export function paletteItemToString(item: PaletteItem): string {
       return "(";
     case "RPAR":
       return ")";
+  }
+}
+
+export function tokenToPaletteItem(token: Token): PaletteItem {
+  switch (token.type) {
+    case "NUMBER":
+      return { kind: "int", value: Number(token.value) };
+    case "VAR":
+      return { kind: "var", name: token.value};
+    case "OPERATOR":
+      return { kind: "operator", op: token.value };
+    case "LPAR":
+      return { kind: "LPAR"};
+    case "RPAR":
+      return { kind: "RPAR" };
+    case "KEYWORD":
+      if ((CONSTANT_SYMBOLS as readonly string[]).includes(token.value))
+        return { kind: "constantSymbol", op: token.value as ConstantSymbol };
+      if ((UNARY_SYMBOLS as readonly string[]).includes(token.value))
+        return { kind: "unarySymbol", op: token.value as UnarySymbol };
+      if ((BINARY_SYMBOLS as readonly string[]).includes(token.value))
+        return { kind: "binarySymbol", op: token.value as BinarySymbol };
+      throw new Error(`Unknown keyword in prefill: \\${token.value}`);
+    case "ROLE_REF":
+      return { kind: "role", name: token.value };
+    default:
+      throw new Error(`Invalid token in prefill: ${token.type}`);
   }
 }
 

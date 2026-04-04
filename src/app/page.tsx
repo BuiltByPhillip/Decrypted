@@ -129,6 +129,7 @@ export default function LandingPage() {
           className="border-green/20 group-hover:border-green/80 absolute right-5 bottom-5 h-7 w-7 rounded-br-sm border-r border-b transition-colors duration-300"
         />
 
+
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-8 py-20 text-center">
           <span className="text-green font-mono text-[10px] tracking-[0.32em] uppercase">
             Get started
