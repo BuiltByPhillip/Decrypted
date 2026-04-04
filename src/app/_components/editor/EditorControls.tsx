@@ -8,23 +8,21 @@ import Button from "~/components/Button";
 
 function CodeWindowSkeleton() {
   return (
-    <div
-      className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#393E46] border-b-[#5a6070]"
-      style={{
-        fontFamily: "ui-monospace, SFMono-Regular, monospace",
-        fontSize: "13px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 16px", borderBottom: "1px solid #393E46", backgroundColor: "rgba(28, 33, 41, 0.8)" }}>
-        <span style={{ backgroundColor: "#ED6A5F", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
-        <span style={{ backgroundColor: "#F6BE50", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
-        <span style={{ backgroundColor: "#61C555", height: "12px", width: "12px", borderRadius: "50%", display: "inline-block" }} />
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-medium border-b-[#5a6070] font-mono text-[13px]">
+      <div className="flex items-center gap-2 border-b border-medium bg-[rgba(28,33,41,0.8)] px-4 py-3">
+        <span className="bg-mac-red h-3 w-3 rounded-full" />
+        <span className="bg-mac-yellow h-3 w-3 rounded-full" />
+        <span className="bg-mac-green h-3 w-3 rounded-full" />
       </div>
-      <div className="flex-1" style={{ backgroundColor: "rgba(34, 40, 49, 0.7)" }}>
-      <div className="flex" style={{ backgroundColor: "rgba(57, 62, 70, 0.3)", marginRight: "16px", marginTop: "16px", lineHeight: "1.4" }}>
-        <span style={{ color: "#94a3b8", paddingLeft: "5px", paddingRight: "8px" }}>1</span>
-        <span style={{ color: "#94a3b8", paddingLeft: "16px" }}>Enter your code here...</span>
-      </div>
+      <div className="flex-1 bg-[rgba(34,40,49,0.7)]">
+        <div className="mr-4 mt-4 flex leading-[1.4] bg-[rgba(57,62,70,0.3)]">
+          <span className="pl-1.25 pr-2 text-muted">
+            1
+          </span>
+          <span className="pl-4 text-muted">
+            Enter your code here...
+          </span>
+        </div>
       </div>
     </div>
   );
