@@ -820,3 +820,104 @@ step:
     });
   });
 });
+
+// ─── prefill parsing ──────────────────────────────────────────────────────────
+
+describe("prefill parsing", () => {
+  const base = (prefill: string) => `protocol: Test
+define:
+    generator \\elem {g, x}
+    prime \\elem {p, q}
+    secret \\elem {a, b}
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        answer: {generator} ^ {secret} mod {prime}
+        prefill: ${prefill}`;
+
+  it("parses a simple variable prefill", () => {
+    const result = parse(base("g"), 0);
+    expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "var", name: "g" });
+  });
+
+  it("parses an operator prefill", () => {
+    const result = parse(base("mod"), 0);
+    expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "operator", op: "mod" });
+  });
+
+  it("parses a number prefill", () => {
+    const result = parse(base("42"), 0);
+    expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "int", value: 42 });
+  });
+
+  it("parses a role reference prefill", () => {
+    const result = parse(base("{prime}"), 0);
+    expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "role", name: "prime" });
+  });
+
+  it("parses multiple tokens in a prefill", () => {
+    const result = parse(base("g ^ a"), 0);
+    const prefill = result.step[0]?.exercise?.prefill!;
+    expect(prefill).toContainEqual({ kind: "var", name: "g" });
+    expect(prefill).toContainEqual({ kind: "operator", op: "^" });
+    expect(prefill).toContainEqual({ kind: "var", name: "a" });
+  });
+
+  it("parses a realistic partial expression: mod {prime}", () => {
+    const result = parse(base("mod {prime}"), 0);
+    const prefill = result.step[0]?.exercise?.prefill!;
+    expect(prefill).toContainEqual({ kind: "operator", op: "mod" });
+    expect(prefill).toContainEqual({ kind: "role", name: "prime" });
+  });
+
+  it("parses a keyword symbol in prefill", () => {
+    const result = parse(base("\\elem"), 0);
+    expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "binarySymbol", op: "elem" });
+  });
+
+  it("parses parentheses in prefill", () => {
+    const result = parse(base("( g )"), 0);
+    const prefill = result.step[0]?.exercise?.prefill!;
+    expect(prefill).toContainEqual({ kind: "LPAR" });
+    expect(prefill).toContainEqual({ kind: "RPAR" });
+  });
+
+  it("prefill is undefined when not specified", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.prefill).toBeUndefined();
+  });
+
+  it("throws when prefill is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g
+        prefill: g
+        prefill: a`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("error message includes line number for invalid prefill token", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g
+        prefill: $1`;
+    expect(() => parse(dsl, 0)).toThrow(/Line 8/);
+  });
+});

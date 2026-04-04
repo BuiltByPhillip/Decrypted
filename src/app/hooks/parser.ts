@@ -884,7 +884,9 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       const prefillText = line.replace("prefill:", "").trim()
       try {
         const tokens: Token[] = tokenize(prefillText);
-        pendingExercise.prefill = tokens.map((item: Token): PaletteItem => tokenToPaletteItem(item));
+        pendingExercise.prefill = tokens
+          .filter((t) => t.type !== "EOF")
+          .map((item: Token): PaletteItem => tokenToPaletteItem(item));
       }
       catch (e) {
         throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
