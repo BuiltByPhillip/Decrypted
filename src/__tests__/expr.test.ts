@@ -146,6 +146,12 @@ describe("exprEquals", () => {
     expect(exprEquals(ab, ba)).toBe(false);
   });
 
+  it("greater is NOT commutative: a > b !== b > a", () => {
+    const ab: Expr = { kind: "binary", op: "greater", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    const ba: Expr = { kind: "binary", op: "greater", left: { kind: "var", name: "b" }, right: { kind: "var", name: "a" } };
+    expect(exprEquals(ab, ba)).toBe(false);
+  });
+
   it("g ^ a mod p does not equal g ^ a mod p with extra term", () => {
     const correct = parseExpression("g ^ a mod p");
     const withExtra = parseExpression("g ^ a mod p");
@@ -225,6 +231,34 @@ describe("exprToString", () => {
     const e: Expr = { kind: "binary", op: "pow", left: { kind: "var", name: "a" }, right: { kind: "int", value: 2 } };
     expect(exprToString(e)).toBe("a^2");
   });
+
+  it("unary with null op renders as _operand", () => {
+    const e: Expr = { kind: "unary", op: null, operand: { kind: "var", name: "x" } };
+    expect(exprToString(e)).toBe("_x");
+  });
+
+  it("binary with null op renders as 'left _ right'", () => {
+    const e: Expr = { kind: "binary", op: null, left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprToString(e)).toBe("a _ b");
+  });
+
+  it("custom op not in OP_TO_STRING falls back to ' OP '", () => {
+    const e: Expr = { kind: "binary", op: "MYOP", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } };
+    expect(exprToString(e)).toBe("a MYOP b");
+  });
+
+  it("nested expression renders with correct spacing", () => {
+    const e: Expr = {
+      kind: "binary", op: "mod",
+      left: {
+        kind: "binary", op: "pow",
+        left: { kind: "var", name: "g" },
+        right: { kind: "var", name: "a" },
+      },
+      right: { kind: "var", name: "p" },
+    };
+    expect(exprToString(e)).toBe("g^a mod p");
+  });
 });
 
 // ─── normalizeExpr ───────────────────────────────────────────────────────────
@@ -272,6 +306,21 @@ describe("normalizeExpr", () => {
       left: { kind: "slot" },
       right: { kind: "var", name: "x" },
     });
+  });
+
+  it("does NOT collapse a non-null-op binary whose children are slots", () => {
+    const e: Expr = { kind: "binary", op: "add", left: { kind: "slot" }, right: { kind: "slot" } };
+    expect(normalizeExpr(e)).toEqual(e);
+  });
+
+  it("collapses deeply nested empty structure to a single slot", () => {
+    // binary(null, unary(null, slot), slot) → binary(null, slot, slot) → slot
+    const e: Expr = {
+      kind: "binary", op: null,
+      left: { kind: "unary", op: null, operand: { kind: "slot" } },
+      right: { kind: "slot" },
+    };
+    expect(normalizeExpr(e)).toEqual({ kind: "slot" });
   });
 });
 
@@ -342,8 +391,7 @@ describe("paletteItemToString", () => {
   });
 
   it("role", () => {
-    // roles are serialized as bare names (not {name}) — roundtrip goes through VAR token
-    expect(paletteItemToString({ kind: "role", name: "generator" })).toBe("generator");
+    expect(paletteItemToString({ kind: "role", name: "generator" })).toBe("{generator}");
   });
 
   it("operator add → ' + '", () => {
@@ -535,6 +583,15 @@ describe("round-trip: token list → string → parseExpression", () => {
     const professorExpr = parseExpression("a - b");
     const studentExpr = parseExpression("b - a");
     expect(exprEquals(studentExpr, professorExpr)).toBe(false);
+  });
+
+  it("role item round-trips correctly through paletteItemToString → parseExpression", () => {
+    // paletteItemToString claims to produce parser-ready strings. For a role item,
+    // it should produce "{generator}" so the parser yields a ROLE_REF, not a VAR.
+    const item: PaletteItem = { kind: "role", name: "generator" };
+    const str = paletteItemToString(item);
+    const result = parseExpression(str);
+    expect(result).toMatchObject({ kind: "role", name: "generator" });
   });
 });
 

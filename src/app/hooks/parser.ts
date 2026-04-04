@@ -586,6 +586,8 @@ export function parse(input: string, startIndex: number): Code {
       continue
     }
     else if (line.startsWith("define:")) {
+      if (code.information.definition.length > 0)
+        throw new Error(`Line ${i + 1} - Define is defined multiple times`)
       const [definition, nextI] = defineParse(lines, i)
       code.information.definition = definition
       i = nextI
@@ -703,7 +705,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
 
-    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("custom:")) {
+    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("custom:") || line.startsWith("define:")) {
       break; // End of define block
     }
 
@@ -949,7 +951,10 @@ function pairsParse(lines: string[], startIndex: number): [{ left: string; right
     if (line.startsWith("-")) {
       const pair = line.replace("-", "").trim().split("->")
       if (pair.length !== 2) throw new Error(`Line ${i + 1} - Each pair must have exactly one '->'`);
-      pairs.push({ left: pair[0]!.trim(), right: pair[1]!.trim() })
+      const left = pair[0]!.trim();
+      const right = pair[1]!.trim();
+      if (!left || !right) throw new Error(`Line ${i + 1} - Pair left and right sides must not be empty`);
+      pairs.push({ left, right })
     }
     else {
       return [pairs, i]

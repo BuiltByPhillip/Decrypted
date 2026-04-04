@@ -108,6 +108,25 @@ describe("tokenize", () => {
     expect(tokenize("or")[0]).toEqual({ type: "OPERATOR", value: "or" });
   });
 
+  it("digits are not part of a variable name: x1 → VAR('x') + NUMBER('1')", () => {
+    const tokens = tokenize("x1");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "x" });
+    expect(tokens[1]).toEqual({ type: "NUMBER", value: "1" });
+  });
+
+  it("a number followed immediately by a letter: 42x → NUMBER('42') + VAR('x')", () => {
+    const tokens = tokenize("42x");
+    expect(tokens[0]).toEqual({ type: "NUMBER", value: "42" });
+    expect(tokens[1]).toEqual({ type: "VAR", value: "x" });
+  });
+
+  it("tokenizes operators without surrounding spaces: a+b → 3 tokens", () => {
+    const tokens = tokenize("a+b");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "a" });
+    expect(tokens[1]).toEqual({ type: "OPERATOR", value: "+" });
+    expect(tokens[2]).toEqual({ type: "VAR", value: "b" });
+  });
+
   it("throws on $ with no digits", () => {
     expect(() => tokenize("$")).toThrow();
   });
@@ -389,6 +408,32 @@ describe("parseExpression", () => {
       right: { kind: "var", name: "b" },
     });
   });
+
+  it("mod is left-associative: a mod b mod c → mod(mod(a,b), c)", () => {
+    const result = parseExpression("a mod b mod c");
+    expect(result).toMatchObject({
+      kind: "binary", op: "mod",
+      left: { kind: "binary", op: "mod", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } },
+      right: { kind: "var", name: "c" },
+    });
+  });
+
+  it("mixed same-precedence ops are left-associative: a + b - c → sub(add(a,b), c)", () => {
+    const result = parseExpression("a + b - c");
+    expect(result).toMatchObject({
+      kind: "binary", op: "sub",
+      left: { kind: "binary", op: "add", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } },
+      right: { kind: "var", name: "c" },
+    });
+  });
+
+  it("nested unary: \\forall \\forall x", () => {
+    const result = parseExpression("\\forall \\forall x");
+    expect(result).toMatchObject({
+      kind: "unary", op: "forall",
+      operand: { kind: "unary", op: "forall", operand: { kind: "var", name: "x" } },
+    });
+  });
 });
 
 // ─── define block parsing ─────────────────────────────────────────────────────
@@ -578,6 +623,51 @@ step:
   it("throws on unknown top-level keyword", () => {
     expect(() => parse("unknown: value", 0)).toThrow();
   });
+
+  it("throws when answer is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g
+        answer: g ^ a`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("throws when prompt is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: First prompt
+        prompt: Second prompt
+        answer: g`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("throws when exercise type is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        type: select
+        prompt: Build it
+        answer: g`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("throws on multiple define blocks", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, x}
+define:
+    prime \\elem {p, q}`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
 });
 
 // ─── match exercise parsing ───────────────────────────────────────────────────
@@ -655,6 +745,18 @@ step:
         prompt: Match the values
         pairs:
             - a -> b -> c`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on a pair with empty left and right sides", () => {
+    const dsl = `protocol: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - ->`;
     expect(() => parse(dsl, 0)).toThrow();
   });
 });

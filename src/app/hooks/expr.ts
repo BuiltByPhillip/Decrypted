@@ -338,7 +338,7 @@ export function paletteItemToString(item: PaletteItem): string {
     case "var":
       return item.name;
     case "role":
-      return item.name;
+      return `{${item.name}}`;
     case "int":
       return String(item.value);
     case "operator":
