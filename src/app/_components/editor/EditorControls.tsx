@@ -8,20 +8,18 @@ import Button from "~/components/Button";
 
 function CodeWindowSkeleton() {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-medium border-b-[#5a6070] font-mono text-[13px]">
-      <div className="flex items-center gap-2 border-b border-medium bg-[rgba(28,33,41,0.8)] px-4 py-3">
+    <div className="border-medium flex h-full w-full flex-col overflow-hidden rounded-2xl border border-b-[#5a6070] font-mono text-[13px]">
+      <div className="border-medium relative flex items-center border-b bg-[rgba(28,33,41,0.8)] px-4 py-3">
         <span className="bg-mac-red h-3 w-3 rounded-full" />
-        <span className="bg-mac-yellow h-3 w-3 rounded-full" />
-        <span className="bg-mac-green h-3 w-3 rounded-full" />
+        <span className="bg-mac-yellow h-3 w-3 rounded-full ml-2" />
+        <span className="bg-mac-green h-3 w-3 rounded-full ml-2" />
+        <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-[0.32em] text-muted uppercase">Exercise Editor</span>
       </div>
+
       <div className="flex-1 bg-[rgba(34,40,49,0.7)]">
-        <div className="mr-4 mt-4 flex leading-[1.4] bg-[rgba(57,62,70,0.3)]">
-          <span className="pl-1.25 pr-2 text-muted">
-            1
-          </span>
-          <span className="pl-4 text-muted">
-            Enter your code here...
-          </span>
+        <div className="mt-4 mr-4 flex bg-[rgba(57,62,70,0.3)] leading-[1.4]">
+          <span className="text-muted pr-2 pl-1.25">1</span>
+          <span className="text-muted pl-4">Enter your code here...</span>
         </div>
       </div>
     </div>
@@ -52,13 +50,6 @@ export default function EditorControls() {
 
   return (
     <>
-      {/* label */}
-      <div className="mb-4 flex w-full items-center gap-3">
-        <span className="bg-green/30 h-px flex-1" />
-        <span className="text-muted font-mono text-[10px] tracking-[0.32em] uppercase">Exercise Editor</span>
-        <span className="bg-green/30 h-px flex-1" />
-      </div>
-
       {/* editor row */}
       <div className="relative">
         {/* editor with glow + corners */}
