@@ -65,6 +65,53 @@ describe("tokenize", () => {
     expect(tokens[tokens.length - 1]).toEqual({ type: "EOF", value: "" });
   });
 
+  it("tokenizes a variable with an underscore", () => {
+    expect(tokenize("_x")[0]).toEqual({ type: "VAR", value: "_x" });
+    expect(tokenize("count_n")[0]).toEqual({ type: "VAR", value: "count_n" });
+  });
+
+  it("tokenizes a variable with a prime", () => {
+    expect(tokenize("x'")[0]).toEqual({ type: "VAR", value: "x'" });
+  });
+
+  it("tokenizes a comma", () => {
+    expect(tokenize(",")[0]).toEqual({ type: "COMMA", value: "," });
+  });
+
+  it("does not split 'android' into operator + var", () => {
+    const tokens = tokenize("android");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "android" });
+    expect(tokens[1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("does not split 'modulo' into operator + var", () => {
+    const tokens = tokenize("modulo");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "modulo" });
+    expect(tokens[1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("does not split 'orbit' into operator + var", () => {
+    const tokens = tokenize("orbit");
+    expect(tokens[0]).toEqual({ type: "VAR", value: "orbit" });
+    expect(tokens[1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("still tokenizes 'mod' alone as an operator", () => {
+    expect(tokenize("mod")[0]).toEqual({ type: "OPERATOR", value: "mod" });
+  });
+
+  it("still tokenizes 'and' alone as an operator", () => {
+    expect(tokenize("and")[0]).toEqual({ type: "OPERATOR", value: "and" });
+  });
+
+  it("still tokenizes 'or' alone as an operator", () => {
+    expect(tokenize("or")[0]).toEqual({ type: "OPERATOR", value: "or" });
+  });
+
+  it("throws on $ with no digits", () => {
+    expect(() => tokenize("$")).toThrow();
+  });
+
   it("throws on unknown characters", () => {
     expect(() => tokenize("@")).toThrow();
   });
@@ -313,6 +360,35 @@ describe("parseExpression", () => {
   it("throws on trailing number after expression", () => {
     expect(() => parseExpression("a + b 3")).toThrow();
   });
+
+  it("throws on missing right operand", () => {
+    expect(() => parseExpression("a +")).toThrow();
+  });
+
+  it("throws on empty input", () => {
+    expect(() => parseExpression("")).toThrow();
+  });
+
+  it("throws on unregistered custom operator used in infix position", () => {
+    expect(() => parseExpression("a SET b", [])).toThrow();
+  });
+
+  it("^ is left-associative: a ^ b ^ c → pow(pow(a,b), c)", () => {
+    const result = parseExpression("a ^ b ^ c");
+    expect(result).toMatchObject({
+      kind: "binary", op: "pow",
+      left: { kind: "binary", op: "pow", left: { kind: "var", name: "a" }, right: { kind: "var", name: "b" } },
+      right: { kind: "var", name: "c" },
+    });
+  });
+
+  it("handles deeply nested parentheses", () => {
+    expect(parseExpression("((a + b))")).toMatchObject({
+      kind: "binary", op: "add",
+      left: { kind: "var", name: "a" },
+      right: { kind: "var", name: "b" },
+    });
+  });
 });
 
 // ─── define block parsing ─────────────────────────────────────────────────────
@@ -371,6 +447,29 @@ define:
     prime \\elem {p, q}`;
     const result = parse(dsl, 0);
     expect(result.information.definition).toHaveLength(2);
+  });
+
+  it("parses numbers as valid symbols", () => {
+    const dsl = `protocol: Test
+define:
+    exponent \\elem {2, 3, 65537}`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.symbols).toHaveLength(3);
+    expect(result.information.definition[0]?.symbols[0]).toMatchObject({ kind: "int", value: 2 });
+  });
+
+  it("throws on duplicate numbers in a definition", () => {
+    const dsl = `protocol: Test
+define:
+    exponent \\elem {2, 2}`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on empty symbol set", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {}`;
+    expect(() => parse(dsl, 0)).toThrow();
   });
 });
 
@@ -533,6 +632,30 @@ step:
   it("does not require an answer field for match exercises", () => {
     const result = parse(matchDsl, 0);
     expect(result.step[0]?.exercise?.answer).toBeUndefined();
+  });
+
+  it("throws on a pair with no -> separator", () => {
+    const dsl = `protocol: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - just a label`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws on a pair with multiple -> separators", () => {
+    const dsl = `protocol: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - a -> b -> c`;
+    expect(() => parse(dsl, 0)).toThrow();
   });
 });
 
@@ -909,6 +1032,18 @@ step:
     expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
   });
 
+  it("throws for a placeholder token in prefill", () => {
+    expect(() => parse(base("$1"), 0)).toThrow();
+  });
+
+  it("throws for a comma in prefill", () => {
+    expect(() => parse(base("g , a"), 0)).toThrow();
+  });
+
+  it("throws for an unknown keyword in prefill", () => {
+    expect(() => parse(base("\\unknown"), 0)).toThrow();
+  });
+
   it("error message includes line number for invalid prefill token", () => {
     const dsl = `protocol: Test
 step:
@@ -919,5 +1054,129 @@ step:
         answer: g
         prefill: $1`;
     expect(() => parse(dsl, 0)).toThrow(/Line 8/);
+  });
+});
+
+// ─── hint field ───────────────────────────────────────────────────────────────
+
+describe("hint field parsing", () => {
+  it("parses a hint on a construct exercise", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g
+        hint: Try using the generator`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.hint).toBe("Try using the generator");
+  });
+
+  it("parses a hint on a select exercise", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - 1
+            - 2
+        answer: 1
+        hint: Think about it`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.hint).toBe("Think about it");
+  });
+
+  it("hint is undefined when not specified", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.hint).toBeUndefined();
+  });
+
+  it("throws when hint is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g
+        hint: First hint
+        hint: Second hint`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+});
+
+// ─── calculate exercise parsing ───────────────────────────────────────────────
+
+describe("calculate exercise parsing", () => {
+  const calculateDsl = `protocol: Test
+step:
+    description: Compute the value
+    exercise:
+        type: calculate
+        prompt: What is g ^ a mod p?
+        answer: g ^ a mod p`;
+
+  it("parses a calculate exercise without throwing", () => {
+    expect(() => parse(calculateDsl, 0)).not.toThrow();
+  });
+
+  it("parses the exercise type as calculate", () => {
+    const result = parse(calculateDsl, 0);
+    expect(result.step[0]?.exercise?.type).toBe("calculate");
+  });
+
+  it("parses the answer expression", () => {
+    const result = parse(calculateDsl, 0);
+    expect(result.step[0]?.exercise?.answer).toHaveLength(1);
+    expect(result.step[0]?.exercise?.answer?.[0]).toMatchObject({ kind: "binary", op: "mod" });
+  });
+
+  it("throws when calculate exercise has no answer", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute the value
+    exercise:
+        type: calculate
+        prompt: What is g ^ a mod p?`;
+    expect(() => parse(dsl, 0)).toThrow();
+  });
+});
+
+// ─── step without exercise ────────────────────────────────────────────────────
+
+describe("step without exercise", () => {
+  it("parses a step that has only a description", () => {
+    const dsl = `protocol: Test
+step:
+    description: Just some context`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.description).toBe("Just some context");
+    expect(result.step[0]?.exercise).toBeUndefined();
+  });
+
+  it("parses multiple steps where some have no exercise", () => {
+    const dsl = `protocol: Test
+step:
+    description: Context step
+step:
+    description: Exercise step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: g`;
+    const result = parse(dsl, 0);
+    expect(result.step).toHaveLength(2);
+    expect(result.step[0]?.exercise).toBeUndefined();
+    expect(result.step[1]?.exercise).toBeDefined();
   });
 });
