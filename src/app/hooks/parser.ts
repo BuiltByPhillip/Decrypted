@@ -242,13 +242,14 @@ export function tokenize(input: string): Token[] {
       return inner(j, [...acc, { type: "NUMBER", value: numStr}])
     }
     // Check for multi-char operators BEFORE variables (so they aren't consumed as a variable)
-    if (input.substring(i, i + 3) === "mod") {
+    // Word-boundary check: only match if the character after the keyword is not a letter/digit/underscore/prime
+    if (input.substring(i, i + 3) === "mod" && !/[a-zA-Z_']/.test(input[i + 3] ?? "")) {
       return inner(i + 3, [...acc, { type: "OPERATOR", value: "mod" }]);
     }
-    if (input.substring(i, i + 3) === "and") {
+    if (input.substring(i, i + 3) === "and" && !/[a-zA-Z_']/.test(input[i + 3] ?? "")) {
       return inner(i + 3, [...acc, { type: "OPERATOR", value: "and"}]);
     }
-    if (input.substring(i, i + 2) === "or") {
+    if (input.substring(i, i + 2) === "or" && !/[a-zA-Z_']/.test(input[i + 2] ?? "")) {
       return inner(i + 2, [...acc, { type: "OPERATOR", value: "or"}]);
     }
     // Check for keywords/symbols (e.g., \elem, \subset, \forall)
@@ -279,6 +280,9 @@ export function tokenize(input: string): Token[] {
       while (j < input.length && /\d/.test(input[j] ?? "")) {
         numStr += input[j];
         j++;
+      }
+      if (numStr === "$") {
+        throw new Error(`Expected digit after $`);
       }
       return inner(j, [...acc, { type: "PLACEHOLDER", value: numStr }]);
     }
@@ -763,8 +767,18 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
         throw new Error(`Line ${line + 1} - Cannot contain duplicate variable names`);
       }
       definition.symbols.push(expr);
+    } else if (tokens[i]?.type === "NUMBER") {
+      const expr: Expr = { kind: "int", value: Number(tokens[i]!.value) };
+      if (exprListContains(expr, definition.symbols)) {
+        throw new Error(`Line ${line + 1} - Cannot contain duplicate variable names`);
+      }
+      definition.symbols.push(expr);
     }
     i++;
+  }
+
+  if (definition.symbols.length === 0) {
+    throw new Error(`Line ${line + 1} - Symbol set must not be empty`);
   }
 
   return definition;
