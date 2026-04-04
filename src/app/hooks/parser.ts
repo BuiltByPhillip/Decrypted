@@ -1,4 +1,4 @@
-import { exprListContains, COMMUTATIVE_OPS } from "~/app/hooks/expr";
+import { exprListContains, COMMUTATIVE_OPS, tokenToPaletteItem } from "~/app/hooks/expr";
 
 export type Code = {
   information: Information;
@@ -38,6 +38,7 @@ type Exercise = {
   hint?: string;
   options?: Expr[];
   pairs?: { left: string; right: string }[];
+  prefill?: PaletteItem[];
   answer?: Expr[];
 }
 
@@ -184,7 +185,7 @@ export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
 
-type Token = {
+export type Token = {
   type: TokenType;
   value: string;
 }
@@ -198,6 +199,28 @@ const EXERCISE_TYPES = [
 
 export type ExerciseType = typeof EXERCISE_TYPES[number];
 
+/**
+ * Converts a raw expression string into a flat list of tokens.
+ *
+ * Recognises the following token types:
+ * - `NUMBER`      - one or more digits, e.g. `42`
+ * - `VAR`         - identifier starting with a letter or `_`, e.g. `alice`, `g`
+ * - `OPERATOR`    - single-char operators (`+`, `-`, `*`, `/`, `^`, `<`, `>`, `=`)
+ *                   and multi-char keywords (`mod`, `and`, `or`)
+ * - `KEYWORD`     - backslash-prefixed symbol names, e.g. `\elem`, `\forall`
+ * - `ROLE_REF`    - a role name wrapped in braces, e.g. `{prime}` -> value `"prime"`
+ * - `PLACEHOLDER` - a `$`-prefixed numeric slot, e.g. `$1`
+ * - `LPAR`/`RPAR` - parentheses `(` `)`
+ * - `LBRACE`/`RBRACE` - bare braces `{` `}` (only when not a role reference)
+ * - `COMMA`       - `,`
+ * - `EOF`         - sentinel appended at the end of every token stream
+ *
+ * Whitespace (spaces, newlines, tabs) is silently skipped.
+ * Throws if an unrecognised character is encountered.
+ *
+ * @param input - The raw expression string to tokenize.
+ * @returns An ordered array of `Token` objects ending with an `EOF` token.
+ */
 export function tokenize(input: string): Token[] {
   function inner (i: number, acc: Token[]): Token[] {
     // Base case
@@ -325,13 +348,35 @@ export function parseExpression(input: string, customOperators: CustomOperator[]
   return parser.parse();
 }
 
+/**
+ * Pratt parser (precedence climbing) that turns a token stream into an `Expr` tree.
+ *
+ * Operator precedence (low to high):
+ * 1. `and`, `or`
+ * 2. `<`, `>`, `=`, binary symbols (e.g. `\elem`)
+ * 3. `+`, `-`
+ * 4. `*`, `/`, `mod`
+ * 5. `^`
+ *
+ * Custom operators defined in the DSL are slotted in at whatever precedence the
+ * professor assigned them. Custom UNARY operators are recognised in `parsePrimary`
+ * and applied as prefix operators; custom BINARY operators are treated like any
+ * other infix operator in `parseExpression`.
+ *
+ * Typical usage is through the `parseExpression` helper rather than directly.
+ */
 class ExpressionParser {
   private readonly tokens: Token[];
   private current: number = 0;
   private readonly customOperators: CustomOperator[];
 
+  /** Returns the current token without consuming it. */
   peek(): Token { return this.tokens[this.current]!; }
+
+  /** Returns the current token and advances the cursor. */
   advance(): Token { return this.tokens[this.current++]!; }
+
+  /** Returns true when the cursor is sitting on the EOF sentinel. */
   isAtEnd(): boolean { return this.peek().type === "EOF"}
 
   constructor(tokens: Token[], customOperators: CustomOperator[] = []) {
@@ -339,6 +384,12 @@ class ExpressionParser {
     this.customOperators = customOperators;
   }
 
+  /**
+   * Entry point - parses the full token stream and returns the root `Expr` node.
+   * Throws if any tokens remain after the expression is parsed.
+   *
+   * @returns The root of the parsed expression tree.
+   */
   parse(): Expr {
     const expr = this.parseExpression(0);
     if (!this.isAtEnd()) {
@@ -347,6 +398,14 @@ class ExpressionParser {
     return expr;
   }
 
+  /**
+   * Returns the binding power of an operator string.
+   * Custom operators use the precedence value from their DSL definition.
+   * Returns 0 for unrecognised operators so they act as a stop condition.
+   *
+   * @param op - The operator string, e.g. `"mod"`, `"^"`, `"and"`.
+   * @returns A numeric precedence level (higher binds tighter).
+   */
   private precedence(op: string): number {
     const custom: CustomOperator | undefined = this.customOperators.find(c => c.name === op);
     if (custom) return custom.precedence;
@@ -360,9 +419,14 @@ class ExpressionParser {
     return 0;
   }
 
-  /*  Base case of the parser. It parses the smallest unit of an expression.
-   *  That is, a single thing that cannot be broken down further
-  */
+  /**
+   * Parses the smallest indivisible unit of an expression (a "primary").
+   * Handles literals, variables, role references, placeholders, parenthesised
+   * sub-expressions, constant/unary symbols, and custom unary operators.
+   * Throws on any token that cannot start a valid primary.
+   *
+   * @returns A leaf or unary `Expr` node.
+   */
   private parsePrimary(): Expr {
     const start = this.current;
     const token: Token = this.advance();
@@ -405,6 +469,16 @@ class ExpressionParser {
     }
   }
 
+  /**
+   * Parses an infix expression using precedence climbing.
+   * Starts by parsing a primary, then repeatedly consumes operators whose
+   * precedence is at least `minPrecedence`, building up a left-associative
+   * binary tree. Right-associativity is achieved by passing `prec + 1` as
+   * the minimum for the recursive right-hand call.
+   *
+   * @param minPrecedence - Only consume operators at or above this level.
+   * @returns The root `Expr` node for this sub-expression.
+   */
   private parseExpression(minPrecedence: number): Expr {
     let left = this.parsePrimary();
 
@@ -443,6 +517,17 @@ class ExpressionParser {
     return left;
   }
 
+  /**
+   * Constructs a `BinaryExpr` node from a raw operator string and its two operands.
+   * Maps operator strings (e.g. `"^"`, `"mod"`) to their `BinaryOp` enum values.
+   * Throws if the operator string is not in the known map.
+   *
+   * @param op - The raw operator string from the token stream.
+   * @param left - The left operand expression.
+   * @param right - The right operand expression.
+   * @returns A `BinaryExpr` node with `tokenRange` and `opTokenIndex` unset
+   *          (the caller in `parseExpression` fills those in).
+   */
   private makeNode(op: string, left: Expr, right: Expr): BinaryExpr {
     const opMap: Record<string, BinaryOp> = {
       "^": "pow",
@@ -792,6 +877,18 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       });
       i = nextI
       continue
+    }
+    else if (line.startsWith("prefill:")) {
+      if (pendingExercise.prefill)
+        throw new Error(`Line ${i + 1} - Prefill defined multiple times`);
+      const prefillText = line.replace("prefill:", "").trim()
+      try {
+        const tokens: Token[] = tokenize(prefillText);
+        pendingExercise.prefill = tokens.map((item: Token): PaletteItem => tokenToPaletteItem(item));
+      }
+      catch (e) {
+        throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
+      }
     }
     else if (line.startsWith("answer:")) {
       if (pendingExercise.answer)

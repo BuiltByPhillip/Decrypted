@@ -354,6 +354,25 @@ export function paletteItemToString(item: PaletteItem): string {
   }
 }
 
+/**
+ * Converts a single `Token` from the tokenizer into a `PaletteItem` for use
+ * as a prefill in the construct exercise.
+ *
+ * Valid conversions:
+ * - `NUMBER`   - `{ kind: "int", value: number }`
+ * - `VAR`      - `{ kind: "var", name: string }`
+ * - `OPERATOR` - `{ kind: "operator", op: string }`
+ * - `LPAR`     - `{ kind: "LPAR" }`
+ * - `RPAR`     - `{ kind: "RPAR" }`
+ * - `ROLE_REF` - `{ kind: "role", name: string }`
+ * - `KEYWORD`  - `{ kind: "constantSymbol" | "unarySymbol" | "binarySymbol", op: string }`
+ *
+ * Throws for tokens that have no `PaletteItem` equivalent:
+ * `LBRACE`, `RBRACE`, `COMMA`, `PLACEHOLDER`, `EOF`, and unknown keywords.
+ *
+ * @param token - A token produced by `tokenize`.
+ * @returns The corresponding `PaletteItem`.
+ */
 export function tokenToPaletteItem(token: Token): PaletteItem {
   switch (token.type) {
     case "NUMBER":
