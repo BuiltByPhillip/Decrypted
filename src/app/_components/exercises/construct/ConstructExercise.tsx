@@ -13,12 +13,13 @@ type ConstructExerciseProps = {
   prompt: string;
   hint?: string;
   definitions?: SelectedDefinitions;
+  prefill?: PaletteItem[];
   answer: Expr;
   customOperators?: CustomOperator[];
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, prefill, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);

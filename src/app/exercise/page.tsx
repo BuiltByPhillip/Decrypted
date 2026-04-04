@@ -319,6 +319,7 @@ export default function ExercisePage() {
               ) : step.exercise?.type === "construct" && exerciseComponents.ConstructExercise ? (
                 <exerciseComponents.ConstructExercise
                   answer={step.exercise.answer![0]!}
+                  prefill={step.exercise.prefill}
                   description={step.description}
                   prompt={step.exercise.prompt}
                   hint={
