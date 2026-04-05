@@ -1,15 +1,12 @@
-"use client"
-
-import Button from "~/components/Button";
-import { useRouter } from "next/navigation";
-
+import ButtonLink from "~/components/ButtonLink";
 
 export default function CTAButton() {
-  const router = useRouter();
-
   return (
-    <Button variant="submit" size="lg" onClick={() => router.push("/editor")}>
+    <ButtonLink
+      variant="submit"
+      size="lg"
+      href={"/editor"}>
       Open the editor
-    </Button>
+    </ButtonLink>
   );
 }

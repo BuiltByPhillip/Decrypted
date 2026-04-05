@@ -1,27 +1,22 @@
-"use client"
-
-import { useRouter } from "next/navigation";
-import Button from "~/components/Button";
+import ButtonLink from "~/components/ButtonLink";
 
 
 export default function HeroButtons() {
-  const router = useRouter();
-
   return (
     <>
-      <Button
+      <ButtonLink
         variant="submit"
         size="lg"
-        onClick={() => router.push("/editor")}>
+        href={"/editor"}>
         Create exercise
-      </Button>
-      <Button
+      </ButtonLink>
+      <ButtonLink
         variant="outline"
         size="lg"
-        onClick={() => router.push("/documentation")}
+        href={"/documentation"}
       >
         Documentation
-      </Button>
+      </ButtonLink>
     </>
   );
 }
