@@ -308,6 +308,10 @@ export default function ExercisePage() {
           definitions={code.information.definition}
           onSelect={updateDefinitions}
           selected={definitions}
+          onComplete={() => {
+            shouldScrollToFirst.current = true;
+            setShowExercises(true);
+          }}
         />
         <Button
           variant="submit"

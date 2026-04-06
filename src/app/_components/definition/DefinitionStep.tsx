@@ -8,12 +8,13 @@ type DefinitionStepProps = {
     definitions: Definition[];
     onSelect: (role: string, symbol: Expr) => void;
     selected: SelectedDefinitions;
+    onComplete?: () => void;
 }
 
 
-export default function DefinitionStep({ definitions, onSelect, selected }: DefinitionStepProps) {
+export default function DefinitionStep({ definitions, onSelect, selected, onComplete }: DefinitionStepProps) {
     const type = definitions[0]?.type
-    
+
     switch (type) {
         case "select":
             return <DefinitionsPicker
@@ -26,6 +27,7 @@ export default function DefinitionStep({ definitions, onSelect, selected }: Defi
               definitions={definitions}
               onSelect={onSelect}
               selected={selected}
+              onComplete={onComplete}
             />
         default:
             throw new Error(`Unsupported type ${type}`);

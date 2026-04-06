@@ -15,9 +15,10 @@ type DefinitionsConstructProps = {
     definitions: Definition[];
     onSelect: (role: string, symbol: Expr) => void;
     selected: SelectedDefinitions;
+    onComplete?: () => void;
 }
 
-export default function DefinitionsConstruct({ definitions, onSelect, selected }: DefinitionsConstructProps) {
+export default function DefinitionsConstruct({ definitions, onSelect, selected, onComplete }: DefinitionsConstructProps) {
     const [tokens, setTokens] = useState<PaletteItem[]>([]);
     const [currentIndex, setCurrentIndex] = useState<number>(0);
 
@@ -28,8 +29,10 @@ export default function DefinitionsConstruct({ definitions, onSelect, selected }
       const expr = parseExpression(tokens.map(paletteItemToString).join(" "));
       const symbol = parseConstructDefinition(expr, currentDefinition.role);
       onSelect(currentDefinition.role, symbol);
+      const isLast = currentIndex + 1 >= definitions.length;
       setCurrentIndex(currentIndex + 1);
       setTokens([]);
+      if (isLast) onComplete?.();
     }
 
     if (!currentDefinition) return null;
