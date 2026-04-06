@@ -87,10 +87,11 @@ custom:
         commutative: true
         precedence: 4
 define:
-      generator \\elem  {g, x, a, b}
-      prime \\elem {p, n, m, q}
-      alice_secret \\elem  {a, s, x}
-      bob_secret \\elem  {b, t, y}
+    type: select
+    generator \\elem  {g, x, a, b}
+    prime \\elem {p, n, m, q}
+    alice_secret \\elem  {a, s, x}
+    bob_secret \\elem  {b, t, y}
 step:
     description: Alice chooses secret {alice_secret}
     exercise:

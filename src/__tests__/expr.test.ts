@@ -8,6 +8,7 @@ import {
   substituteRoles,
   substituteRolesInString,
   substituteRolesInPalette,
+  parseConstructDefinition,
   exprDiff,
   exprListContains,
   findDiffPair,
@@ -853,6 +854,47 @@ describe("custom operator parsing and equality round-trip", () => {
 });
 
 // ─── tokenToPaletteItem ───────────────────────────────────────────────────────
+
+// ─── parseConstructDefinition ────────────────────────────────────────────────
+
+describe("parseConstructDefinition", () => {
+  it("returns the left side when format is correct", () => {
+    const expr = parseExpression("g \\elem {generator}");
+    expect(parseConstructDefinition(expr, "generator")).toMatchObject({ kind: "var", name: "g" });
+  });
+
+  it("works with an integer on the left", () => {
+    const expr = parseExpression("7 \\elem {prime}");
+    expect(parseConstructDefinition(expr, "prime")).toMatchObject({ kind: "int", value: 7 });
+  });
+
+  it("returns only the left side, not the role reference", () => {
+    const expr = parseExpression("a \\elem {alice_secret}");
+    const result = parseConstructDefinition(expr, "alice_secret");
+    expect(result).toMatchObject({ kind: "var", name: "a" });
+    expect(result).not.toHaveProperty("right");
+  });
+
+  it("throws when the expression is not a binary elem", () => {
+    const expr = parseExpression("g + x");
+    expect(() => parseConstructDefinition(expr, "generator")).toThrow("\\elem");
+  });
+
+  it("throws for a plain variable with no elem", () => {
+    const expr = parseExpression("g");
+    expect(() => parseConstructDefinition(expr, "generator")).toThrow();
+  });
+
+  it("throws when the right side is not a role reference", () => {
+    const expr = parseExpression("g \\elem S");
+    expect(() => parseConstructDefinition(expr, "generator")).toThrow("generator");
+  });
+
+  it("throws when the right side role does not match the expected role", () => {
+    const expr = parseExpression("g \\elem {prime}");
+    expect(() => parseConstructDefinition(expr, "generator")).toThrow("generator");
+  });
+});
 
 // ─── substituteRolesInPalette ─────────────────────────────────────────────────
 

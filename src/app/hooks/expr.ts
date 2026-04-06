@@ -401,6 +401,28 @@ export function tokenToPaletteItem(token: Token): PaletteItem {
 }
 
 /**
+ * Extracts the defined symbol from a construct definition expression.
+ *
+ * The expected format is `value \elem {role}` (a binary `elem` expression), e.g. `g \elem {generator}`.
+ * The right-hand side must be a role reference matching the expected role name.
+ * The left-hand side (`value`) is returned as the symbol to assign to the role.
+ *
+ * @param expr - A parsed expression, expected to be a binary `elem` expression
+ * @param role - The role name the right-hand side must match
+ * @returns The left-hand side of the `\elem` expression
+ * @throws If the expression is not a binary `elem` expression, or the right side does not match the role
+ */
+export function parseConstructDefinition(expr: Expr, role: string): Expr {
+  if (expr.kind !== "binary" || expr.op !== "elem") {
+    throw new Error("Construct definition must be in the format: value \\elem {role}");
+  }
+  if (expr.right.kind !== "role" || expr.right.name !== role) {
+    throw new Error(`Construct definition right-hand side must be the role {${role}}`);
+  }
+  return expr.left;
+}
+
+/**
  * Replaces role references in a `PaletteItem[]` with the actual symbols selected by the user.
  * Used to resolve prefill tokens before they are rendered in the construct exercise.
  * @param items - The palette items potentially containing role references
