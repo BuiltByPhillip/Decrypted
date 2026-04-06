@@ -109,6 +109,7 @@ step:
         type: construct
         prompt: Construct the expression for Alice to calculate her public key A
         hint: Bob uses the same expression to calculate B
+        prefill: mod {prime}
         answer: {generator} ^ {alice_secret} mod {prime}
 step:
     description: Alice sends A to Bob
