@@ -13,7 +13,7 @@ export default function HeroButtons() {
       <ButtonLink
         variant="outline"
         size="lg"
-        href={"/documentation"}
+        href={"/docs"}
       >
         Documentation
       </ButtonLink>
