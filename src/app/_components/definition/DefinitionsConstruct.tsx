@@ -1,5 +1,5 @@
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
-import type {Definition, Expr} from "~/app/hooks/parser";
+import type { Definition, Expr, PaletteItem } from "~/app/hooks/parser";
 import type {SelectedDefinitions} from "~/app/exercise/page";
 
 

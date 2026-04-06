@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import ExprPalette from "~/app/_components/exercises/construct/ExprPalette";
 import {
   type PaletteItem, type TokenRange,
@@ -18,31 +18,33 @@ import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
 import TrashContainer from "~/app/_components/exercises/shared/dnd/TrashContainer";
 import DraggableWindow from "~/app/_components/exercises/shared/dnd/DraggableWindow";
 import Button from "~/components/Button";
-import TokenContainer from "~/app/_components/exercises/construct/TokenContainer";
-import type {SelectedDefinitions} from "~/app/exercise/page";
+import TokenContainer, { type CombinedToken } from "~/app/_components/exercises/construct/TokenContainer";
 
 type DragAndDropProps = {
   onTokensChangeAction?: (tokens: PaletteItem[]) => void;
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
-  definitions?: SelectedDefinitions;
   locked?: boolean;
   customOperatorItems?: PaletteItem[];
+  prefill?: PaletteItem[];
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, definitions, locked, customOperatorItems = [] }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, customOperatorItems = [], prefill = [] }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
 
-  const [tokens, setTokens] = useState<PaletteItem[]>([]);
+  // Single source-of-truth array. Seeded with frozen prefill tokens; user tokens are inserted as non-frozen.
+  const [tokens, setTokens] = useState<CombinedToken[]>(() =>
+    prefill.map(token => ({ token, frozen: true }))
+  );
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [isDragDisintegrating, setIsDragDisintegrating] = useState(false);
 
-  function updateTokens(next: PaletteItem[]) {
+  function updateTokens(next: CombinedToken[]) {
     setTokens(next);
-    onTokensChangeAction?.(next)
+    onTokensChangeAction?.(next.map(t => t.token));
   }
 
   const { dragState, dragCursorPos, startDrag, moveDrag, endDrag } = useDragSession<PaletteItem>();
@@ -80,7 +82,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     sourceTokenIndexRef.current = undefined;
     endDrag();
     // Token was already removed from `tokens` when drag started — just finalize
-    updateTokens(tokens);
+    updateTokens([...tokens]);
   };
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
@@ -89,7 +91,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     const filtered = tokens.filter((_, i) => i !== index);
     setTokens(filtered);
     // Notify parent immediately so error/correct colors are cleared before indices shift.
-    onTokensChangeAction?.(filtered);
+    onTokensChangeAction?.(filtered.map(t => t.token));
     moveDrag(x, y)
     setIsDragDisintegrating(false);
     sourceTokenIndexRef.current = index;
@@ -154,12 +156,12 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
             } else if (gapIndex !== null) {
               // Token already removed from `tokens` (if from token list), insert directly
               const next = [...tokens];
-              next.splice(gapIndex, 0, dragState.item);
+              next.splice(gapIndex, 0, { token: dragState.item, frozen: false });
               updateTokens(next);
             } else if (srcIndex !== undefined) {
               // Dropped nowhere valid: restore the token at its original position
               const next = [...tokens];
-              next.splice(srcIndex, 0, dragState.item);
+              next.splice(srcIndex, 0, { token: dragState.item, frozen: false });
               setTokens(next);
             }
 
@@ -195,7 +197,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
             className="flex justify-end pr-3 select-none"
             size="none"
             onClick={() => {
-              if (!locked) updateTokens([]);
+              if (!locked) updateTokens(tokens.filter(t => t.frozen));
             }}
           >
             Clear expression

@@ -4,7 +4,7 @@ import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 import {type CustomOperator, type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import {useState} from "react";
-import {exprDiff, exprEquals, paletteItemToString, substituteRoles} from "~/app/hooks/expr";
+import {exprDiff, exprEquals, paletteItemToString, substituteRoles, substituteRolesInPalette} from "~/app/hooks/expr";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 
@@ -85,7 +85,14 @@ export default function ConstructExercise({ answer, prefill, definitions, prompt
         onSubmit={checkAnswer}
         feedback={submittedAnswer && isCorrect === false && <UserFeedback exerciseType="construct" userAnswer={submittedAnswer} correctAnswer={resolvedAnswer} definitions={definitions} attempts={attempts} />}
       >
-        <DragAndDrop definitions={definitions} onTokensChangeAction={handleTokensChange} errorRange={errorRange} isCorrect={isCorrect} locked={locked} customOperatorItems={customOperators.map(op => ({ kind: "operator" as const, op: op.name }))}/>
+        <DragAndDrop
+          onTokensChangeAction={handleTokensChange}
+          errorRange={errorRange}
+          isCorrect={isCorrect}
+          locked={locked}
+          customOperatorItems={customOperators.map(op => ({ kind: "operator" as const, op: op.name }))}
+          prefill={prefill && definitions ? substituteRolesInPalette(prefill, definitions) : prefill}
+        />
       </ExerciseShell>
 
 )

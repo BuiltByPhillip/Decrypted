@@ -401,6 +401,19 @@ export function tokenToPaletteItem(token: Token): PaletteItem {
 }
 
 /**
+ * Replaces role references in a `PaletteItem[]` with the actual symbols selected by the user.
+ * Used to resolve prefill tokens before they are rendered in the construct exercise.
+ * @param items - The palette items potentially containing role references
+ * @param definitions - The user's selected symbol definitions
+ * @returns A new array with all role items substituted
+ */
+export function substituteRolesInPalette(items: PaletteItem[], definitions: SelectedDefinitions): PaletteItem[] {
+  return items.map(item =>
+    item.kind === "role" ? (definitions[item.name] as PaletteItem ?? item) : item
+  );
+}
+
+/**
  * Replaces role references (e.g. `{generator}`, `{alice_secret}`) in a plain string with the
  * actual symbols selected by the user. Used to substitute roles in description, prompt, and hint fields.
  * @param text - The string potentially containing role references (e.g. `"Choose Alice's secret {alice_secret}"`)
