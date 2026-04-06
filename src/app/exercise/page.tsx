@@ -153,8 +153,43 @@ export default function ExercisePage() {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!["ArrowDown", "ArrowUp", "PageDown", "PageUp"].includes(e.key)) return;
+      e.preventDefault();
+
+      const now = Date.now();
+      if (now - lastScrollTimeRef.current < 800) return;
+      lastScrollTimeRef.current = now;
+
+      const currentIdx = currentExerciseIndexRef.current;
+
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        const nextIdx = currentIdx + 1;
+        if (!exercisesRef.current[currentIdx]?.step.exercise) {
+          setResults(prev => ({ ...prev, [currentIdx]: true }));
+        }
+        if (exerciseRefs.current.has(nextIdx)) {
+          scrollToExercise(nextIdx);
+        } else if (showFinishRef.current && finishElementRef.current) {
+          currentExerciseIndexRef.current = exercisesLengthRef.current;
+          lenis.resize();
+          lenis.scrollTo(finishElementRef.current, { duration: 1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
+        }
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        if (currentIdx === exercisesLengthRef.current) {
+          scrollToExercise(exercisesLengthRef.current - 1);
+        } else if (currentIdx > 0) {
+          scrollToExercise(currentIdx - 1);
+        }
+      }
+    };
+
     window.addEventListener("wheel", handleWheel, { capture: true, passive: false });
-    return () => window.removeEventListener("wheel", handleWheel, { capture: true });
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => {
+      window.removeEventListener("wheel", handleWheel, { capture: true });
+      window.removeEventListener("keydown", handleKeyDown, { capture: true });
+    };
   }, [showExercises, lenis, scrollToExercise]);
 
   // Handle scroll to first exercise after content is rendered
