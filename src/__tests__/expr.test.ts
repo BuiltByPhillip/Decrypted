@@ -7,6 +7,7 @@ import {
   paletteItemToString,
   substituteRoles,
   substituteRolesInString,
+  substituteRolesInPalette,
   exprDiff,
   exprListContains,
   findDiffPair,
@@ -852,6 +853,127 @@ describe("custom operator parsing and equality round-trip", () => {
 });
 
 // ─── tokenToPaletteItem ───────────────────────────────────────────────────────
+
+// ─── substituteRolesInPalette ─────────────────────────────────────────────────
+
+describe("substituteRolesInPalette", () => {
+  it("replaces a role item with its resolved var", () => {
+    const items: PaletteItem[] = [{ kind: "role", name: "prime" }];
+    const defs = { prime: { kind: "var" as const, name: "p" } };
+    expect(substituteRolesInPalette(items, defs)).toEqual([{ kind: "var", name: "p" }]);
+  });
+
+  it("leaves non-role items unchanged", () => {
+    const items: PaletteItem[] = [
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "g" },
+      { kind: "int", value: 7 },
+    ];
+    expect(substituteRolesInPalette(items, {})).toEqual(items);
+  });
+
+  it("substitutes only role items in a mixed list", () => {
+    const items: PaletteItem[] = [
+      { kind: "operator", op: "mod" },
+      { kind: "role", name: "prime" },
+    ];
+    const defs = { prime: { kind: "var" as const, name: "p" } };
+    expect(substituteRolesInPalette(items, defs)).toEqual([
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "p" },
+    ]);
+  });
+
+  it("substitutes multiple role items", () => {
+    const items: PaletteItem[] = [
+      { kind: "role", name: "generator" },
+      { kind: "operator", op: "^" },
+      { kind: "role", name: "alice_secret" },
+    ];
+    const defs = {
+      generator: { kind: "var" as const, name: "g" },
+      alice_secret: { kind: "var" as const, name: "a" },
+    };
+    expect(substituteRolesInPalette(items, defs)).toEqual([
+      { kind: "var", name: "g" },
+      { kind: "operator", op: "^" },
+      { kind: "var", name: "a" },
+    ]);
+  });
+
+  it("leaves a role item unchanged when the role is not in definitions", () => {
+    const items: PaletteItem[] = [{ kind: "role", name: "unknown" }];
+    expect(substituteRolesInPalette(items, {})).toEqual([{ kind: "role", name: "unknown" }]);
+  });
+
+  it("returns an empty array unchanged", () => {
+    expect(substituteRolesInPalette([], {})).toEqual([]);
+  });
+
+  it("substitutes a role resolved to an int", () => {
+    const items: PaletteItem[] = [{ kind: "role", name: "prime" }];
+    const defs = { prime: { kind: "int" as const, value: 23 } };
+    expect(substituteRolesInPalette(items, defs)).toEqual([{ kind: "int", value: 23 }]);
+  });
+});
+
+// ─── prefill round-trip: combined token list → answer check ──────────────────
+
+describe("prefill answer-checking round-trip", () => {
+  it("prefill + user tokens produce a parseable expression", () => {
+    // Simulates: prefill = [mod, p], user tokens = [g, ^, a]
+    // Combined list sent to answer checker: [g, ^, a, mod, p]
+    const combined: PaletteItem[] = [
+      { kind: "var", name: "g" },
+      { kind: "operator", op: "^" },
+      { kind: "var", name: "a" },
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "p" },
+    ];
+    const str = combined.map(paletteItemToString).join(" ");
+    const expr = parseExpression(str);
+    expect(expr).toMatchObject({ kind: "binary", op: "mod" });
+  });
+
+  it("combined tokens match the correct answer expression", () => {
+    const combined: PaletteItem[] = [
+      { kind: "var", name: "g" },
+      { kind: "operator", op: "^" },
+      { kind: "var", name: "a" },
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "p" },
+    ];
+    const str = combined.map(paletteItemToString).join(" ");
+    const userExpr = parseExpression(str);
+    const answerExpr = parseExpression("g ^ a mod p");
+    expect(exprEquals(userExpr, answerExpr)).toBe(true);
+  });
+
+  it("combined tokens with wrong user section do not match the answer", () => {
+    // User built [g, ^, b] instead of [g, ^, a], prefill is [mod, p]
+    const combined: PaletteItem[] = [
+      { kind: "var", name: "g" },
+      { kind: "operator", op: "^" },
+      { kind: "var", name: "b" },
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "p" },
+    ];
+    const str = combined.map(paletteItemToString).join(" ");
+    const userExpr = parseExpression(str);
+    const answerExpr = parseExpression("g ^ a mod p");
+    expect(exprEquals(userExpr, answerExpr)).toBe(false);
+  });
+
+  it("prefill-only tokens (no user input) do not match a full answer", () => {
+    // User added nothing; only prefill [mod, p] is present
+    const combined: PaletteItem[] = [
+      { kind: "operator", op: "mod" },
+      { kind: "var", name: "p" },
+    ];
+    const str = combined.map(paletteItemToString).join(" ");
+    expect(() => parseExpression(str)).toThrow();
+  });
+});
 
 describe("tokenToPaletteItem", () => {
   it("converts a NUMBER token to an int palette item", () => {
