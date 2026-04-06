@@ -307,8 +307,7 @@ npm run dev`}
             <CodeBlock label="Example">
               {`exercise:
   type: calculate
-  prompt: Compute the shared key for Alice and Bob, when {alice_secret} = 4, {bob_secret} = 5, {prime} = 23, {generator} = 5
-  hint: The formula is A ^ {bob_secret} mod {prime} and B ^ {alice_secret} mod {prime}
+  prompt: Compute the shared key when alice_secret = 4, prime = 23, generator = 5
   answer: 12`}
             </CodeBlock>
           </section>
