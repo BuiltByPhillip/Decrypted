@@ -300,7 +300,7 @@ export default function ExercisePage() {
         className="fixed top-7 left-10"
       />
       {/* Definition selection */}
-      <div className="flex min-h-screen flex-col items-center justify-center">
+      <div className="flex min-h-screen w-full flex-col items-center justify-center py-24">
         <span className="text-gray pb-5 text-xl font-medium tracking-wider uppercase">
           define symbols for exercises
         </span>

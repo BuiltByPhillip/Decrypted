@@ -194,7 +194,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         <div className="flex flex-col pt-5">
           <Button
             variant="ghostMuted"
-            className="flex justify-end pr-3 select-none"
+            className="w-fit self-end pr-3 select-none"
             size="none"
             onClick={() => {
               if (!locked) updateTokens(tokens.filter(t => t.frozen));

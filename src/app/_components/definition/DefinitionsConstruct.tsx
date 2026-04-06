@@ -35,7 +35,7 @@ export default function DefinitionsConstruct({ definitions, onSelect, selected }
     if (!currentDefinition) return null;
 
     return (
-      <div className="flex flex-col">
+      <div className="flex w-full flex-col">
         <DragAndDrop
           key={currentIndex}
           onTokensChangeAction={setTokens}
@@ -44,12 +44,15 @@ export default function DefinitionsConstruct({ definitions, onSelect, selected }
             { kind: "role", name: currentDefinition.role },
           ]}
         />
-        <Button
-          variant="submit"
-          onClick={addDefinition}
-        >
-          Add
-        </Button>
+        <div className="flex justify-center pt-5">
+          <Button
+            variant="submit"
+            className="w-100"
+            onClick={addDefinition}
+          >
+            Add
+          </Button>
+        </div>
       </div>
     );
 }
