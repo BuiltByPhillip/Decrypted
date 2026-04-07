@@ -999,6 +999,46 @@ custom:
     const result = parse(`protocol: Test`, 0);
     expect(result.customOperators).toHaveLength(0);
   });
+
+  it("throws when name conflicts with a built-in arithmetic operator", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: mod
+        type: BINARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+  });
+
+  it("throws when name conflicts with a binary symbol", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: xor
+        type: BINARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+  });
+
+  it("throws when name conflicts with a unary symbol", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: forall
+        type: UNARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+  });
+
+  it("throws when name conflicts with a constant symbol", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: reals
+        type: UNARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+  });
 });
 
 // ─── custom operator expression parsing ──────────────────────────────────────

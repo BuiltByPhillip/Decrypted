@@ -648,7 +648,12 @@ function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator,
 
     if (line.startsWith("name:")) {
       if (customOp.name !== undefined) throw new Error(`Line ${i + 1} - Name defined multiple times`);
-      customOp.name = line.replace("name:", "").trim();
+      const name = line.replace("name:", "").trim();
+      const ALL_BUILT_IN = [...ALL_OPERATORS, ...BINARY_SYMBOLS, ...UNARY_SYMBOLS, ...CONSTANT_SYMBOLS];
+      if ((ALL_BUILT_IN as readonly string[]).includes(name)) {
+        throw new Error(`Line ${i + 1} - '${name}' is already a built-in operator`);
+      }
+      customOp.name = name
     } else if (line.startsWith("type:")) {
       if (customOp.type !== undefined) throw new Error(`Line ${i + 1} - Type defined multiple times`);
       const typeValue = line.replace("type:", "").trim().toUpperCase();
