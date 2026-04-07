@@ -650,8 +650,9 @@ function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator,
       if (customOp.name !== undefined) throw new Error(`Line ${i + 1} - Name defined multiple times`);
       const name = line.replace("name:", "").trim();
       const ALL_BUILT_IN = [...ALL_OPERATORS, ...BINARY_SYMBOLS, ...UNARY_SYMBOLS, ...CONSTANT_SYMBOLS];
-      if ((ALL_BUILT_IN as readonly string[]).includes(name)) {
-        throw new Error(`Line ${i + 1} - '${name}' is already a built-in operator`);
+      const conflict = (ALL_BUILT_IN as readonly string[]).find(b => b === name.toLowerCase());
+      if (conflict) {
+        throw new Error(`Line ${i + 1} - '${name}' conflicts with built-in operator '${conflict}'`);
       }
       customOp.name = name
     } else if (line.startsWith("type:")) {

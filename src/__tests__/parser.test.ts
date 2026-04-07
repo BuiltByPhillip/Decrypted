@@ -1007,7 +1007,28 @@ custom:
         name: mod
         type: BINARY
         precedence: 3`;
-    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+    expect(() => parse(dsl, 0)).toThrow(/conflicts with built-in operator/i);
+  });
+
+  it("throws when name conflicts with a built-in operator regardless of case", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: MOD
+        type: BINARY
+        precedence: 3`;
+    expect(() => parse(dsl, 0)).toThrow(/conflicts with built-in operator/i);
+  });
+
+  it("preserves the original case of the operator name", () => {
+    const dsl = `protocol: Test
+custom:
+    operator:
+        name: SET
+        type: BINARY
+        precedence: 3`;
+    const result = parse(dsl, 0);
+    expect(result.customOperators[0]?.name).toBe("SET");
   });
 
   it("throws when name conflicts with a binary symbol", () => {
@@ -1017,7 +1038,7 @@ custom:
         name: xor
         type: BINARY
         precedence: 3`;
-    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+    expect(() => parse(dsl, 0)).toThrow(/conflicts with built-in operator/i);
   });
 
   it("throws when name conflicts with a unary symbol", () => {
@@ -1027,7 +1048,7 @@ custom:
         name: forall
         type: UNARY
         precedence: 3`;
-    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+    expect(() => parse(dsl, 0)).toThrow(/conflicts with built-in operator/i);
   });
 
   it("throws when name conflicts with a constant symbol", () => {
@@ -1037,7 +1058,7 @@ custom:
         name: reals
         type: UNARY
         precedence: 3`;
-    expect(() => parse(dsl, 0)).toThrow(/built-in/i);
+    expect(() => parse(dsl, 0)).toThrow(/conflicts with built-in operator/i);
   });
 });
 
