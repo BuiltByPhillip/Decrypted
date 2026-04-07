@@ -76,7 +76,7 @@ export default function ConstructExercise({ answer, prefill, palette, definition
   };
 
   const priorityValueItems: PaletteItem[] = Object.values(definitions ?? {})
-    .flatMap(expr =>
+    .flatMap((expr): PaletteItem[] =>
       expr.kind === "var" ? [{ kind: "var" as const, name: expr.name }]
       : expr.kind === "int" ? [{ kind: "int" as const, value: expr.value }]
       : []
