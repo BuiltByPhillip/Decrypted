@@ -1,7 +1,9 @@
 import Footer from "~/app/_components/Footer";
 import DocsSidebar from "~/app/docs/DocsSidebar";
 import CodeBlock from "~/app/docs/CodeBlock";
+import DslCodeBlock from "~/app/docs/DslCodeBlock";
 import FieldList from "~/app/docs/FieldList";
+import { Badge } from "~/app/docs/Badge";
 
 
 function Callout({ children }: { children: React.ReactNode }) {
@@ -130,8 +132,8 @@ step:
           <section>
             <SectionHeading id="installation">Installation</SectionHeading>
             <Body>
-              If you wish to install and run this project locally, then you
-              have to navigate to the{" "}
+              If you wish to install and run this project locally, then you have
+              to navigate to the{" "}
               <a
                 href="https://github.com/BuiltByPhillip/Decrypted"
                 target="_blank"
@@ -161,37 +163,47 @@ npm run dev`}
 
             <SectionHeading id="define-block">Define Block</SectionHeading>
             <Body>
-              Quis autem vel eum iure reprehenderit qui in ea voluptate velit
-              esse quam nihil molestiae consequatur, vel illum qui dolorem eum
-              fugiat quo voluptas nulla pariatur.
+              The define block lets you declare named roles that students assign
+              symbols to before the exercises begin. Once assigned, you can
+              reference any role anywhere in the protocol using {"{role}"}, and
+              every description, prompt, and expression will automatically
+              reflect the student's choices. This means a single exercise
+              definition can present itself differently to every student, making
+              abstract protocols feel concrete and personal. There are two ways
+              students can assign a symbol to a role.
             </Body>
+            <Badge key={"select"} label={"Multiple Choice"} />
             <CodeBlock>
-              {`define:
-  type: select
-  role \elem { symbol_a, symbol_b, symbol_c }`}
+              {`type: select
+generator \\elem  {g, x, a, b}
+prime \\elem {p, n, m, q}
+alice_secret \\elem  {a, s, x}
+bob_secret \\elem  {b, t, y}`}
+            </CodeBlock>
+
+            <Badge key={"construct"} label={"Drag And Drop"} />
+            <CodeBlock>
+              {`type: construct
+variables: generator, prime, alice_secret, bob_secret`}
             </CodeBlock>
             <Callout>
-              The define block must appear before any step blocks. Lorem ipsum
-              dolor sit amet, consectetur adipiscing elit and other placeholder
-              content.
+              The language will not compile if the define block does not appear
+              before any step blocks.
             </Callout>
 
             <SectionHeading id="step-block">Step Block</SectionHeading>
             <Body>
-              Each exercise is split into step code blocks. One step is one exercise.
-              It is required for any step to always have a description, but each exercise type
-              has a set of required and optional fields that needs to be included for the
-              step to compile.
+              Each exercise is split into step code blocks. One step is one
+              exercise. It is required for any step to always have a
+              description, but each exercise type has a set of required and
+              optional fields that needs to be included for the step to compile.
             </Body>
             <div className="mt-2 flex flex-wrap gap-2">
-              {["Multiple Choice", "Drag And Drop", "Match", "Calculate"].map((type) => (
-                <span
-                  key={type}
-                  className="border-green/30 text-green bg-green/5 rounded-lg border px-3 py-1 font-mono text-[12px]"
-                >
-                  {type}
-                </span>
-              ))}
+              {["Multiple Choice", "Drag And Drop", "Match", "Calculate"].map(
+                (type) => (
+                  <Badge key={type} label={type} />
+                ),
+              )}
             </div>
             <CodeBlock>
               {`step:
@@ -214,20 +226,37 @@ npm run dev`}
           <section>
             <SectionHeading id="select">Multiple Choice</SectionHeading>
             <Body>
-              The student is presented with a prompt and must pick the correct answer from a list of options.
+              The student is presented with a prompt and must pick the correct
+              answer from a list of options.
             </Body>
             <FieldList
               required={[
-                { name: "type", description: 'Always "select" for this exercise type.' },
-                { name: "prompt", description: "The question shown to the student." },
-                { name: "answer", description: "The correct answer expression." },
-                { name: "options", description: "A list of expressions the student can choose from." },
+                {
+                  name: "type",
+                  description: 'Always "select" for this exercise type.',
+                },
+                {
+                  name: "prompt",
+                  description: "The question shown to the student.",
+                },
+                {
+                  name: "answer",
+                  description: "The correct answer expression.",
+                },
+                {
+                  name: "options",
+                  description:
+                    "A list of expressions the student can choose from.",
+                },
               ]}
               optional={[
-                { name: "hint", description: "A hint revealed when the student requests it." },
+                {
+                  name: "hint",
+                  description: "A hint revealed when the student requests it.",
+                },
               ]}
             />
-            <CodeBlock label="Example">
+            <DslCodeBlock label="Example">
               {`exercise:
   type: select
   prompt: Choose Alice's secret exponent {alice_secret}
@@ -238,47 +267,79 @@ npm run dev`}
     - {prime}-1
     - {prime}-2
   answer: 7`}
-            </CodeBlock>
+            </DslCodeBlock>
 
             <SectionHeading id="construct">Drag And Drop</SectionHeading>
             <Body>
-              The student builds an expression by dragging tokens from a palette onto a canvas.
+              The student builds an expression by dragging tokens from a palette
+              onto a canvas.
             </Body>
             <FieldList
               required={[
-                { name: "type", description: 'Always "construct" for this exercise type.' },
-                { name: "prompt", description: "The question shown to the student." },
-                { name: "answer", description: "The correct expression the student must construct." },
+                {
+                  name: "type",
+                  description: 'Always "construct" for this exercise type.',
+                },
+                {
+                  name: "prompt",
+                  description: "The question shown to the student.",
+                },
+                {
+                  name: "answer",
+                  description:
+                    "The correct expression the student must construct.",
+                },
               ]}
               optional={[
-                { name: "prefill", description: "Tokens pre-loaded onto the canvas that the student cannot remove." },
-                { name: "hint", description: "A hint revealed when the student requests it." },
+                {
+                  name: "prefill",
+                  description:
+                    "Tokens pre-loaded onto the canvas that the student cannot remove.",
+                },
+                {
+                  name: "hint",
+                  description: "A hint revealed when the student requests it.",
+                },
               ]}
             />
-            <CodeBlock label="Example">
+            <DslCodeBlock label="Example">
               {`exercise:
   type: construct
   prompt: Construct the expression for Alice to calculate her public key A
   hint: Bob uses the same expression to calculate B
   prefill: mod {prime}
   answer: {generator} ^ {alice_secret} mod {prime}`}
-            </CodeBlock>
+            </DslCodeBlock>
 
             <SectionHeading id="match">Match</SectionHeading>
             <Body>
-              The student matches items on the left to their corresponding items on the right.
+              The student matches items on the left to their corresponding items
+              on the right.
             </Body>
             <FieldList
               required={[
-                { name: "type", description: 'Always "match" for this exercise type.' },
-                { name: "prompt", description: "The question shown to the student." },
-                { name: "pairs", description: "A set of key-value pairs the student must match together." },
+                {
+                  name: "type",
+                  description: 'Always "match" for this exercise type.',
+                },
+                {
+                  name: "prompt",
+                  description: "The question shown to the student.",
+                },
+                {
+                  name: "pairs",
+                  description:
+                    "A set of key-value pairs the student must match together.",
+                },
               ]}
               optional={[
-                { name: "hint", description: "A hint revealed when the student requests it." },
+                {
+                  name: "hint",
+                  description: "A hint revealed when the student requests it.",
+                },
               ]}
             />
-            <CodeBlock label="Example">
+            <DslCodeBlock label="Example">
               {`exercise:
   type: match
   prompt: Match each step in the Diffie-Hellman protocol with the right formula
@@ -288,28 +349,41 @@ npm run dev`}
     - {generator}^{bob_secret} mod {prime} -> Bob's public key
     - B^{alice_secret} mod {prime} -> Alice's shared secret
     - A^{bob_secret} mod {prime} -> Bob's shared secret`}
-            </CodeBlock>
+            </DslCodeBlock>
 
             <SectionHeading id="calculate">Calculate</SectionHeading>
             <Body>
-              The student is given an expression to evaluate and must type in the correct result.
+              The student is given an expression to evaluate and must type in
+              the correct result.
             </Body>
             <FieldList
               required={[
-                { name: "type", description: 'Always "calculate" for this exercise type.' },
-                { name: "prompt", description: "The question shown to the student." },
-                { name: "answer", description: "The correct numeric or symbolic result." },
+                {
+                  name: "type",
+                  description: 'Always "calculate" for this exercise type.',
+                },
+                {
+                  name: "prompt",
+                  description: "The question shown to the student.",
+                },
+                {
+                  name: "answer",
+                  description: "The correct numeric or symbolic result.",
+                },
               ]}
               optional={[
-                { name: "hint", description: "A hint revealed when the student requests it." },
+                {
+                  name: "hint",
+                  description: "A hint revealed when the student requests it.",
+                },
               ]}
             />
-            <CodeBlock label="Example">
+            <DslCodeBlock label="Example">
               {`exercise:
   type: calculate
   prompt: Compute the shared key when alice_secret = 4, prime = 23, generator = 5
   answer: 12`}
-            </CodeBlock>
+            </DslCodeBlock>
           </section>
 
           {/* ── Configuration ── */}
