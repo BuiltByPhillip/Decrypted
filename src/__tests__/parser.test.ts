@@ -518,6 +518,62 @@ define:
   });
 });
 
+describe("construct define block parsing", () => {
+  it("parses a variables line into multiple definitions", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime, alice_secret`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition).toHaveLength(3);
+  });
+
+  it("parses role names correctly", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.role).toBe("generator");
+    expect(result.information.definition[1]?.role).toBe("prime");
+  });
+
+  it("sets type to construct on each definition", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.type).toBe("construct");
+    expect(result.information.definition[1]?.type).toBe("construct");
+  });
+
+  it("sets symbols to empty array for each definition", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime`;
+    const result = parse(dsl, 0);
+    expect(result.information.definition[0]?.symbols).toHaveLength(0);
+    expect(result.information.definition[1]?.symbols).toHaveLength(0);
+  });
+
+  it("throws when variables: is used without type: construct", () => {
+    const dsl = `protocol: Test
+define:
+    variables: generator, prime`;
+    expect(() => parse(dsl, 0)).toThrow(/'variables:' is only valid for type 'construct'/);
+  });
+
+  it("throws when variables: is used with type: select", () => {
+    const dsl = `protocol: Test
+define:
+    type: select
+    variables: generator, prime`;
+    expect(() => parse(dsl, 0)).toThrow(/'variables:' is only valid for type 'construct'/);
+  });
+});
+
 // ─── construct exercise parsing ───────────────────────────────────────────────
 
 describe("construct exercise parsing", () => {

@@ -30,9 +30,12 @@ export const DOC_EXAMPLES = {
 
   match: SHELL(`type: match
   prompt: Match each step in the Diffie-Hellman protocol with the right formula
+  hint: Remember, Alice doesn't know {bob_secret} and Bob doesn't know {alice_secret}
   pairs:
-    generator^alice_secret mod prime: Alice's public key
-    generator^bob_secret mod prime: Bob's public key`),
+    - {generator}^{alice_secret} mod {prime} -> Alice's public key
+    - {generator}^{bob_secret} mod {prime} -> Bob's public key
+    - B^{alice_secret} mod {prime} -> Alice's shared secret
+    - A^{bob_secret} mod {prime} -> Bob's shared secret`),
 
   calculate: SHELL(`type: calculate
   prompt: Compute the shared key when alice_secret = 4, bob_secret = 5, prime = 23, generator = 5

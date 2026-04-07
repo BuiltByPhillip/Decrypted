@@ -202,7 +202,7 @@ export type ExerciseType = typeof EXERCISE_TYPES[number];
 /**
  * Converts a raw expression string into a flat list of tokens.
  *
- * Recognises the following token types:
+ * Recognizes the following token types:
  * - `NUMBER`      - one or more digits, e.g. `42`
  * - `VAR`         - identifier starting with a letter or `_`, e.g. `alice`, `g`
  * - `OPERATOR`    - single-char operators (`+`, `-`, `*`, `/`, `^`, `<`, `>`, `=`)
@@ -556,7 +556,7 @@ class ExpressionParser {
   }
 }
 
-export function parse(input: string, startIndex: number): Code {
+export function parse(input: string, startIndex: number = 0): Code {
   const lines: string[] = input.split("\n");
   let code: Code = {
     information: { name: "", definition: []},
@@ -716,18 +716,27 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       }
       type = typeValue;
       i++;
-      continue;
+    } else if (line.startsWith("variables:")) {
+      if (type !== "construct")
+        throw new Error(`Line ${i + 1} - 'variables:' is only valid for type 'construct'`);
+
+      const vArray: string[] = line.replace("variables:", "").split(",")
+      definitions.push(
+        ...vArray.map((name) => ({ type, role: name.trim(), symbols: [] })),
+      );
+      i++
+    } else {
+      let tokens: Token[];
+      try {
+        tokens = tokenize(line);
+      } catch (e) {
+        throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
+      }
+      const def: Definition = parseDefinition(tokens, type, i);
+      definitions.push(def);
+      i++;
     }
 
-    let tokens: Token[];
-    try {
-      tokens = tokenize(line);
-    } catch (e) {
-      throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
-    }
-    const def: Definition = parseDefinition(tokens, type, i);
-    definitions.push(def);
-    i++
   }
   return [definitions, i++];
 }
