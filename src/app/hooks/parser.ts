@@ -53,63 +53,38 @@ export type LeafExpr =
   | { kind: "slot", tokenRange?: TokenRange } // Empty drop target in UI
   | { kind: "constant"; symbol: ConstantSymbol, tokenRange?: TokenRange };
 
-// Binary operator types - single source of truth
+// ── Operator categories ───────────────────────────────────────────────────────
+
+// Tokenized as OPERATOR tokens (no backslash prefix)
+export const ARITHMETIC_OPERATORS    = ["add", "sub", "mul", "div", "mod", "pow"] as const;
+export const LOGICAL_OPERATORS       = ["and", "or"] as const;
+export const COMPARISON_OPERATORS    = ["less", "greater", "equal"] as const;
+
+// Tokenized as KEYWORD tokens (backslash prefix, e.g. \elem)
+export const SET_THEORY_SYMBOLS      = ["elem", "notelem", "subset", "union", "intersection"] as const;
+export const CRYPTOGRAPHIC_SYMBOLS   = ["xor", "concat", "congruent", "notequal", "randomsample"] as const;
+export const PROTOCOL_SYMBOLS        = ["leftarrow", "rightarrow", "biarrow"] as const;
+export const NUMBER_THEORY_SYMBOLS   = ["divides", "notdivides", "lessequal", "greaterequal"] as const;
+export const QUANTIFIER_SYMBOLS      = ["forall", "exists"] as const;
+export const NUMBER_SET_CONSTANTS    = ["emptyset", "reals", "naturals", "integers", "rationals", "complex", "powerset", "universal"] as const;
+
+// ── Derived flat arrays (used internally and for backward compatibility) ──────
+
 export const ALL_OPERATORS = [
-  // logical
-  "and", "or",
-  // arithmetic
-  "add", "sub",
-  // multiplicative
-  "mul", "div", "mod",
-  // exponentiation
-  "pow",
-  // comparison
-  "less", "greater", "equal"
+  ...ARITHMETIC_OPERATORS,
+  ...LOGICAL_OPERATORS,
+  ...COMPARISON_OPERATORS,
 ] as const;
 
-// Binary symbols (two operands: left OP right)
 export const BINARY_SYMBOLS = [
-  // Set theory / Relations
-  "elem",           // ∈ element of
-  "notelem",        // ∉ not element of
-  "subset",         // ⊆ subset
-  "union",          // ∪ union
-  "intersection",   // ∩ intersection
-  // Cryptographic
-  "xor",            // ⊕ XOR
-  "concat",         // || concatenation
-  "congruent",      // ≡ congruent (mod)
-  "notequal",       // ≠ not equal
-  // Protocol arrows
-  "leftarrow",      // ← assignment/receives
-  "rightarrow",     // → sends/maps to
-  "biarrow",        // ↔ bidirectional/iff
-  "randomsample",   // ←$ random sampling
-  // Number theory
-  "divides",        // | divides
-  "notdivides",     // ∤ does not divide
-  // Other
-  "lessequal",      // ≤ less than or equal
-  "greaterequal",   // ≥ greater than or equal
+  ...SET_THEORY_SYMBOLS,
+  ...CRYPTOGRAPHIC_SYMBOLS,
+  ...PROTOCOL_SYMBOLS,
+  ...NUMBER_THEORY_SYMBOLS,
 ] as const;
 
-// Unary symbols (one operand: OP expr)
-export const UNARY_SYMBOLS = [
-  "forall",         // ∀x
-  "exists",         // ∃x
-] as const;
-
-// Constant symbols (no operands)
-export const CONSTANT_SYMBOLS = [
-  "emptyset",       // ∅
-  "reals",          // ℝ
-  "naturals",       // ℕ
-  "integers",       // ℤ
-  "rationals",      // ℚ
-  "complex",        // ℂ
-  "powerset",       // ℙ
-  "universal",      // 𝕌
-] as const;
+export const UNARY_SYMBOLS   = [...QUANTIFIER_SYMBOLS] as const;
+export const CONSTANT_SYMBOLS = [...NUMBER_SET_CONSTANTS] as const;
 
 export type BinaryOp = typeof ALL_OPERATORS[number];
 export type BinarySymbol = typeof BINARY_SYMBOLS[number];
@@ -158,8 +133,7 @@ export type PaletteItem =
   | { kind: "LPAR" }
   | { kind: "RPAR" }
 
-// Binary symbols that belong to the Sets palette
-export const SET_BINARY_SYMBOLS = ["elem", "notelem", "subset", "union", "intersection"] as const;
+// ── Palette item helpers ──────────────────────────────────────────────────────
 
 // Parenthesis palette items
 export const PAR_PALETTE_ITEMS: PaletteItem[] = [
@@ -167,20 +141,35 @@ export const PAR_PALETTE_ITEMS: PaletteItem[] = [
   { kind: "RPAR" },
 ];
 
-// All operators as palette items - for use with "palette: *"
+export const ARITHMETIC_PALETTE_ITEMS: PaletteItem[] = ARITHMETIC_OPERATORS.map(op => ({ kind: "operator", op }));
+export const LOGICAL_PALETTE_ITEMS: PaletteItem[]    = LOGICAL_OPERATORS.map(op => ({ kind: "operator", op }));
+export const COMPARISON_PALETTE_ITEMS: PaletteItem[] = COMPARISON_OPERATORS.map(op => ({ kind: "operator", op }));
+export const SET_THEORY_PALETTE_ITEMS: PaletteItem[] = [
+  ...SET_THEORY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
+  ...NUMBER_SET_CONSTANTS.map(op => ({ kind: "constantSymbol" as const, op })),
+];
+export const CRYPTOGRAPHIC_PALETTE_ITEMS: PaletteItem[] = CRYPTOGRAPHIC_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
+export const PROTOCOL_PALETTE_ITEMS: PaletteItem[]      = PROTOCOL_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
+export const NUMBER_THEORY_PALETTE_ITEMS: PaletteItem[] = NUMBER_THEORY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
+export const QUANTIFIER_PALETTE_ITEMS: PaletteItem[]    = QUANTIFIER_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op }));
+
+// ── Derived palette groups (backward compatibility) ───────────────────────────
+
+// Keep SET_BINARY_SYMBOLS for any existing references
+export const SET_BINARY_SYMBOLS = SET_THEORY_SYMBOLS;
+
+// All operators as palette items
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
 
 // Sets palette: set-theory binary ops + all number-set constants
-export const ALL_SET_PALETTE_ITEMS: PaletteItem[] = [
-  ...SET_BINARY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
-  ...CONSTANT_SYMBOLS.map(op => ({ kind: "constantSymbol" as const, op })),
-];
+export const ALL_SET_PALETTE_ITEMS: PaletteItem[] = SET_THEORY_PALETTE_ITEMS;
 
 // Symbols palette: everything that isn't set-theory
-const SET_BINARY_SET = new Set<string>(SET_BINARY_SYMBOLS);
 export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
-  ...BINARY_SYMBOLS.filter(op => !SET_BINARY_SET.has(op)).map(op => ({ kind: "binarySymbol" as const, op })),
-  ...UNARY_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op })),
+  ...CRYPTOGRAPHIC_PALETTE_ITEMS,
+  ...PROTOCOL_PALETTE_ITEMS,
+  ...NUMBER_THEORY_PALETTE_ITEMS,
+  ...QUANTIFIER_PALETTE_ITEMS,
 ];
 
 type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
