@@ -292,6 +292,28 @@ variables: generator, prime, alice_secret, bob_secret`}
               ]}
               optional={[
                 {
+                  name: "palette",
+                  description:
+                    "A default operator category shown in the palette. Students can still search for any operator.",
+                  details: (
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "ARITHMETIC_OPERATORS",
+                        "LOGICAL_OPERATORS",
+                        "COMPARISON_OPERATORS",
+                        "SET_THEORY_SYMBOLS",
+                        "CRYPTOGRAPHIC_SYMBOLS",
+                        "PROTOCOL_SYMBOLS",
+                        "NUMBER_THEORY_SYMBOLS",
+                        "QUANTIFIER_SYMBOLS",
+                        "NUMBER_SET_CONSTANTS",
+                      ].map((cat) => (
+                        <Badge key={cat} label={cat} />
+                      ))}
+                    </div>
+                  ),
+                },
+                {
                   name: "prefill",
                   description:
                     "Tokens pre-loaded onto the canvas that the student cannot remove.",
@@ -307,6 +329,7 @@ variables: generator, prime, alice_secret, bob_secret`}
   type: construct
   prompt: Construct the expression for Alice to calculate her public key A
   hint: Bob uses the same expression to calculate B
+  palette: ARITHMETIC_OPERATORS
   prefill: mod {prime}
   answer: {generator} ^ {alice_secret} mod {prime}`}
             </DslCodeBlock>

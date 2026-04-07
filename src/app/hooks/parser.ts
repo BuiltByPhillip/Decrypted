@@ -38,6 +38,7 @@ type Exercise = {
   hint?: string;
   options?: Expr[];
   pairs?: { left: string; right: string }[];
+  palette?: string;
   prefill?: PaletteItem[];
   answer?: Expr[];
 }
@@ -897,6 +898,26 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       });
       i = nextI
       continue
+    }
+    else if (line.startsWith("palette:")) {
+      if (pendingExercise.palette)
+        throw new Error(`Line ${i + 1} - Palette defined multiple times`);
+      const VALID_CATEGORIES = [
+        "ARITHMETIC_OPERATORS",
+        "LOGICAL_OPERATORS",
+        "COMPARISON_OPERATORS",
+        "SET_THEORY_SYMBOLS",
+        "CRYPTOGRAPHIC_SYMBOLS",
+        "PROTOCOL_SYMBOLS",
+        "NUMBER_THEORY_SYMBOLS",
+        "QUANTIFIER_SYMBOLS",
+        "NUMBER_SET_CONSTANTS",
+      ] as const;
+      const value = line.replace("palette:", "").trim();
+      if (!VALID_CATEGORIES.includes(value as typeof VALID_CATEGORIES[number])) {
+        throw new Error(`Line ${i + 1} - Unknown palette category: '${value}'`);
+      }
+      pendingExercise.palette = value;
     }
     else if (line.startsWith("prefill:")) {
       if (pendingExercise.prefill)

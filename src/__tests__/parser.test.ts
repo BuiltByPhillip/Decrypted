@@ -607,6 +607,69 @@ step:
         prompt: Build the expression`;
     expect(() => parse(dsl, 0)).toThrow();
   });
+
+  it("parses a valid palette category", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: ARITHMETIC_OPERATORS
+        answer: {generator} ^ {secret} mod {prime}`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.palette).toBe("ARITHMETIC_OPERATORS");
+  });
+
+  it("throws on unknown palette category", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: ARITHMATIC_OPERATORS
+        answer: {generator} ^ {secret} mod {prime}`;
+    expect(() => parse(dsl, 0)).toThrow(/Unknown palette category/i);
+  });
+
+  it("throws when palette is defined multiple times", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: ARITHMETIC_OPERATORS
+        palette: LOGICAL_OPERATORS
+        answer: {generator} ^ {secret} mod {prime}`;
+    expect(() => parse(dsl, 0)).toThrow(/multiple times/i);
+  });
+
+  it("parses all valid palette categories without throwing", () => {
+    const categories = [
+      "ARITHMETIC_OPERATORS",
+      "LOGICAL_OPERATORS",
+      "COMPARISON_OPERATORS",
+      "SET_THEORY_SYMBOLS",
+      "CRYPTOGRAPHIC_SYMBOLS",
+      "PROTOCOL_SYMBOLS",
+      "NUMBER_THEORY_SYMBOLS",
+      "QUANTIFIER_SYMBOLS",
+      "NUMBER_SET_CONSTANTS",
+    ];
+    for (const category of categories) {
+      const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: ${category}
+        answer: a`;
+      expect(() => parse(dsl, 0)).not.toThrow();
+    }
+  });
 });
 
 // ─── select exercise parsing ──────────────────────────────────────────────────
