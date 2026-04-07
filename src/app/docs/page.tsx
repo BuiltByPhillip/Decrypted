@@ -1,5 +1,6 @@
 import Footer from "~/app/_components/Footer";
 import DocsSidebar from "~/app/docs/DocsSidebar";
+import DocsScrollLogo from "~/app/docs/DocsScrollLogo";
 import CodeBlock from "~/app/docs/CodeBlock";
 import DslCodeBlock from "~/app/docs/DslCodeBlock";
 import FieldList from "~/app/docs/FieldList";
@@ -49,6 +50,7 @@ function Body({ children }: { children: React.ReactNode }) {
 export default function DocsPage() {
   return (
     <div className="bg-pattern min-h-screen bg-fixed">
+      <DocsScrollLogo />
       {/* Layout wrapper - offset for fixed header */}
       <div className="mx-auto flex max-w-7xl pt-20">
         <DocsSidebar />

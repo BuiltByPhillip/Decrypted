@@ -1,7 +1,7 @@
 "use client"
 
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
-import {type CustomOperator, type Expr, type PaletteItem, parseExpression, type TokenRange} from "~/app/hooks/parser";
+import {type CustomOperator, type Expr, type PaletteItem, parseExpression, type TokenRange, PALETTE_CATEGORIES} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
 import {useState} from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles, substituteRolesInPalette} from "~/app/hooks/expr";
@@ -14,12 +14,13 @@ type ConstructExerciseProps = {
   hint?: string;
   definitions?: SelectedDefinitions;
   prefill?: PaletteItem[];
+  palette?: string[];
   answer: Expr;
   customOperators?: CustomOperator[];
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, prefill, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, prefill, palette, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
@@ -74,6 +75,13 @@ export default function ConstructExercise({ answer, prefill, definitions, prompt
     }
   };
 
+  const priorityValueItems: PaletteItem[] = Object.values(definitions ?? {})
+    .flatMap(expr =>
+      expr.kind === "var" ? [{ kind: "var" as const, name: expr.name }]
+      : expr.kind === "int" ? [{ kind: "int" as const, value: expr.value }]
+      : []
+    );
+
   return (
       <ExerciseShell
         className="w-full"
@@ -91,7 +99,9 @@ export default function ConstructExercise({ answer, prefill, definitions, prompt
           isCorrect={isCorrect}
           locked={locked}
           customOperatorItems={customOperators.map(op => ({ kind: "operator" as const, op: op.name }))}
+          priorityValueItems={priorityValueItems}
           prefill={prefill && definitions ? substituteRolesInPalette(prefill, definitions) : prefill}
+          defaultPaletteItems={palette?.flatMap(cat => PALETTE_CATEGORIES[cat] ?? [])}
         />
       </ExerciseShell>
 

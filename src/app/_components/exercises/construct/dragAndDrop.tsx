@@ -8,6 +8,8 @@ import {
 import {
   DEFAULT_PALETTE_ITEMS,
   DEFAULT_VALUE_ITEMS,
+  SLOT_BUDGET,
+  estimateSlotCost,
   searchPalette,
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
@@ -26,11 +28,13 @@ type DragAndDropProps = {
   isCorrect?: boolean | null;
   locked?: boolean;
   customOperatorItems?: PaletteItem[];
+  priorityValueItems?: PaletteItem[];
   prefill?: PaletteItem[];
+  defaultPaletteItems?: PaletteItem[];
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, customOperatorItems = [], prefill = [] }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trashRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
@@ -108,7 +112,12 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
       >
         <ExprPalette
           category="Palette"
-          defaultItems={DEFAULT_PALETTE_ITEMS}
+          defaultItems={(() => {
+            const prioritySlots = customOperatorItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
+            const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
+            const baseItems = defaultPaletteItems ?? DEFAULT_PALETTE_ITEMS;
+            return [...customOperatorItems, ...baseItems.slice(0, remaining)];
+          })()}
           searchFn={(q) => searchPalette(q, customOperatorItems)}
           onStartDrag={onStartDrag}
           searchPlaceholder="Search..."
@@ -122,7 +131,19 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
       >
         <ExprPalette
           category="Values"
-          defaultItems={DEFAULT_VALUE_ITEMS}
+          defaultItems={(() => {
+            const prioritySlots = priorityValueItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
+            const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
+            const filtered = DEFAULT_VALUE_ITEMS.filter(item =>
+              !priorityValueItems.some(p =>
+                (p.kind === "var" && item.kind === "var" && p.name === item.name) ||
+                (p.kind === "int" && item.kind === "int" && p.value === item.value)
+              )
+            ).slice(0, remaining);
+            return [...priorityValueItems, ...filtered].sort((a, b) =>
+              a.kind === "var" && b.kind === "var" ? a.name.localeCompare(b.name) : 0
+            );
+          })()}
           searchFn={searchValues}
           onStartDrag={onStartDrag}
           searchPlaceholder="Create any variable or integer"

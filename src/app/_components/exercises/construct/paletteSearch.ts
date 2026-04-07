@@ -46,11 +46,31 @@ function matchSymbols<K extends "binarySymbol" | "unarySymbol" | "constantSymbol
   });
 }
 
-// Default items for Values: 1-10 and a-j
+// Default items for Values: a-x (upper bound — actual count is trimmed dynamically)
 export const DEFAULT_VALUE_ITEMS: Item[] = [
-  ...Array.from({ length: 10 }, (_, i) => ({ kind: "int" as const, value: i + 1 })),
-  ...Array.from({ length: 10 }, (_, i) => ({ kind: "var" as const, name: String.fromCharCode(97 + i) })),
+  ...Array.from({ length: 24 }, (_, i) => ({ kind: "var" as const, name: String.fromCharCode(97 + i) })),
 ];
+
+// Slot budget constants derived from ExprBlock (min-w-10 px-2 text-2xl) + ExprPalette (550px, px-2, gap-1)
+const BLOCK_MIN_WIDTH = 40; // min-w-10
+const BLOCK_PADDING = 16;   // px-2 both sides
+const CHAR_WIDTH = 14;       // ~text-2xl char width in px
+const GAP = 4;               // gap-1
+const SINGLE_CHAR_SLOT = BLOCK_MIN_WIDTH + GAP; // 44px
+
+export const SLOT_BUDGET = 24; // slots per palette (12 per row × 2 rows)
+
+export function estimateSlotCost(item: Item): number {
+  let charCount: number;
+  if (item.kind === "var") charCount = item.name.length;
+  else if (item.kind === "int") charCount = String(item.value).length;
+  else if (item.kind === "operator") charCount = (operatorSymbol[item.op] ?? item.op).length;
+  else if (item.kind === "binarySymbol" || item.kind === "unarySymbol" || item.kind === "constantSymbol")
+    charCount = (symbolDisplay[item.op] ?? item.op).length;
+  else charCount = 1; // LPAR, RPAR
+  const width = Math.max(BLOCK_MIN_WIDTH, charCount * CHAR_WIDTH + BLOCK_PADDING);
+  return (width + GAP) / SINGLE_CHAR_SLOT;
+}
 
 const PAREN_SEARCH_TERMS: { item: Item; terms: string[] }[] = [
   { item: { kind: "LPAR" }, terms: ["(", "left", "paren", "parenthesis"] },

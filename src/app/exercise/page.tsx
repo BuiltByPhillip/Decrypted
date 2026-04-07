@@ -359,6 +359,7 @@ export default function ExercisePage() {
                 <exerciseComponents.ConstructExercise
                   answer={step.exercise.answer![0]!}
                   prefill={step.exercise.prefill}
+                  palette={step.exercise.palette}
                   description={step.description}
                   prompt={step.exercise.prompt}
                   hint={
