@@ -4,6 +4,7 @@ import CodeBlock from "~/app/docs/CodeBlock";
 import DslCodeBlock from "~/app/docs/DslCodeBlock";
 import FieldList from "~/app/docs/FieldList";
 import { Badge } from "~/app/docs/Badge";
+import { PALETTE_CATEGORIES, operatorSymbol, symbolDisplay } from "~/app/hooks/parser";
 
 
 function Callout({ children }: { children: React.ReactNode }) {
@@ -296,19 +297,26 @@ variables: generator, prime, alice_secret, bob_secret`}
                   description:
                     "A default operator category shown in the palette. Students can still search for any operator.",
                   details: (
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "ARITHMETIC_OPERATORS",
-                        "LOGICAL_OPERATORS",
-                        "COMPARISON_OPERATORS",
-                        "SET_THEORY_SYMBOLS",
-                        "CRYPTOGRAPHIC_SYMBOLS",
-                        "PROTOCOL_SYMBOLS",
-                        "NUMBER_THEORY_SYMBOLS",
-                        "QUANTIFIER_SYMBOLS",
-                        "NUMBER_SET_CONSTANTS",
-                      ].map((cat) => (
-                        <Badge key={cat} label={cat} />
+                    <div className="flex flex-col gap-3">
+                      {Object.keys(PALETTE_CATEGORIES).map((name) => (
+                        <div key={name} className="flex items-center gap-3">
+                          <Badge label={name} />
+                          <div className="flex flex-wrap gap-1">
+                            {PALETTE_CATEGORIES[name]!.map((item) => {
+                              const op = "op" in item ? item.op : "";
+                              const display = { ...operatorSymbol, ...symbolDisplay }[op] ?? op;
+                              return (
+                                <span
+                                  key={op}
+                                  className="border-medium text-muted rounded border px-1.5 py-0.5 font-mono text-[11px]"
+                                  title={op}
+                                >
+                                  {display}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ),
@@ -329,7 +337,7 @@ variables: generator, prime, alice_secret, bob_secret`}
   type: construct
   prompt: Construct the expression for Alice to calculate her public key A
   hint: Bob uses the same expression to calculate B
-  palette: ARITHMETIC_OPERATORS
+  palette: ARITHMETIC_OPERATORS, CRYPTOGRAPHIC_SYMBOLS
   prefill: mod {prime}
   answer: {generator} ^ {alice_secret} mod {prime}`}
             </DslCodeBlock>

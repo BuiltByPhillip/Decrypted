@@ -38,7 +38,7 @@ type Exercise = {
   hint?: string;
   options?: Expr[];
   pairs?: { left: string; right: string }[];
-  palette?: string;
+  palette?: string[];
   prefill?: PaletteItem[];
   answer?: Expr[];
 }
@@ -145,14 +145,28 @@ export const PAR_PALETTE_ITEMS: PaletteItem[] = [
 export const ARITHMETIC_PALETTE_ITEMS: PaletteItem[] = ARITHMETIC_OPERATORS.map(op => ({ kind: "operator", op }));
 export const LOGICAL_PALETTE_ITEMS: PaletteItem[]    = LOGICAL_OPERATORS.map(op => ({ kind: "operator", op }));
 export const COMPARISON_PALETTE_ITEMS: PaletteItem[] = COMPARISON_OPERATORS.map(op => ({ kind: "operator", op }));
-export const SET_THEORY_PALETTE_ITEMS: PaletteItem[] = [
-  ...SET_THEORY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op })),
-  ...NUMBER_SET_CONSTANTS.map(op => ({ kind: "constantSymbol" as const, op })),
-];
+export const SET_THEORY_PALETTE_ITEMS: PaletteItem[] = SET_THEORY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
+export const NUMBER_SET_PALETTE_ITEMS: PaletteItem[] = NUMBER_SET_CONSTANTS.map(op => ({ kind: "constantSymbol" as const, op }));
 export const CRYPTOGRAPHIC_PALETTE_ITEMS: PaletteItem[] = CRYPTOGRAPHIC_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
 export const PROTOCOL_PALETTE_ITEMS: PaletteItem[]      = PROTOCOL_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
 export const NUMBER_THEORY_PALETTE_ITEMS: PaletteItem[] = NUMBER_THEORY_SYMBOLS.map(op => ({ kind: "binarySymbol" as const, op }));
 export const QUANTIFIER_PALETTE_ITEMS: PaletteItem[]    = QUANTIFIER_SYMBOLS.map(op => ({ kind: "unarySymbol" as const, op }));
+
+// ── Palette categories map ────────────────────────────────────────────────────
+// Single source of truth for valid palette categories.
+// Add a new entry here to make a category available in the DSL and docs.
+
+export const PALETTE_CATEGORIES: Record<string, PaletteItem[]> = {
+  ARITHMETIC_OPERATORS:  ARITHMETIC_PALETTE_ITEMS,
+  LOGICAL_OPERATORS:     LOGICAL_PALETTE_ITEMS,
+  COMPARISON_OPERATORS:  COMPARISON_PALETTE_ITEMS,
+  SET_THEORY_SYMBOLS:    SET_THEORY_PALETTE_ITEMS,
+  CRYPTOGRAPHIC_SYMBOLS: CRYPTOGRAPHIC_PALETTE_ITEMS,
+  PROTOCOL_SYMBOLS:      PROTOCOL_PALETTE_ITEMS,
+  NUMBER_THEORY_SYMBOLS: NUMBER_THEORY_PALETTE_ITEMS,
+  QUANTIFIER_SYMBOLS:    QUANTIFIER_PALETTE_ITEMS,
+  NUMBER_SET_CONSTANTS:  NUMBER_SET_PALETTE_ITEMS,
+};
 
 // ── Derived palette groups (backward compatibility) ───────────────────────────
 
@@ -163,7 +177,7 @@ export const SET_BINARY_SYMBOLS = SET_THEORY_SYMBOLS;
 export const ALL_OPERATOR_PALETTE_ITEMS: PaletteItem[] = ALL_OPERATORS.map(op => ({ kind: "operator", op }));
 
 // Sets palette: set-theory binary ops + all number-set constants
-export const ALL_SET_PALETTE_ITEMS: PaletteItem[] = SET_THEORY_PALETTE_ITEMS;
+export const ALL_SET_PALETTE_ITEMS: PaletteItem[] = [...SET_THEORY_PALETTE_ITEMS, ...NUMBER_SET_PALETTE_ITEMS];
 
 // Symbols palette: everything that isn't set-theory
 export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
@@ -902,22 +916,13 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
     else if (line.startsWith("palette:")) {
       if (pendingExercise.palette)
         throw new Error(`Line ${i + 1} - Palette defined multiple times`);
-      const VALID_CATEGORIES = [
-        "ARITHMETIC_OPERATORS",
-        "LOGICAL_OPERATORS",
-        "COMPARISON_OPERATORS",
-        "SET_THEORY_SYMBOLS",
-        "CRYPTOGRAPHIC_SYMBOLS",
-        "PROTOCOL_SYMBOLS",
-        "NUMBER_THEORY_SYMBOLS",
-        "QUANTIFIER_SYMBOLS",
-        "NUMBER_SET_CONSTANTS",
-      ] as const;
-      const value = line.replace("palette:", "").trim();
-      if (!VALID_CATEGORIES.includes(value as typeof VALID_CATEGORIES[number])) {
-        throw new Error(`Line ${i + 1} - Unknown palette category: '${value}'`);
+      const values = line.replace("palette:", "").split(",").map(s => s.trim());
+      for (const value of values) {
+        if (!(value in PALETTE_CATEGORIES)) {
+          throw new Error(`Line ${i + 1} - Unknown palette category: '${value}'`);
+        }
       }
-      pendingExercise.palette = value;
+      pendingExercise.palette = values;
     }
     else if (line.startsWith("prefill:")) {
       if (pendingExercise.prefill)

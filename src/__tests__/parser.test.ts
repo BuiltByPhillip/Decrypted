@@ -608,7 +608,7 @@ step:
     expect(() => parse(dsl, 0)).toThrow();
   });
 
-  it("parses a valid palette category", () => {
+  it("parses a single palette category", () => {
     const dsl = `protocol: Test
 step:
     description: Compute public key
@@ -618,7 +618,20 @@ step:
         palette: ARITHMETIC_OPERATORS
         answer: {generator} ^ {secret} mod {prime}`;
     const result = parse(dsl, 0);
-    expect(result.step[0]?.exercise?.palette).toBe("ARITHMETIC_OPERATORS");
+    expect(result.step[0]?.exercise?.palette).toEqual(["ARITHMETIC_OPERATORS"]);
+  });
+
+  it("parses multiple palette categories", () => {
+    const dsl = `protocol: Test
+step:
+    description: Compute public key
+    exercise:
+        type: construct
+        prompt: Build the expression
+        palette: ARITHMETIC_OPERATORS, LOGICAL_OPERATORS
+        answer: {generator} ^ {secret} mod {prime}`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.palette).toEqual(["ARITHMETIC_OPERATORS", "LOGICAL_OPERATORS"]);
   });
 
   it("throws on unknown palette category", () => {
