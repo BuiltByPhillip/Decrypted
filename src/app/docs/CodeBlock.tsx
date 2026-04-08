@@ -16,7 +16,7 @@ export default function CodeBlock({ children, label, preview }: { children: stri
   return (
     <div className="my-6">
       {label && (
-        <p className="text-soft-white mb-2 pl-4 text-xs font-semibold tracking-widest uppercase">{label}</p>
+        <p className="text-soft-white mb-2 pl-2 text-xs font-semibold tracking-widest uppercase">{label}</p>
       )}
       <div className="border-medium overflow-hidden rounded-xl border bg-[#0d1117]">
         <div className="border-medium flex items-center justify-between border-b px-4 py-2.5">

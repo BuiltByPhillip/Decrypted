@@ -65,7 +65,7 @@ export default function DocsSidebar() {
 
   return (
     <aside className="hidden w-64 shrink-0 lg:block">
-      <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-12 pr-6 scrollbar-hide">
+      <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pb-12 pl-6 pr-6 scrollbar-hide">
         <div className="mb-6">
           <span className="text-green font-mono text-[10px] tracking-[0.32em] uppercase">
             Documentation

@@ -41,6 +41,30 @@ function SubHeading({ id, children }: { id: string; children: React.ReactNode })
   );
 }
 
+function SubSubHeading({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <h4
+      id={id}
+      className="text-soft-white mt-7 mb-2 scroll-mt-24 text-sm font-bold tracking-tight"
+    >
+      {children}
+    </h4>
+  );
+}
+
+function DocLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const external = href.startsWith("http");
+  return (
+    <a
+      href={href}
+      className="text-green underline underline-offset-2 transition-opacity hover:opacity-80"
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {children}
+    </a>
+  );
+}
+
 function Body({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-muted mb-4 text-sm leading-7">{children}</p>
@@ -104,29 +128,47 @@ export default function DocsPage() {
             <SectionHeading id="quick-start">Quick Start</SectionHeading>
             <Body>
               To get started building exercises, follow this quick start guide,
-              as it will teach you the basics of the framework. The framework provides
-              a set amount of exercises, but it brings an infinite amount of possibilities,
-              because they allow much different behavior.
+              as it will teach you the basics of the framework. The framework
+              provides a set amount of exercises, but it brings an infinite
+              amount of possibilities, because they allow much different
+              behavior.
             </Body>
-            <SubHeading id="understanding-the-structure">Understanding the structure</SubHeading>
+            <SubHeading id="understanding-the-structure">
+              Understanding the structure
+            </SubHeading>
             <Body>
-              Exercises have to be individually inside a step. A step covers what
-              the user will see one a single page. This means that multiple steps,
-              e.g. 4 steps, will cover four separate pages. Once the user has completed all 4 steps,
-              the user will be able to submit their answers, and see the final
-              summarization page of how they did.
+              Exercises have to be individually inside a step. A step covers
+              what the user will see one a single page. This means that multiple
+              steps, e.g. 4 steps, will cover four separate pages. Once the user
+              has completed all 4 steps, the user will be able to submit their
+              answers, and see the final summarization page of how they did.
             </Body>
             <SubHeading id="getting-started">Getting Started</SubHeading>
+            <SubSubHeading id="protocol">Protocol</SubSubHeading>
             <Body>
-              To get started
+              To get started building exercises, you have to put in the protocol
+              that the exercises relate to. This is purely a title and DOES NOT
+              affect the exercises. You put the name of the protocol at the
+              start of the code.
             </Body>
-            <CodeBlock>
+            <SubSubHeading id="define">Define</SubSubHeading>
+            <Body>
+              The define block is where you declare the roles students assign symbols to before the exercises begin. It
+              is a really powerful tool and it is important you understand and use this system.
+            </Body>
+            <Body>
+              See the{" "}
+              <DocLink href="#define-block">Define Block</DocLink>{" "}
+              section for full details.
+            </Body>
+            <SubSubHeading id="step">Step</SubSubHeading>
+            <CodeBlock label="Example">
               {`protocol: Diffie-Hellman Key Exchange
 
 define:
   type: select
-  generator g \elem { g, x, a, b }
-  prime p \elem { p, q, r, s }
+  generator \\elem { g, x, a, b }
+  prime \\elem { p, q, r, s }
 
 step:
   description: Alice computes her public key.
@@ -150,17 +192,10 @@ step:
             <Body>
               If you wish to install and run this project locally, then you have
               to navigate to the{" "}
-              <a
-                href="https://github.com/BuiltByPhillip/Decrypted"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-green underline underline-offset-2 transition-opacity hover:opacity-80"
-              >
-                GitHub repository
-              </a>
+              <DocLink href="https://github.com/BuiltByPhillip/Decrypted">GitHub repository</DocLink>
               , then run:
             </Body>
-            <CodeBlock>
+            <CodeBlock label="Terminal">
               {`npm install
 npm run dev`}
             </CodeBlock>
@@ -189,7 +224,14 @@ npm run dev`}
               students can assign a symbol to a role.
             </Body>
             <Badge key={"select"} label={"Multiple Choice"} />
-            <CodeBlock>
+            <FieldList
+              required={[
+                { name: "type", description: 'Always "select" for this define type.' },
+                { name: "role \\elem { ... }", description: "Declares a role and the set of symbols the student can assign to it. Add one per line for each role." },
+              ]}
+              optional={[]}
+            />
+            <CodeBlock label="Example">
               {`type: select
 generator \\elem  {g, x, a, b}
 prime \\elem {p, n, m, q}
@@ -198,7 +240,14 @@ bob_secret \\elem  {b, t, y}`}
             </CodeBlock>
 
             <Badge key={"construct"} label={"Drag And Drop"} />
-            <CodeBlock>
+            <FieldList
+              required={[
+                { name: "type", description: 'Always "construct" for this define type.' },
+                { name: "variables", description: "A comma-separated list of role names the student will assign symbols to via drag and drop." },
+              ]}
+              optional={[]}
+            />
+            <CodeBlock label="Example">
               {`type: construct
 variables: generator, prime, alice_secret, bob_secret`}
             </CodeBlock>
@@ -221,7 +270,7 @@ variables: generator, prime, alice_secret, bob_secret`}
                 ),
               )}
             </div>
-            <CodeBlock>
+            <CodeBlock label="Example">
               {`step:
   description: Lorem ipsum description text.
   exercise:
@@ -319,7 +368,9 @@ variables: generator, prime, alice_secret, bob_secret`}
                           <div className="flex flex-wrap gap-1">
                             {PALETTE_CATEGORIES[name]!.map((item) => {
                               const op = "op" in item ? item.op : "";
-                              const display = { ...operatorSymbol, ...symbolDisplay }[op] ?? op;
+                              const display =
+                                { ...operatorSymbol, ...symbolDisplay }[op] ??
+                                op;
                               return (
                                 <span
                                   key={op}
@@ -442,7 +493,7 @@ variables: generator, prime, alice_secret, bob_secret`}
               eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
               enim ad minim veniam, quis nostrud exercitation.
             </Body>
-            <CodeBlock>
+            <CodeBlock label="Example">
               {`custom: \oplus XOR
 custom: \cat Concatenation`}
             </CodeBlock>
