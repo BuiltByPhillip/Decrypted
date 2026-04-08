@@ -58,7 +58,7 @@ export default function DocsPage() {
         {/* Main content */}
         <main className="min-w-0 flex-1 px-8 pb-24 lg:px-16">
           {/* Page header */}
-          <div className="mb-12 [animation:fade-up_0.5s_ease_forwards] opacity-0 [animation-delay:0.1s]">
+          <div className="mb-12">
             <span className="text-green mb-3 block font-mono text-[10px] tracking-[0.32em] uppercase">
               Decrypted Docs
             </span>
@@ -75,7 +75,7 @@ export default function DocsPage() {
           </div>
 
           {/* ── Introduction ── */}
-          <section className="[animation:fade-up_0.5s_ease_forwards] opacity-0 [animation-delay:0.2s]">
+          <section>
             <SectionHeading id="introduction">Introduction</SectionHeading>
             <Body>
               Decrypted is an educational framework for building interactive

@@ -44,7 +44,7 @@ export default function CodeBlock({ children, label, preview }: { children: stri
         </div>
         {tab === "code" ? (
           <div className="relative">
-            <pre className="text-muted overflow-x-auto px-5 py-4 font-mono text-[13px] leading-relaxed">
+            <pre className="text-muted overflow-auto px-5 py-4 font-mono text-[13px] leading-relaxed [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb:hover]:bg-white/20">
               <code>{children}</code>
             </pre>
             <button
