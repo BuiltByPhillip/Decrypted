@@ -103,9 +103,22 @@ export default function DocsPage() {
           <section>
             <SectionHeading id="quick-start">Quick Start</SectionHeading>
             <Body>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+              To get started building exercises, follow this quick start guide,
+              as it will teach you the basics of the framework. The framework provides
+              a set amount of exercises, but it brings an infinite amount of possibilities,
+              because they allow much different behavior.
+            </Body>
+            <SubHeading id="understanding-the-structure">Understanding the structure</SubHeading>
+            <Body>
+              Exercises have to be individually inside a step. A step covers what
+              the user will see one a single page. This means that multiple steps,
+              e.g. 4 steps, will cover four separate pages. Once the user has completed all 4 steps,
+              the user will be able to submit their answers, and see the final
+              summarization page of how they did.
+            </Body>
+            <SubHeading id="getting-started">Getting Started</SubHeading>
+            <Body>
+              To get started
             </Body>
             <CodeBlock>
               {`protocol: Diffie-Hellman Key Exchange
