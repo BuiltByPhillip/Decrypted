@@ -3,6 +3,7 @@ import DocsSidebar from "~/app/docs/DocsSidebar";
 import DocsScrollLogo from "~/app/docs/DocsScrollLogo";
 import CodeBlock from "~/app/docs/CodeBlock";
 import DslCodeBlock from "~/app/docs/DslCodeBlock";
+import DefineCodeBlock from "~/app/docs/DefineCodeBlock";
 import FieldList from "~/app/docs/FieldList";
 import { Badge } from "~/app/docs/Badge";
 import { PALETTE_CATEGORIES, operatorSymbol, symbolDisplay } from "~/app/hooks/parser";
@@ -214,32 +215,45 @@ npm run dev`}
 
             <SectionHeading id="define-block">Define Block</SectionHeading>
             <Body>
-              The define block lets you declare named roles that students assign
-              symbols to before the exercises begin. Once assigned, you can
-              reference any role anywhere in the protocol using {"{role}"}, and
-              every description, prompt, and expression will automatically
-              reflect the student's choices. This means a single exercise
-              definition can present itself differently to every student, making
-              abstract protocols feel concrete and personal. There are two ways
-              students can assign a symbol to a role.
+              The define block is where you declare the named roles that students
+              assign symbols to before the exercises begin. Once a student has made
+              their choices, you can reference any role throughout the protocol
+              using {"{role}"}, in descriptions, prompts, and expressions alike.
+              This lets a single exercise definition feel personal to each student,
+              since every occurrence of {"{role}"} is automatically replaced with
+              the symbol they picked.
             </Body>
+            <SubHeading id="how-to-use">Variants</SubHeading>
             <Badge key={"select"} label={"Multiple Choice"} />
+            <Body>
+              With the multiple choice variant, each role is paired with a fixed set
+              of symbols the student can choose from. This is the simpler of the two
+              variants and is a good default, keeping the student focused without
+              overwhelming them with options.
+            </Body>
             <FieldList
               required={[
                 { name: "type", description: 'Always "select" for this define type.' },
-                { name: "role \\elem { ... }", description: "Declares a role and the set of symbols the student can assign to it. Add one per line for each role." },
+                { name: "role \\elem { ... }", description: "Declares a role and the set of symbols the student can pick from. Add one line per role." },
               ]}
               optional={[]}
             />
-            <CodeBlock label="Example">
+            <DefineCodeBlock label="Example - Multiple Choice">
               {`type: select
 generator \\elem  {g, x, a, b}
 prime \\elem {p, n, m, q}
 alice_secret \\elem  {a, s, x}
 bob_secret \\elem  {b, t, y}`}
-            </CodeBlock>
+            </DefineCodeBlock>
 
             <Badge key={"construct"} label={"Drag And Drop"} />
+            <Body>
+              With the drag and drop variant, students build their own symbol for
+              each role using a palette of tokens, without being limited to a
+              predefined set. This gives more flexibility, but also more room for
+              error, so consider whether that freedom is appropriate for your
+              exercise before choosing this variant over multiple choice.
+            </Body>
             <FieldList
               required={[
                 { name: "type", description: 'Always "construct" for this define type.' },
@@ -247,13 +261,13 @@ bob_secret \\elem  {b, t, y}`}
               ]}
               optional={[]}
             />
-            <CodeBlock label="Example">
+            <DefineCodeBlock label="Example - Drag And Drop">
               {`type: construct
 variables: generator, prime, alice_secret, bob_secret`}
-            </CodeBlock>
+            </DefineCodeBlock>
             <Callout>
-              The language will not compile if the define block does not appear
-              before any step blocks.
+              The define block must appear before any step blocks, or the protocol
+              will fail to compile.
             </Callout>
 
             <SectionHeading id="step-block">Step Block</SectionHeading>
@@ -263,6 +277,14 @@ variables: generator, prime, alice_secret, bob_secret`}
               description, but each exercise type has a set of required and
               optional fields that needs to be included for the step to compile.
             </Body>
+            <FieldList
+              required={[
+                { name: "description", description: "The text shown at the top of the step page. Required for every step." },
+              ]}
+              optional={[
+                { name: "exercise", description: "The exercise block for this step. If omitted, the step renders as a description-only page." },
+              ]}
+            />
             <div className="mt-2 flex flex-wrap gap-2">
               {["Multiple Choice", "Drag And Drop", "Match", "Calculate"].map(
                 (type) => (
