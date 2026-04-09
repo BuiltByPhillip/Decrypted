@@ -50,7 +50,6 @@ export type LeafExpr =
   | { kind: "var"; name: string, tokenRange?: TokenRange }
   | { kind: "role"; name: string, tokenRange?: TokenRange }
   | { kind: "int"; value: number, tokenRange?: TokenRange }
-  | { kind: "placeholder"; index: number, tokenRange?: TokenRange } // Defined by user "fill in value here" ($1, $2)
   | { kind: "slot", tokenRange?: TokenRange } // Empty drop target in UI
   | { kind: "constant"; symbol: ConstantSymbol, tokenRange?: TokenRange };
 
@@ -187,7 +186,7 @@ export const ALL_SYMBOL_PALETTE_ITEMS: PaletteItem[] = [
   ...QUANTIFIER_PALETTE_ITEMS,
 ];
 
-type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "PLACEHOLDER" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
+type TokenType = "NUMBER" | "VAR" | "OPERATOR" | "LPAR" | "RPAR" | "LBRACE" | "RBRACE" | "KEYWORD" | "COMMA" | "ROLE_REF" | "EOF";
 
 export type Token = {
   type: TokenType;
@@ -213,7 +212,6 @@ export type ExerciseType = typeof EXERCISE_TYPES[number];
  *                   and multi-char keywords (`mod`, `and`, `or`)
  * - `KEYWORD`     - backslash-prefixed symbol names, e.g. `\elem`, `\forall`
  * - `ROLE_REF`    - a role name wrapped in braces, e.g. `{prime}` -> value `"prime"`
- * - `PLACEHOLDER` - a `$`-prefixed numeric slot, e.g. `$1`
  * - `LPAR`/`RPAR` - parentheses `(` `)`
  * - `LBRACE`/`RBRACE` - bare braces `{` `}` (only when not a role reference)
  * - `COMMA`       - `,`
@@ -277,18 +275,9 @@ export function tokenize(input: string): Token[] {
       }
       return inner(j, [...acc, { type: "VAR", value: str }])
     }
-    // Check for placeholders $1, $2, etc.
+    // Check for $ (placeholder syntax - not supported)
     if (input[i] === "$") {
-      let numStr: string = "$";
-      let j: number = i+1;
-      while (j < input.length && /\d/.test(input[j] ?? "")) {
-        numStr += input[j];
-        j++;
-      }
-      if (numStr === "$") {
-        throw new Error(`Expected digit after $`);
-      }
-      return inner(j, [...acc, { type: "PLACEHOLDER", value: numStr }]);
+      throw new Error(`Placeholder syntax ($1, $2, ...) is not supported`);
     }
     // CHeck for comma
     if (input[i] === ",") {
@@ -450,9 +439,6 @@ class ExpressionParser {
         }
         return { kind: "var", name: token.value, tokenRange: { start, end: this.current} }
       }
-      case "PLACEHOLDER":
-        // token.value is $1, $2, etc. - therefore we remove $
-        return { kind: "placeholder", index: Number(token.value.slice(1)), tokenRange: { start, end: this.current} }
       case "ROLE_REF":
         return { kind: "role", name: token.value, tokenRange: { start, end: this.current} };
       case "LPAR":
@@ -499,14 +485,14 @@ class ExpressionParser {
         const prec: number = this.precedence(op);
         const right: Expr = this.parseExpression(prec + 1);
         left = this.makeNode(op, left, right);
-        left.tokenRange = { start: left.left.tokenRange!.start, end: this.current };
+        left.tokenRange = { start: left.left.tokenRange?.start ?? 0, end: this.current };
         left.opTokenIndex = opTokenIndex;
       }
       else if (next.type === "KEYWORD" && (BINARY_SYMBOLS as readonly string[]).includes(next.value) && this.precedence(next.value) >= minPrecedence) {
         const opTokenIndex = this.current;
         const op = this.advance().value as BinarySymbol;
         const right: Expr = this.parseExpression(this.precedence(op) + 1);
-        left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current }, opTokenIndex };
+        left = { kind: "binary", op, left, right, tokenRange: { start: left.tokenRange?.start ?? 0, end: this.current }, opTokenIndex };
       }
       else if (next.type === "VAR") {
         const custom = this.customOperators.find(op => op.name === next.value && op.type ===
@@ -515,7 +501,7 @@ class ExpressionParser {
           const opTokenIndex = this.current;
           this.advance();
           const right = this.parseExpression(custom.precedence + 1);
-          left = { kind: "binary", op: custom.name, left, right, tokenRange: { start: left.tokenRange!.start, end: this.current }, opTokenIndex };
+          left = { kind: "binary", op: custom.name, left, right, tokenRange: { start: left.tokenRange?.start ?? 0, end: this.current }, opTokenIndex };
         } else break;
       }
       else {
@@ -652,6 +638,18 @@ function validateCode(code: Code) {
           throw new Error(
             `Role '{${item.name}}' is used but not defined in the define: block`,
           );
+        }
+      }
+    }
+
+    for (const text of [exercise.prompt, exercise.hint]) {
+      if (!text) continue;
+      const roleRefRegex = /\{(\w+)\}/g;
+      let match;
+      while ((match = roleRefRegex.exec(text)) !== null) {
+        const role = match[1]!;
+        if (!definedSet.has(role)) {
+          throw new Error(`Role '{${role}}' is used but not defined in the define: block`);
         }
       }
     }
@@ -806,6 +804,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
   let i: number = startIndex + 1;
   let definitions: Definition[] = [];
   let type: DefinitionType = DEFINITION_TYPES[0];
+  let variablesDefined = false;
 
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
@@ -824,13 +823,22 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
     } else if (line.startsWith("variables:")) {
       if (type !== "construct")
         throw new Error(`Line ${i + 1} - 'variables:' is only valid for type 'construct'`);
+      if (variablesDefined)
+        throw new Error(`Line ${i + 1} - 'variables:' is defined multiple times`);
+      variablesDefined = true;
 
-      const vArray: string[] = line.replace("variables:", "").split(",")
-      definitions.push(
-        ...vArray.map((name) => ({ type, role: name.trim(), symbols: [] })),
-      );
+      const vArray: string[] = line.replace("variables:", "").split(",").map(s => s.trim());
+      for (const name of vArray) {
+        if (definitions.some(def => def.role === name)) {
+          throw new Error(`Line ${i + 1} - Role '${name}' is defined multiple times`);
+        }
+        definitions.push({ type, role: name, symbols: [] });
+      }
       i++
     } else {
+      if (/^\w+:/.test(line)) {
+        throw new Error(`Line ${i + 1} - Unrecognized field '${line.split(":")[0]}:' in define block. Valid fields are: 'type:', 'variables:'`);
+      }
       let tokens: Token[];
       try {
         tokens = tokenize(line);
@@ -849,9 +857,10 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
         )
       );
       if (conflictingDef) {
-        const sharedSymbol = conflictingDef.symbols.find(existingSymbol =>
-          newDef.symbols.some(newSymbol => exprEquals(existingSymbol, newSymbol))
-        );
+        const sharedSymbol =
+          conflictingDef.symbols.find(existingSymbol =>
+            newDef.symbols.some(newSymbol => exprEquals(existingSymbol, newSymbol))
+          ) ?? conflictingDef.symbols[0];
         throw new Error(`Line ${i + 1} - Symbol '${exprToString(sharedSymbol!)}' in role '${newDef.role}' is already used in role '${conflictingDef.role}'`);
       }
       definitions.push(newDef);
@@ -859,7 +868,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
     }
 
   }
-  return [definitions, i++];
+  return [definitions, i];
 }
 
 function parseDefinition(tokens: Token[], type: DefinitionType, line: number): Definition {
@@ -905,6 +914,8 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
         throw new Error(`Line ${line + 1} - Cannot contain duplicate variable names`);
       }
       definition.symbols.push(expr);
+    } else if (tokens[i]?.type !== "COMMA") {
+      throw new Error(`Line ${line + 1} - Unexpected token '${tokens[i]!.value}' in symbol set`);
     }
     i++;
   }
@@ -989,7 +1000,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
         throw new Error(`Line ${i + 1} - Prompt defined multiple times`);
       pendingExercise.prompt = line.replace("prompt:", "").trim()
     }
-    else if (line.startsWith("hint")) {
+    else if (line.startsWith("hint:")) {
       if (pendingExercise.hint)
         throw new Error(`Line ${i + 1} - Hint defined multiple times`);
       pendingExercise.hint = line.replace("hint:", "").trim()

@@ -27,7 +27,6 @@ export function substituteRoles(e: Expr, definitions: SelectedDefinitions): Expr
     // Leaf nodes - return as-is
     case "var":
     case "int":
-    case "placeholder":
     case "slot":
     case "constant":
       return e;
@@ -71,8 +70,6 @@ export function exprEquals(a: Expr, b: Expr): boolean {
       return b.kind === "role" && b.name === a.name;
     case "int":
       return b.kind === "int" && b.value === a.value;
-    case "placeholder":
-      return b.kind === "placeholder" && b.index === a.index;
     case "slot":
       return a.kind === "slot" && b.kind === "slot";
     case "constant":
@@ -223,8 +220,6 @@ export function exprToString(e: Expr): string {
       return `{${e.name}}`;  // shouldn't appear after substitution
     case "int":
       return String(e.value);
-    case "placeholder":
-      return `$${e.index}`;
     case "slot":
       return "_";
     case "unary":
@@ -263,7 +258,6 @@ export function normalizeExpr(e: Expr): Expr {
     case "var":
     case "int":
     case "role":
-    case "placeholder":
     case "slot":
     case "constant":
       return e;

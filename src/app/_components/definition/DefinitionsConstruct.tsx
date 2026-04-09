@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 import type { Definition, Expr, PaletteItem } from "~/app/hooks/parser";
 import type {SelectedDefinitions} from "~/app/exercise/page";
@@ -27,8 +25,15 @@ export default function DefinitionsConstruct({ definitions, onSelect, selected, 
 
     const addDefinition = () => {
       if (!currentDefinition) return;
-      const expr = parseExpression(tokens.map(paletteItemToString).join(" "));
-      const symbol = parseConstructDefinition(expr, currentDefinition.role);
+
+      let symbol: Expr;
+      try {
+        const expr = parseExpression(tokens.map(paletteItemToString).join(" "));
+        symbol = parseConstructDefinition(expr, currentDefinition.role);
+      } catch {
+        setError("Invalid expression - make sure you've built a complete symbol.");
+        return;
+      }
 
       const conflict = Object.entries(selected).find(([, value]) => exprEquals(value, symbol));
       if (conflict) {
