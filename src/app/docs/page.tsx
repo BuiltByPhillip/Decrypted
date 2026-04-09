@@ -421,7 +421,7 @@ variables: generator, prime, alice_secret, bob_secret`}
                 {
                   name: "prefill",
                   description:
-                    "Tokens pre-loaded onto the canvas that the student cannot remove.",
+                    "Tokens pre-loaded onto the canvas that the student cannot remove. Prefill tokens must appear in the answer, and in the same left-to-right order as they do in the answer expression.",
                 },
                 {
                   name: "hint",
