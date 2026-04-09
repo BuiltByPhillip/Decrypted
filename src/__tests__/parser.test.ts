@@ -610,6 +610,10 @@ step:
 
   it("parses a single palette category", () => {
     const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    secret \\elem {x, y}
+    prime \\elem {p, q}
 step:
     description: Compute public key
     exercise:
@@ -623,6 +627,10 @@ step:
 
   it("parses multiple palette categories", () => {
     const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    secret \\elem {x, y}
+    prime \\elem {p, q}
 step:
     description: Compute public key
     exercise:
@@ -1559,5 +1567,87 @@ describe("collectRole", () => {
       new Set()
     );
     expect(result).toEqual(new Set());
+  });
+});
+
+// ─── validateCode (via parse) ─────────────────────────────────────────────────
+
+describe("validateCode", () => {
+  it("does not throw when all roles in answer are defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: {generator}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+
+  it("throws when a role in answer is not defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: {prime}`;
+    expect(() => parse(dsl)).toThrow("Role '{prime}' is used but not defined in the define: block");
+  });
+
+  it("throws when a role in options is not defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+step:
+    description: Step
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - {generator}
+            - {prime}
+        answer: {generator}`;
+    expect(() => parse(dsl)).toThrow("Role '{prime}' is used but not defined in the define: block");
+  });
+
+  it("does not throw when no roles are used and define block is absent", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: x + y`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+
+  it("throws when a role is used but define block is entirely absent", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: {prime}`;
+    expect(() => parse(dsl)).toThrow("Role '{prime}' is used but not defined in the define: block");
+  });
+
+  it("does not throw when multiple roles are all defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    prime \\elem {p, q}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build it
+        answer: {generator} + {prime}`;
+    expect(() => parse(dsl)).not.toThrow();
   });
 });

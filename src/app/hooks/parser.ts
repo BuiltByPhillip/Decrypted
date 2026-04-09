@@ -616,11 +616,72 @@ export function parse(input: string, startIndex: number = 0): Code {
   return code;
 }
 
+/**
+ * Validates a fully parsed `Code` object for semantic correctness.
+ *
+ * Checks that every role reference used in exercises is defined in the
+ * `define:` block. Throws if any role is used but not defined.
+ *
+ * Currently validates:
+ * - `answer` expressions in all exercises
+ * - `options` expressions in select exercises
+ * - `prefill` palette items in construct exercises
+ *
+ * @param code - The parsed `Code` object to validate.
+ * @throws If a role reference is used that has no corresponding definition.
+ */
 function validateCode(code: Code) {
-  const definitionUsed: boolean = code.information.definition.length > 0;
+  const definedSet: Set<string> = new Set(code.information.definition.map((def: Definition) => (def.role)))
+
+  for (const step of code.step) {
+    const exercise = step.exercise
+    // Check if step only contains a description and no exercise
+    if (!exercise) continue;
+
+    if (exercise.answer) {
+      containsRoles(exercise.answer, definedSet)
+    }
+
+    if (exercise.options) {
+      containsRoles(exercise.options, definedSet)
+    }
+
+    if (exercise.prefill) {
+      for (const item of exercise.prefill) {
+        if (item.kind === "role" && !definedSet.has(item.name)) {
+          throw new Error(
+            `Role '{${item.name}}' is used but not defined in the define: block`,
+          );
+        }
+      }
+    }
+  }
 
   // TODO Validate that define does not have duplicated variables, both the role and the value
-  // TODO Run over every exercise's answer, options, and prefill fields, to make sure that no roles are used that don't exist.
+}
+
+/**
+ * Checks a list of expressions for role references not present in `definedSet`.
+ *
+ * Uses `collectRole` to walk each expression tree and throws if any role name
+ * found is not in the set of defined roles.
+ *
+ * @param exprList - The list of expressions to check.
+ * @param definedSet - The set of valid role names from the `define:` block.
+ * @throws If any expression contains a role not in `definedSet`.
+ */
+function containsRoles(exprList: Expr[], definedSet: Set<string>) {
+  for (const expr of exprList) {
+    const roles = collectRole(expr, new Set<string>());
+
+    for (const role of roles) {
+      if (!definedSet.has(role)) {
+        throw new Error(
+          `Role '{${role}}' is used but not defined in the define: block`,
+        );
+      }
+    }
+  }
 }
 
 /**
