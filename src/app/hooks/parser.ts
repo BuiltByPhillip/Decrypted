@@ -1,4 +1,4 @@
-import { exprListContains, COMMUTATIVE_OPS, tokenToPaletteItem } from "~/app/hooks/expr";
+import { exprListContains, COMMUTATIVE_OPS, tokenToPaletteItem, exprEquals, exprToString } from "~/app/hooks/expr";
 
 export type Code = {
   information: Information;
@@ -656,8 +656,6 @@ function validateCode(code: Code) {
       }
     }
   }
-
-  // TODO Validate that define does not have duplicated variables, both the role and the value
 }
 
 /**
@@ -843,6 +841,18 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       // Check that definition doesn't already exist
       if (definitions.some(def => def.role === newDef.role)) {
         throw new Error(`Line ${i + 1} - Role '${newDef.role}' is defined multiple times`);
+      }
+      // Check that definition doesn't contain same possible values
+      const conflictingDef = definitions.find(def =>
+        def.symbols.some(existingSymbol =>
+          newDef.symbols.some(newSymbol => exprEquals(existingSymbol, newSymbol))
+        )
+      );
+      if (conflictingDef) {
+        const sharedSymbol = conflictingDef.symbols.find(existingSymbol =>
+          newDef.symbols.some(newSymbol => exprEquals(existingSymbol, newSymbol))
+        );
+        throw new Error(`Line ${i + 1} - Symbol '${exprToString(sharedSymbol!)}' in role '${newDef.role}' is already used in role '${conflictingDef.role}'`);
       }
       definitions.push(newDef);
       i++;

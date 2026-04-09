@@ -2,7 +2,7 @@ const SHELL = (exercise: string) => `
 protocol: Diffie-Hellman
 define:
   type: select
-  generator \\elem {g, x, a, b}
+  generator \\elem {g, h, k}
   prime \\elem {p, n, m, q}
   alice_secret \\elem {a, s, x}
   bob_secret \\elem {b, t, y}

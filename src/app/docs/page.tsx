@@ -240,7 +240,7 @@ npm run dev`}
             />
             <DefineCodeBlock label="Example - Multiple Choice">
               {`type: select
-generator \\elem  {g, x, a, b}
+generator \\elem  {g, h, k}
 prime \\elem {p, n, m, q}
 alice_secret \\elem  {a, s, x}
 bob_secret \\elem  {b, t, y}`}
@@ -268,6 +268,15 @@ variables: generator, prime, alice_secret, bob_secret`}
             <Callout>
               The define block must appear before any step blocks, or the protocol
               will fail to compile.
+            </Callout>
+            <Callout>
+              Each symbol must belong to exactly one role. A symbol that appears
+              in two different role definitions will cause a compile error. For
+              example, if {`generator`} already contains {`g`}, no other role may
+              also list {`g`} as a possible value. This applies to both the select
+              and construct variants - in construct exercises, students will be
+              prevented from assigning a symbol that is already assigned to
+              another role.
             </Callout>
 
             <SectionHeading id="step-block">Step Block</SectionHeading>
