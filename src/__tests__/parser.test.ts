@@ -1671,3 +1671,40 @@ define:
     expect(() => parse(dsl)).not.toThrow();
   });
 });
+
+// ─── duplicate symbols across roles ──────────────────────────────────────────
+
+describe("duplicate symbols across roles", () => {
+  it("throws when the same symbol appears in two different roles", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    prime \\elem {p, a}`;
+    expect(() => parse(dsl)).toThrow();
+  });
+
+  it("does not throw when all symbols are unique across roles", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    prime \\elem {p, q}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+
+  it("treats uppercase and lowercase as distinct symbols", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    prime \\elem {G, A, B}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+
+  it("throws when a symbol is shared across three roles", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a}
+    prime \\elem {p, q}
+    secret \\elem {s, a}`;
+    expect(() => parse(dsl)).toThrow();
+  });
+});
