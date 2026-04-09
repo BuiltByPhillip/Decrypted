@@ -1708,3 +1708,78 @@ define:
     expect(() => parse(dsl)).toThrow();
   });
 });
+
+// ─── variables: field validation ─────────────────────────────────────────────
+
+describe("variables: field validation", () => {
+  it("throws when variables: is defined twice", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime
+    variables: secret`;
+    expect(() => parse(dsl)).toThrow("'variables:' is defined multiple times");
+  });
+
+  it("throws when the same role appears twice in variables:", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, generator`;
+    expect(() => parse(dsl)).toThrow("Role 'generator' is defined multiple times");
+  });
+
+  it("does not throw when all role names in variables: are unique", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    variables: generator, prime, secret`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+});
+
+// ─── role validation in prompt and hint ──────────────────────────────────────
+
+describe("role validation in prompt and hint", () => {
+  it("throws when an undefined role is used in a prompt", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, h, k}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build {prime} something
+        answer: {generator}`;
+    expect(() => parse(dsl)).toThrow("Role '{prime}' is used but not defined in the define: block");
+  });
+
+  it("throws when an undefined role is used in a hint", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, h, k}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Build something
+        hint: Think about {prime}
+        answer: {generator}`;
+    expect(() => parse(dsl)).toThrow("Role '{prime}' is used but not defined in the define: block");
+  });
+
+  it("does not throw when all roles in prompt and hint are defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, h, k}
+    prime \\elem {p, q}
+step:
+    description: Step
+    exercise:
+        type: construct
+        prompt: Use {generator} and {prime}
+        hint: Remember {prime}
+        answer: {generator}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+});
