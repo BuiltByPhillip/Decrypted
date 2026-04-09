@@ -839,8 +839,12 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       } catch (e) {
         throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
       }
-      const def: Definition = parseDefinition(tokens, type, i);
-      definitions.push(def);
+      const newDef: Definition = parseDefinition(tokens, type, i);
+      // Check that definition doesn't already exist
+      if (definitions.some(def => def.role === newDef.role)) {
+        throw new Error(`Line ${i + 1} - Role '${newDef.role}' is defined multiple times`);
+      }
+      definitions.push(newDef);
       i++;
     }
 

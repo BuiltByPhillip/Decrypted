@@ -1651,3 +1651,23 @@ step:
     expect(() => parse(dsl)).not.toThrow();
   });
 });
+
+// ─── duplicate role definitions ───────────────────────────────────────────────
+
+describe("duplicate role definitions", () => {
+  it("throws when the same role is defined twice", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    generator \\elem {x, y}`;
+    expect(() => parse(dsl)).toThrow();
+  });
+
+  it("does not throw when two different roles are defined", () => {
+    const dsl = `protocol: Test
+define:
+    generator \\elem {g, a, b}
+    prime \\elem {p, q}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+});
