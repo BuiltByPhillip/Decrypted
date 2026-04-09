@@ -1247,7 +1247,7 @@ step:
 // ─── prefill parsing ──────────────────────────────────────────────────────────
 
 describe("prefill parsing", () => {
-  const base = (prefill: string) => `protocol: Test
+  const base = (prefill: string, answer = "{generator} ^ {secret} mod {prime}") => `protocol: Test
 define:
     generator \\elem {g, x}
     prime \\elem {p, q}
@@ -1257,11 +1257,11 @@ step:
     exercise:
         type: construct
         prompt: Build the expression
-        answer: {generator} ^ {secret} mod {prime}
+        answer: ${answer}
         prefill: ${prefill}`;
 
   it("parses a simple variable prefill", () => {
-    const result = parse(base("g"), 0);
+    const result = parse(base("g", "g ^ {secret} mod {prime}"), 0);
     expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "var", name: "g" });
   });
 
@@ -1271,7 +1271,7 @@ step:
   });
 
   it("parses a number prefill", () => {
-    const result = parse(base("42"), 0);
+    const result = parse(base("42", "{generator} + 42"), 0);
     expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "int", value: 42 });
   });
 
@@ -1281,7 +1281,7 @@ step:
   });
 
   it("parses multiple tokens in a prefill", () => {
-    const result = parse(base("g ^ a"), 0);
+    const result = parse(base("g ^ a", "g ^ a mod {prime}"), 0);
     const prefill = result.step[0]?.exercise?.prefill!;
     expect(prefill).toContainEqual({ kind: "var", name: "g" });
     expect(prefill).toContainEqual({ kind: "operator", op: "^" });
@@ -1296,12 +1296,13 @@ step:
   });
 
   it("parses a keyword symbol in prefill", () => {
-    const result = parse(base("\\elem"), 0);
+    const result = parse(base("\\elem", "{generator} \\elem {prime}"), 0);
     expect(result.step[0]?.exercise?.prefill).toContainEqual({ kind: "binarySymbol", op: "elem" });
   });
 
   it("parses parentheses in prefill", () => {
-    const result = parse(base("( g )"), 0);
+    // LPAR/RPAR are structural and always valid - validation skips them
+    const result = parse(base("( g )", "g ^ {secret}"), 0);
     const prefill = result.step[0]?.exercise?.prefill!;
     expect(prefill).toContainEqual({ kind: "LPAR" });
     expect(prefill).toContainEqual({ kind: "RPAR" });
@@ -1342,6 +1343,26 @@ step:
 
   it("throws for an unknown keyword in prefill", () => {
     expect(() => parse(base("\\unknown"), 0)).toThrow();
+  });
+
+  it("throws when prefill token does not appear in the answer", () => {
+    // 'z' is a var not present in the default answer expression
+    expect(() => parse(base("z"), 0)).toThrow(/does not appear in the answer/i);
+  });
+
+  it("throws when prefill operator appears more times than in answer", () => {
+    // answer has one 'mod'; prefill has two - second 'mod' has no remaining position in the answer
+    expect(() => parse(base("mod mod"), 0)).toThrow();
+  });
+
+  it("throws when prefill tokens are in the wrong order relative to the answer", () => {
+    // answer is {generator} ^ {secret} mod {prime}: 'mod' comes after '{generator}'
+    expect(() => parse(base("mod {generator}"), 0)).toThrow(/out of order/i);
+  });
+
+  it("allows non-contiguous prefill tokens that appear in the correct order", () => {
+    // {generator} and {prime} are both in the answer and {generator} comes before {prime}
+    expect(() => parse(base("{generator} {prime}"), 0)).not.toThrow();
   });
 
   it("error message includes line number for invalid prefill token", () => {
@@ -1729,6 +1750,22 @@ define:
     variables: generator, prime, secret`;
     expect(() => parse(dsl)).not.toThrow();
   });
+
+  it("throws when \\elem syntax is used in a construct block", () => {
+    const dsl = `protocol: Test
+define:
+    type: construct
+    generator \\elem {g, a, b}`;
+    expect(() => parse(dsl)).toThrow("Use 'variables:' to declare roles for type 'construct'");
+  });
+
+  it("does not throw when \\elem syntax is used in a select block", () => {
+    const dsl = `protocol: Test
+define:
+    type: select
+    generator \\elem {g, a, b}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
 });
 
 // ─── role validation in prompt and hint ──────────────────────────────────────
@@ -1773,6 +1810,54 @@ step:
         prompt: Use {generator} and {prime}
         hint: Remember {prime}
         answer: {generator}`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+});
+
+// ─── select answer must match an option ──────────────────────────────────────
+
+describe("select answer must match an option", () => {
+  it("throws when the answer does not match any option", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - 1
+            - 7
+        answer: a`;
+    expect(() => parse(dsl)).toThrow("Answer must match one of the options in a select exercise");
+  });
+
+  it("does not throw when the answer matches an option", () => {
+    const dsl = `protocol: Test
+step:
+    description: Step
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - 1
+            - 7
+        answer: 7`;
+    expect(() => parse(dsl)).not.toThrow();
+  });
+
+  it("does not throw when the answer matches an option containing a role", () => {
+    const dsl = `protocol: Test
+define:
+    prime \\elem {p, q}
+step:
+    description: Step
+    exercise:
+        type: select
+        prompt: Pick one
+        options:
+            - 1
+            - {prime}-1
+        answer: {prime}-1`;
     expect(() => parse(dsl)).not.toThrow();
   });
 });

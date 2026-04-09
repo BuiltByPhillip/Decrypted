@@ -1,4 +1,11 @@
-import { exprListContains, COMMUTATIVE_OPS, tokenToPaletteItem, exprEquals, exprToString } from "~/app/hooks/expr";
+import {
+  exprListContains,
+  COMMUTATIVE_OPS,
+  tokenToPaletteItem,
+  exprEquals,
+  exprToString,
+  paletteItemToString,
+} from "~/app/hooks/expr";
 
 export type Code = {
   information: Information;
@@ -653,6 +660,7 @@ function validateCode(code: Code) {
         }
       }
     }
+
   }
 }
 
@@ -839,6 +847,9 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
       if (/^\w+:/.test(line)) {
         throw new Error(`Line ${i + 1} - Unrecognized field '${line.split(":")[0]}:' in define block. Valid fields are: 'type:', 'variables:'`);
       }
+      if (type === "construct") {
+        throw new Error(`Line ${i + 1} - Use 'variables:' to declare roles for type 'construct', not '\\elem' syntax`);
+      }
       let tokens: Token[];
       try {
         tokens = tokenize(line);
@@ -914,6 +925,8 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
         throw new Error(`Line ${line + 1} - Cannot contain duplicate variable names`);
       }
       definition.symbols.push(expr);
+    } else if (tokens[i]?.type === "EOF") {
+      throw new Error(`Line ${line + 1} - Expected closing '}' for symbol set`);
     } else if (tokens[i]?.type !== "COMMA") {
       throw new Error(`Line ${line + 1} - Unexpected token '${tokens[i]!.value}' in symbol set`);
     }
@@ -974,6 +987,8 @@ function stepParse(lines: string[], startIndex: number, customOperators: CustomO
 function exerciseParse(lines: string[], startIndex: number, customOperators: CustomOperator[] = []): [Exercise, number] {
   let i: number = startIndex;
   let pendingExercise: Partial<Exercise> = {};
+  let answerLine: number = startIndex;
+  let prefillLine: number = startIndex;
 
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
@@ -1023,13 +1038,13 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       if (options.length == 0) {
         throw new Error(`Line ${i + 1} - No options for exercise type select`);
       }
-      pendingExercise.options = options.map(opt => {
+      pendingExercise.options = options.map((opt, j) => {
         try {
           const tokens = tokenize(opt);
           const parser = new ExpressionParser(tokens, customOperators);
           return parser.parse();
         } catch (e) {
-          throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
+          throw new Error(`Line ${i + j + 2} - ${(e as Error).message}`);
         }
       });
       i = nextI
@@ -1055,6 +1070,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
         pendingExercise.prefill = tokens
           .filter((t) => t.type !== "EOF")
           .map((item: Token): PaletteItem => tokenToPaletteItem(item));
+        prefillLine = i;
       }
       catch (e) {
         throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
@@ -1068,6 +1084,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
         const tokens = tokenize(answerText)
         const parser = new ExpressionParser(tokens, customOperators)
         pendingExercise.answer = [parser.parse()]
+        answerLine = i;
       } catch (e) {
         throw new Error(`Line ${i + 1} - ${(e as Error).message}`);
       }
@@ -1077,7 +1094,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
     }
     i++
   }
-  return [finalizeExercise(pendingExercise, startIndex), i]
+  return [finalizeExercise(pendingExercise, startIndex, answerLine, prefillLine), i]
 }
 
 /**
@@ -1138,7 +1155,16 @@ function optionsParse(lines: string[], startIndex: number): [string[], number] {
   return [options, i]
 }
 
-function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
+// Maps operator token values (as produced by the tokenizer) to internal op names
+// (as stored in the expression tree). Arithmetic operators use different symbols
+// as tokens ("^") vs internal names ("pow"); keyword-based operators match directly.
+const OPERATOR_TOKEN_TO_INTERNAL: Record<string, string> = {
+  "^": "pow", "mod": "mod", "and": "and", "or": "or",
+  "*": "mul", "/": "div", "+": "add", "-": "sub",
+  "<": "less", ">": "greater", "=": "equal",
+};
+
+function finalizeExercise(fields: Partial<Exercise>, line: number, answerLine: number, prefillLine: number): Exercise {
   if (!fields.type) {
     throw new Error(`Line ${line + 1} - Exercise type must be specified`)
   }
@@ -1156,6 +1182,54 @@ function finalizeExercise(fields: Partial<Exercise>, line: number): Exercise {
   }
   if (fields.type === "select" && !fields.options) {
     throw new Error(`Line ${line + 1}${typeLabel} - Exercise must have options`)
+  }
+  if (fields.type === "select" && fields.answer && fields.options) {
+    const answer = fields.answer[0];
+    if (answer && !fields.options.some(opt => exprEquals(opt, answer))) {
+      throw new Error(`Line ${answerLine + 1} - Answer must match one of the options in a select exercise`);
+    }
+  }
+  if (fields.type === "construct" && fields.answer && fields.prefill) {
+    const answer = fields.answer[0];
+    if (!answer) throw new Error(`Line ${line + 1} - Construct exercise must have an answer`);
+    // Collect answer tokens in left-to-right order via in-order tree traversal
+    const answerTokens: string[] = [];
+    const walkExpr = (e: Expr): void => {
+      switch (e.kind) {
+        case "var":    answerTokens.push(`var:${e.name}`); break;
+        case "role":   answerTokens.push(`role:${e.name}`); break;
+        case "int":    answerTokens.push(`int:${e.value}`); break;
+        case "binary": walkExpr(e.left); if (e.op) answerTokens.push(`op:${e.op}`); walkExpr(e.right); break;
+        case "unary":  if (e.op) answerTokens.push(`unary:${e.op}`); walkExpr(e.operand); break;
+      }
+    };
+    walkExpr(answer);
+
+    // Prefill must be a subsequence of the answer tokens (same relative order)
+    let pos = 0;
+    for (const item of fields.prefill) {
+      let key: string | null;
+      switch (item.kind) {
+        case "var":          key = `var:${item.name}`; break;
+        case "role":         key = `role:${item.name}`; break;
+        case "int":          key = `int:${item.value}`; break;
+        case "operator":     key = `op:${OPERATOR_TOKEN_TO_INTERNAL[item.op] ?? item.op}`; break;
+        case "binarySymbol": key = `op:${item.op}`; break;
+        case "unarySymbol":  key = `unary:${item.op}`; break;
+        case "LPAR": case "RPAR": key = null; break;
+        default:             key = null;
+      }
+      if (key === null) continue; // LPAR/RPAR are structural - always valid
+      const idx = answerTokens.indexOf(key, pos);
+      if (idx === -1) {
+        const displayStr = paletteItemToString(item);
+        if (answerTokens.includes(key)) {
+          throw new Error(`Line ${prefillLine + 1} - Prefill token '${displayStr}' is out of order - prefill tokens must appear in the same order as in the answer`);
+        }
+        throw new Error(`Line ${prefillLine + 1} - Prefill token '${displayStr}' does not appear in the answer`);
+      }
+      pos = idx + 1;
+    }
   }
 
   return fields as Exercise
