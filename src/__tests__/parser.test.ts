@@ -49,9 +49,8 @@ describe("tokenize", () => {
     expect(tokenize("{generator}")[0]).toEqual({ type: "ROLE_REF", value: "generator" });
   });
 
-  it("tokenizes placeholders", () => {
-    expect(tokenize("$1")[0]).toEqual({ type: "PLACEHOLDER", value: "$1" });
-    expect(tokenize("$42")[0]).toEqual({ type: "PLACEHOLDER", value: "$42" });
+  it("throws on placeholder syntax", () => {
+    expect(() => tokenize("$1")).toThrow("Placeholder syntax ($1, $2, ...) is not supported");
   });
 
   it("skips whitespace", () => {
@@ -157,9 +156,7 @@ describe("parseExpression", () => {
     expect(parseExpression("{generator}")).toMatchObject({ kind: "role", name: "generator" });
   });
 
-  it("parses a placeholder", () => {
-    expect(parseExpression("$1")).toMatchObject({ kind: "placeholder", index: 1 });
-  });
+
 
   // --- Constants ---
 
@@ -1497,10 +1494,6 @@ describe("collectRole", () => {
     expect(result).toEqual(new Set());
   });
 
-  it("returns empty set for a placeholder leaf", () => {
-    const result = collectRole({ kind: "placeholder", index: 1 }, new Set());
-    expect(result).toEqual(new Set());
-  });
 
   it("collects a single role name", () => {
     const result = collectRole({ kind: "role", name: "prime" }, new Set());

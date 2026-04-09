@@ -49,13 +49,6 @@ describe("exprEquals", () => {
     expect(exprEquals({ kind: "role", name: "alice" }, { kind: "role", name: "bob" })).toBe(false);
   });
 
-  it("identical placeholders are equal", () => {
-    expect(exprEquals({ kind: "placeholder", index: 1 }, { kind: "placeholder", index: 1 })).toBe(true);
-  });
-
-  it("different placeholders are not equal", () => {
-    expect(exprEquals({ kind: "placeholder", index: 1 }, { kind: "placeholder", index: 2 })).toBe(false);
-  });
 
   it("two slots are equal", () => {
     expect(exprEquals({ kind: "slot" }, { kind: "slot" })).toBe(true);
@@ -201,9 +194,7 @@ describe("exprToString", () => {
     expect(exprToString({ kind: "role", name: "generator" })).toBe("{generator}");
   });
 
-  it("placeholder", () => {
-    expect(exprToString({ kind: "placeholder", index: 3 })).toBe("$3");
-  });
+
 
   it("slot", () => {
     expect(exprToString({ kind: "slot" })).toBe("_");
@@ -1078,9 +1069,6 @@ describe("tokenToPaletteItem", () => {
     expect(() => tokenToPaletteItem({ type: "COMMA", value: "," })).toThrow();
   });
 
-  it("throws for a PLACEHOLDER token", () => {
-    expect(() => tokenToPaletteItem({ type: "PLACEHOLDER", value: "$1" })).toThrow();
-  });
 
   it("throws for an EOF token", () => {
     expect(() => tokenToPaletteItem({ type: "EOF", value: "" })).toThrow();
