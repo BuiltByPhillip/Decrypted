@@ -2,11 +2,29 @@
 
 import { darkTheme } from "~/app/codeMirrorTheme";
 import CodeMirror from "@uiw/react-codemirror";
+import { keymap } from "@codemirror/view";
+import { Prec } from "@codemirror/state";
 
 interface Props {
   code: string;
   onChange: (value: string) => void;
 }
+
+const autoIndentAfterColon = Prec.highest(keymap.of([{
+  key: "Enter",
+  run: (view) => {
+    const { state } = view;
+    const { from } = state.selection.main;
+    const line = state.doc.lineAt(from);
+    const indent = line.text.match(/^(\s*)/)?.[1] ?? "";
+
+    if (line.text.trimEnd().endsWith(":")) {
+      view.dispatch(state.replaceSelection("\n" + indent + "    "));
+      return true;
+    }
+    return false;
+  }
+}]));
 
 export default function CodeWindow({ code, onChange }: Props) {
   return (
@@ -22,7 +40,7 @@ export default function CodeWindow({ code, onChange }: Props) {
         value={code}
         onChange={onChange}
         theme="none"
-        extensions={[darkTheme]}
+        extensions={[darkTheme, autoIndentAfterColon]}
         placeholder="Enter your code here..."
         className="h-full"
       />
