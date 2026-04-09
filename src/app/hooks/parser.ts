@@ -611,8 +611,44 @@ export function parse(input: string, startIndex: number = 0): Code {
     }
     i++
   }
+  validateCode(code)
 
   return code;
+}
+
+function validateCode(code: Code) {
+  const definitionUsed: boolean = code.information.definition.length > 0;
+
+  // TODO Validate that define does not have duplicated variables, both the role and the value
+  // TODO Run over every exercise's answer, options, and prefill fields, to make sure that no roles are used that don't exist.
+}
+
+/**
+ * Recursively collects all role names used within an expression tree.
+ *
+ * Walks the full tree and accumulates any `{ kind: "role" }` node names into
+ * the provided set. All other leaf types (var, int, placeholder, slot, constant)
+ * are ignored as they contain no role references.
+ *
+ * @param expr - The expression tree to walk.
+ * @param acc - Accumulated set of role names found so far.
+ * @returns A new set containing all role names from `acc` plus any found in `expr`.
+ *
+ */
+export function collectRole(expr: Expr, acc: Set<string>): Set<string> {
+  switch (expr.kind) {
+    // Base case
+    case "role":
+      return new Set([...acc, expr.name])
+
+    // Recursive cases
+    case "unary":
+      return collectRole(expr.operand, acc)
+    case "binary":
+      return collectRole(expr.right, collectRole(expr.left, acc));
+    default:
+      return acc
+  }
 }
 
 function customParse(lines: string[], startIndex: number): [CustomOperator[], number] {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, parseExpression, parse } from "../app/hooks/parser";
+import { tokenize, parseExpression, parse, collectRole } from "../app/hooks/parser";
 
 // ─── tokenize ────────────────────────────────────────────────────────────────
 
@@ -1473,5 +1473,91 @@ step:
     expect(result.step).toHaveLength(2);
     expect(result.step[0]?.exercise).toBeUndefined();
     expect(result.step[1]?.exercise).toBeDefined();
+  });
+});
+
+// ─── collectRole ─────────────────────────────────────────────────────────────
+
+describe("collectRole", () => {
+  it("returns empty set for a var leaf", () => {
+    const result = collectRole({ kind: "var", name: "x" }, new Set());
+    expect(result).toEqual(new Set());
+  });
+
+  it("returns empty set for an int leaf", () => {
+    const result = collectRole({ kind: "int", value: 42 }, new Set());
+    expect(result).toEqual(new Set());
+  });
+
+  it("returns empty set for a placeholder leaf", () => {
+    const result = collectRole({ kind: "placeholder", index: 1 }, new Set());
+    expect(result).toEqual(new Set());
+  });
+
+  it("collects a single role name", () => {
+    const result = collectRole({ kind: "role", name: "prime" }, new Set());
+    expect(result).toEqual(new Set(["prime"]));
+  });
+
+  it("preserves existing entries in acc", () => {
+    const result = collectRole({ kind: "role", name: "prime" }, new Set(["generator"]));
+    expect(result).toEqual(new Set(["generator", "prime"]));
+  });
+
+  it("does not add duplicates for the same role name", () => {
+    const result = collectRole({ kind: "role", name: "prime" }, new Set(["prime"]));
+    expect(result).toEqual(new Set(["prime"]));
+  });
+
+  it("collects role from a unary expression", () => {
+    const result = collectRole(
+      { kind: "unary", op: "forall", operand: { kind: "role", name: "prime" } },
+      new Set()
+    );
+    expect(result).toEqual(new Set(["prime"]));
+  });
+
+  it("collects roles from both sides of a binary expression", () => {
+    const result = collectRole(
+      {
+        kind: "binary",
+        op: "add",
+        left: { kind: "role", name: "generator" },
+        right: { kind: "role", name: "prime" },
+      },
+      new Set()
+    );
+    expect(result).toEqual(new Set(["generator", "prime"]));
+  });
+
+  it("collects roles from a deeply nested expression", () => {
+    const result = collectRole(
+      {
+        kind: "binary",
+        op: "add",
+        left: {
+          kind: "binary",
+          op: "mul",
+          left: { kind: "role", name: "generator" },
+          right: { kind: "var", name: "x" },
+        },
+        right: { kind: "role", name: "prime" },
+      },
+      new Set()
+    );
+    expect(result).toEqual(new Set(["generator", "prime"]));
+  });
+
+  it("returns empty set when no roles exist anywhere in the tree", () => {
+    const result = collectRole(
+      {
+        kind: "binary",
+        op: "add",
+        left: { kind: "var", name: "a" },
+        right: { kind: "int", value: 1 },
+      },
+      new Set()
+    );
+    expect(result).toEqual(new Set());
   });
 });
