@@ -3,6 +3,7 @@ import HeroButtons from "~/app/_components/landing/HeroButtons";
 import ScrollCue from "~/app/_components/landing/ScrollCue";
 import FeatureCards from "~/app/_components/landing/FeatureCards";
 import CTAButton from "~/app/_components/landing/CTAButton";
+import ButtonLink from "~/components/ButtonLink";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,10 @@ export default function LandingPage() {
     >
       {/* ── Hero ── */}
       <section className="bg-pattern relative flex min-h-screen flex-col items-center justify-center rounded-b-3xl">
+        <div className="absolute top-6 right-8 z-20 flex items-center gap-3">
+          <ButtonLink variant="submit" size="sm" className="rounded-xl" href="/login">Log in</ButtonLink>
+          <ButtonLink variant="outline" size="sm" className="rounded-xl" href="/register">Create account</ButtonLink>
+        </div>
         {/* ambient glow */}
         <div
           aria-hidden="true"
