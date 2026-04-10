@@ -1,5 +1,4 @@
 import ButtonLink from "~/components/ButtonLink";
-import LogoutButton from "./LogoutButton";
 
 type User = {
   email: string;
@@ -34,7 +33,6 @@ export default function ProfileSection({ user }: { user: User }) {
         >
           Go to editor
         </ButtonLink>
-        <LogoutButton />
       </div>
     </div>
   );

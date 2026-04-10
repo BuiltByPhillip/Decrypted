@@ -9,8 +9,13 @@ const tabs = [
 ];
 
 export default function AccountSidebar({ activeTab }: { activeTab: string }) {
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/";
+  };
+
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-1 h-full">
       {tabs.map((tab) => (
         <Link
           key={tab.id}
@@ -26,6 +31,15 @@ export default function AccountSidebar({ activeTab }: { activeTab: string }) {
           {tab.label}
         </Link>
       ))}
+
+      <div className="mt-auto pt-4 border-t border-medium/40">
+        <button
+          onClick={handleLogout}
+          className="w-full rounded-lg px-3 py-2 font-mono text-xs text-muted transition-colors duration-150 hover:bg-danger/10 hover:text-danger text-left cursor-pointer"
+        >
+          Log out
+        </button>
+      </div>
     </nav>
   );
 }
