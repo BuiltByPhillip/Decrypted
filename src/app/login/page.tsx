@@ -1,5 +1,5 @@
-import Button from "~/components/Button";
 import ButtonLink from "~/components/ButtonLink";
+import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
   return (
@@ -18,6 +18,7 @@ export default function LoginPage() {
           <span aria-hidden="true" className="absolute -top-3 -right-3 h-6 w-6 rounded-tr border-t border-r border-green/40" />
           <span aria-hidden="true" className="absolute -bottom-3 -left-3 h-6 w-6 rounded-bl border-b border-l border-green/40" />
           <span aria-hidden="true" className="absolute -right-3 -bottom-3 h-6 w-6 rounded-br border-b border-r border-green/40" />
+
           {/* Eyebrow */}
           <p className="mb-6 font-mono text-[10px] tracking-[0.32em] text-green uppercase">
             // secure access
@@ -31,34 +32,7 @@ export default function LoginPage() {
             Authenticate to continue
           </p>
 
-          {/* Form */}
-          <form className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-lg border border-medium/60 bg-dark/60 px-4 py-2.5 font-mono text-sm text-soft-white placeholder:text-muted/40 transition duration-200 focus:border-green/60 focus:ring-1 focus:ring-green/20 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-medium/60 bg-dark/60 px-4 py-2.5 font-mono text-sm text-soft-white placeholder:text-muted/40 transition duration-200 focus:border-green/60 focus:ring-1 focus:ring-green/20 focus:outline-none"
-              />
-            </div>
-
-            <Button variant="submit" size="md" className="mt-2 w-full rounded-xl font-mono tracking-wider">
-              Access system
-            </Button>
-          </form>
+          <LoginForm />
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">

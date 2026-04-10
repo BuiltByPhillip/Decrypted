@@ -1,5 +1,5 @@
-import Button from "~/components/Button";
 import ButtonLink from "~/components/ButtonLink";
+import RegisterForm from "./RegisterForm";
 
 export default function RegisterPage() {
   return (
@@ -32,45 +32,7 @@ export default function RegisterPage() {
             Register to get started
           </p>
 
-          {/* Form */}
-          <form className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-lg border border-medium/60 bg-dark/60 px-4 py-2.5 font-mono text-sm text-soft-white placeholder:text-muted/40 transition duration-200 focus:border-green/60 focus:ring-1 focus:ring-green/20 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-medium/60 bg-dark/60 px-4 py-2.5 font-mono text-sm text-soft-white placeholder:text-muted/40 transition duration-200 focus:border-green/60 focus:ring-1 focus:ring-green/20 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="font-mono text-[10px] tracking-[0.2em] text-muted uppercase">
-                Confirm password
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-medium/60 bg-dark/60 px-4 py-2.5 font-mono text-sm text-soft-white placeholder:text-muted/40 transition duration-200 focus:border-green/60 focus:ring-1 focus:ring-green/20 focus:outline-none"
-              />
-            </div>
-
-            <Button variant="submit" size="md" className="mt-2 w-full rounded-xl font-mono tracking-wider">
-              Create account
-            </Button>
-          </form>
+          <RegisterForm />
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">

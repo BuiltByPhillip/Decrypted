@@ -4,10 +4,20 @@ import ScrollCue from "~/app/_components/landing/ScrollCue";
 import FeatureCards from "~/app/_components/landing/FeatureCards";
 import CTAButton from "~/app/_components/landing/CTAButton";
 import ButtonLink from "~/components/ButtonLink";
+import { cookies } from "next/headers";
+import { verifyToken } from "~/server/session";
+import { UserCircle } from "lucide-react";
+import LogoutIcon from "~/app/_components/landing/LogoutIcon";
+
+export const dynamic = "force-dynamic";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+  const session = token ? await verifyToken(token) : null;
+  const isLoggedIn = !!session;
 
   return (
     <div
@@ -21,8 +31,20 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section className="bg-pattern relative flex min-h-screen flex-col items-center justify-center rounded-b-3xl">
         <div className="absolute top-6 right-8 z-20 flex items-center gap-3">
-          <ButtonLink variant="submit" size="sm" className="rounded-xl" href="/login">Log in</ButtonLink>
-          <ButtonLink variant="outline" size="sm" className="rounded-xl" href="/register">Create account</ButtonLink>
+          {isLoggedIn ? (
+            <>
+              <a href="/account" className="flex flex-col items-center gap-0.5 text-muted hover:text-green transition-colors duration-200">
+                <UserCircle size={24} strokeWidth={1.5} />
+                <span className="font-mono text-[9px] tracking-widest uppercase">Account</span>
+              </a>
+              <LogoutIcon />
+            </>
+          ) : (
+            <>
+              <ButtonLink variant="submit" size="sm" className="rounded-xl" href="/login">Log in</ButtonLink>
+              <ButtonLink variant="outline" size="sm" className="rounded-xl" href="/register">Create account</ButtonLink>
+            </>
+          )}
         </div>
         {/* ambient glow */}
         <div
