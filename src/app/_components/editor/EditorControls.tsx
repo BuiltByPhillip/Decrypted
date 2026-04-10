@@ -39,10 +39,13 @@ export default function EditorControls() {
   const handleClick = () => {
     try {
       if (code.trim() === "") throw new Error("No code entered");
-      const userCode = parse(code, 0);
+      parse(code, 0);
       setError(null);
-      sessionStorage.setItem("exerciseData", JSON.stringify(userCode));
-      router.push("/exercise");
+      const slug = btoa(encodeURIComponent(code))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+      router.push(`/exercise/${slug}`);
     } catch (e) {
       setError((e as Error).message);
     }
