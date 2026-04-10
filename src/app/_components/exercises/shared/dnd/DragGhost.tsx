@@ -28,7 +28,7 @@ export default function DragGhost({ children, onDrop, onMove, startX, startY, of
   useDraggable({ ref, startX, startY, offsetX, offsetY, onDrop, onMove });
 
   return (
-    <div ref={ref} className="fixed">
+    <div ref={ref} className="fixed z-50">
       {children}
     </div>
   );

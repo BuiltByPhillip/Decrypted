@@ -8,9 +8,10 @@ type ExprBlockProps = {
   item: PaletteItem;
   className?: string;
   style?: React.CSSProperties;
+  isDeleteMode?: boolean;
 }
 
-export default function ExprBlock({ item, className, style }: ExprBlockProps) {
+export default function ExprBlock({ item, className, style, isDeleteMode }: ExprBlockProps) {
 
   const renderValue = (item: PaletteItem) => {
     switch (item.kind) {
@@ -35,7 +36,7 @@ export default function ExprBlock({ item, className, style }: ExprBlockProps) {
 
   return (
     <div
-      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-pointer rounded-xl text-2xl select-none hover:brightness-125 transition-colors duration-300 ${className ?? "bg-dark/70 text-muted"}`}
+      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-pointer rounded-xl text-2xl select-none hover:brightness-125 transition-all duration-200 ${isDeleteMode ? "bg-danger/20 text-danger opacity-50" : className ?? "bg-dark/70 text-muted"}`}
       style={style}
     >
       {renderValue(item)}
