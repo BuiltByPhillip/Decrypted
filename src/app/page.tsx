@@ -6,7 +6,7 @@ import CTAButton from "~/app/_components/landing/CTAButton";
 import ButtonLink from "~/components/ButtonLink";
 import { cookies } from "next/headers";
 import { verifyToken } from "~/server/session";
-import { UserCircle } from "lucide-react";
+import { BookOpen, UserCircle } from "lucide-react";
 import LogoutIcon from "~/app/_components/landing/LogoutIcon";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +33,10 @@ export default async function LandingPage() {
         <div className="absolute top-6 right-8 z-20 flex items-center gap-3">
           {isLoggedIn ? (
             <>
+              <a href="/exercises" className="flex flex-col items-center gap-0.5 text-muted hover:text-green transition-colors duration-200">
+                <BookOpen size={24} strokeWidth={1.5} />
+                <span className="font-mono text-[9px] tracking-widest uppercase">Exercises</span>
+              </a>
               <a href="/account" className="flex flex-col items-center gap-0.5 text-muted hover:text-green transition-colors duration-200">
                 <UserCircle size={24} strokeWidth={1.5} />
                 <span className="font-mono text-[9px] tracking-widest uppercase">Account</span>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { parse } from "~/app/hooks/parser";
 import Button from "~/components/Button";
+import { api } from "~/trpc/react";
 
 function CodeWindowSkeleton() {
   return (
@@ -35,17 +36,15 @@ export default function EditorControls() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const createExercise = api.exercise.create.useMutation();
 
-  const handleClick = () => {
+  const handleClick = async () => {
     try {
       if (code.trim() === "") throw new Error("No code entered");
-      parse(code, 0);
+      const parsed = parse(code, 0);
       setError(null);
-      const slug = btoa(encodeURIComponent(code))
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
-      router.push(`/exercise/${slug}`);
+      router.push("/exercises");
+      createExercise.mutate({ dsl: code, name: parsed.information.name });
     } catch (e) {
       setError((e as Error).message);
     }
