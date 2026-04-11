@@ -1,14 +1,11 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { verifyToken } from "~/server/session";
 import AccountContent from "./AccountContent";
 
 export default async function AccountPage() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
-  const session = token ? await verifyToken(token) : null;
-
-  if (!session) redirect("/login");
+  const token = cookieStore.get("session")!.value;
+  const session = (await verifyToken(token))!;
 
   return (
     <main className="flex h-screen overflow-hidden bg-[#141820]">
