@@ -103,6 +103,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
   return (
     <ExerciseShell
       className="w-full max-w-3xl"
+      footerClassName="max-w-3xl"
       description={description}
       prompt={prompt}
       hint={hint}

@@ -15,10 +15,11 @@ type ExerciseShellProps = {
   feedback?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  footerClassName?: string;
 }
 
 
-export default function ExerciseShell({ description, prompt, hint, onSubmit, submitState, children, definitions, feedback, className }: ExerciseShellProps) {
+export default function ExerciseShell({ description, prompt, hint, onSubmit, submitState, children, definitions, feedback, className, footerClassName = "max-w-150" }: ExerciseShellProps) {
   const [showHint, setShowHint] = useState(false);
 
   return (
@@ -33,7 +34,7 @@ export default function ExerciseShell({ description, prompt, hint, onSubmit, sub
       {children}
 
       <div className="flex flex-col items-center pt-10">
-        <div className="relative flex w-full items-center justify-center">
+        <div className={`relative flex w-full items-center justify-center ${footerClassName}`}>
           <div className="absolute bottom-full flex w-full flex-col items-center pb-2">
             {showHint && hint ? (
               <span className="text-muted text-sm">
