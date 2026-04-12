@@ -114,6 +114,20 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     }
   }, [showExercises, lenis]);
 
+  // Re-snap to current exercise on window resize
+  useEffect(() => {
+    if (!showExercises || !lenis) return;
+
+    const handleResize = () => {
+      lenis.resize();
+      const element = exerciseRefs.current.get(currentExerciseIndexRef.current);
+      if (element) lenis.scrollTo(element, { immediate: true });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [showExercises, lenis, scrollToExercise]);
+
   // Snap scroll: intercept wheel events and navigate between exercises
   useEffect(() => {
     if (!showExercises || !lenis) return;
