@@ -12,6 +12,7 @@ export default function ExercisesContent() {
     refetchOnMount: true,
     staleTime: 0,
   });
+  const { data: averages } = api.rating.getAverages.useQuery();
   const deleteExercise = api.exercise.delete.useMutation({
     onMutate: ({ id }) => {
       queryClient.setQueryData(
@@ -102,13 +103,29 @@ export default function ExercisesContent() {
                       >
                         {exercise.name}
                       </Link>
-                      <p className="mt-0.5 font-mono text-[10px] text-muted">
-                        Created at {new Date(exercise.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
+                      <div className="mt-0.5 flex items-center gap-3">
+                        <p className="font-mono text-[10px] text-muted">
+                          Created {new Date(exercise.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                        {averages?.[exercise.id] && (
+                          <span className="flex items-center gap-1 font-mono text-[10px] text-muted">
+                            <svg width="10" height="10" viewBox="0 0 24 24">
+                              <polygon
+                                points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+                                fill="#5ce88a"
+                                stroke="#5ce88a"
+                                strokeWidth="1.5"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            {averages[exercise.id]!.average} ({averages[exercise.id]!.count})
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">

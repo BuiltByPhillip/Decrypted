@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "~/trpc/react";
 import type { Code, Expr } from "~/app/hooks/parser";
 import { parse } from "~/app/hooks/parser";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,7 +26,8 @@ type ExerciseComponents = {
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
 
-export default function ExercisePage({ dsl }: { dsl: string }) {
+export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exerciseId: string }) {
+  const submitRating = api.rating.create.useMutation();
   const [code] = useState<Code | null>(() => {
     try { return parse(dsl); } catch { return null; }
   });
@@ -433,6 +435,7 @@ export default function ExercisePage({ dsl }: { dsl: string }) {
             totalExercises={realExerciseIndices.length}
             results={remappedResults}
             onRestart={handleRestart}
+            onRate={(rating) => submitRating.mutate({ exerciseId, rating })}
           />
         </div>
       )}

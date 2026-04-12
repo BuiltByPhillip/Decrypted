@@ -10,5 +10,5 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   if (!exercise) notFound();
 
-  return <ExercisePage dsl={exercise.dsl} />;
+  return <ExercisePage dsl={exercise.dsl} exerciseId={exercise.id} />;
 }

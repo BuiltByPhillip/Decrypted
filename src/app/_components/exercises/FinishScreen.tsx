@@ -3,11 +3,13 @@
 import { Lock, LockOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import Button from "~/components/Button";
+import StarRating from "~/app/_components/exercises/StarRating";
 
 type FinishScreenProps = {
   totalExercises: number;
   results: Record<number, boolean>;
   onRestart: () => void;
+  onRate?: (rating: number) => void;
 };
 
 const SHAKE_DURATION_MS = 750;
@@ -16,7 +18,7 @@ const fadeUp = (delay: string) => ({
   animation: `fade-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay} both`,
 });
 
-export default function FinishScreen({ totalExercises, results, onRestart }: FinishScreenProps) {
+export default function FinishScreen({ totalExercises, results, onRestart, onRate }: FinishScreenProps) {
   const [unlocked, setUnlocked] = useState(false);
   const correct = Object.values(results).filter(Boolean).length;
   const perfect = correct === totalExercises;
@@ -90,8 +92,13 @@ export default function FinishScreen({ totalExercises, results, onRestart }: Fin
         </span>
       </div>
 
+      {/* Star rating */}
+      <div style={fadeUp("300ms")}>
+        <StarRating onRate={onRate} />
+      </div>
+
       {/* Actions */}
-      <div className="flex gap-4" style={fadeUp("340ms")}>
+      <div className="flex gap-4" style={fadeUp("400ms")}>
         <Button variant="ghostMuted" size="md" onClick={onRestart}>
           Try again
         </Button>
