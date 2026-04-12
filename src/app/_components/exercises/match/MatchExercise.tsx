@@ -102,7 +102,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
   return (
     <ExerciseShell
-      className=""
+      className="w-full max-w-3xl"
       description={description}
       prompt={prompt}
       hint={hint}
@@ -121,9 +121,9 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       </Button>
 
       {/* Source palette - unassigned cards */}
-      <div className="border-muted grid grid-cols-4 gap-4 rounded-2xl border p-3">
+      <div className="border-muted grid grid-cols-2 gap-4 rounded-2xl border p-3 sm:grid-cols-4">
         {shuffledPairs.map((pair) => (
-          <div key={pair.left} className="relative h-20 w-full">
+          <div key={pair.left} className="relative min-h-16 w-full">
             {/* Placeholder: always in flow so the grid slot never collapses when the card is dragging */}
             <div ref={el => { paletteRefs.current[pair.left] = el; }} className="absolute inset-0 rounded-2xl border border-dashed border-muted opacity-30" />
             {unassignedItems.includes(pair.left) && (
@@ -155,7 +155,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
               <MatchCard label={pair.right} definitions={definitions} />
               <div
                 ref={el => { slotRefs.current[pair.right] = el; }}
-                className="relative h-20 w-full"
+                className="relative min-h-16 w-full"
               >
                 {/* Drop zone indicator */}
                 <div className={`absolute inset-0 rounded-2xl border transition duration-200 ${

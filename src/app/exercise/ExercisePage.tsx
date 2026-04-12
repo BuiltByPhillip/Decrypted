@@ -347,7 +347,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             <div
               key={stepIndex}
               ref={(el) => setExerciseRef(exerciseIndex, el)}
-              className="flex min-h-screen w-full flex-col items-center justify-center gap-8"
+              className="flex min-h-screen w-full flex-col items-center justify-center gap-8 pr-10"
             >
               {step.exercise?.type === "select" && exerciseComponents.SelectExercise ? (
                 <exerciseComponents.SelectExercise

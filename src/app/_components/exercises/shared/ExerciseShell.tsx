@@ -33,7 +33,7 @@ export default function ExerciseShell({ description, prompt, hint, onSubmit, sub
       {children}
 
       <div className="flex flex-col items-center pt-10">
-        <div className="relative flex w-150 items-center justify-center">
+        <div className="relative flex w-full items-center justify-center">
           <div className="absolute bottom-full flex w-full flex-col items-center pb-2">
             {showHint && hint ? (
               <span className="text-muted text-sm">
@@ -43,7 +43,7 @@ export default function ExerciseShell({ description, prompt, hint, onSubmit, sub
               feedback
             )}
           </div>
-          <Button variant="submit" className="w-100" onClick={onSubmit}>
+          <Button variant="submit" className="w-[min(25rem,75vw)]" onClick={onSubmit}>
             {submitState === "correct"
               ? "Correct!"
               : submitState === "incorrect"

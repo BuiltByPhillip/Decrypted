@@ -16,7 +16,7 @@ export default function MatchCard({ label, className = "", onMouseDown, definiti
   return (
     <div
       onMouseDown={onMouseDown}
-      className={`border-muted bg-dark text-muted flex h-20 w-full items-center justify-center rounded-2xl border px-4 text-center font-medium opacity-70 transition duration-300 ease-in-out select-none ${className}`}
+      className={`border-muted bg-dark text-muted flex min-h-16 w-full items-center justify-center rounded-2xl border px-4 py-2 text-center text-sm font-medium opacity-70 transition duration-300 ease-in-out select-none ${className}`}
     >
       {substituteRolesInString(label, definitions)}
     </div>
