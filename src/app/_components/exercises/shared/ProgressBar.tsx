@@ -11,7 +11,7 @@ export default function ProgressBar({ results, total, currentIndex, onSegmentCli
     const triangleTop = total > 0 ? ((currentIndex + 0.5) / total) * 100 : 0;
 
     return (
-        <div className="relative w-5 h-150">
+        <div className="relative w-5 h-[min(37.5rem,60vh)]">
             {/* Triangle indicator */}
             <div
                 className="absolute -left-4 -translate-y-1/2"
