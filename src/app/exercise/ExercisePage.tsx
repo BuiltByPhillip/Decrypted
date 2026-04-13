@@ -46,6 +46,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
   const [results, setResults] = useState<Record<number, boolean>>({});
   const [showFinish, setShowFinish] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
   const lenis = useLenis();
@@ -310,6 +311,63 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
         selected={new Map(Object.entries(definitions))}
         className="fixed top-7 left-10"
       />
+
+      {/* Protocol name */}
+      {code.information.name && (
+        <div className="fixed top-7 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2">
+          <span className="font-mono text-[10px] tracking-[0.2em] text-muted/40 uppercase">Protocol</span>
+          <span className="font-mono text-[10px] text-muted/40">/</span>
+          <span className="font-mono text-xs font-medium text-soft-white">{code.information.name}</span>
+        </div>
+      )}
+
+      {!showExercises && (
+        <button
+          onClick={() => setShowHowItWorks(true)}
+          className="fixed top-7 right-10 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-40"
+        >
+          How it works?
+        </button>
+      )}
+      {/* How it works modal */}
+      {showHowItWorks && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowHowItWorks(false)}>
+          <div
+            className="w-full max-w-md rounded-2xl border border-medium/40 bg-[#141820] p-7"
+            style={{ animation: "fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-5 text-sm font-semibold text-soft-white">How it works</p>
+            <div className="mb-6 flex flex-col gap-4">
+              <div className="flex gap-3">
+                <span className="mt-0.5 font-mono text-xs text-green">1.</span>
+                <p className="text-xs leading-relaxed text-muted">
+                  Assign a symbol to each role in the protocol. For example, if the roles are <span className="text-soft-white">Alice</span> and <span className="text-soft-white">Bob</span>, you might assign them the symbols <span className="text-soft-white">A</span> and <span className="text-soft-white">B</span>.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="mt-0.5 font-mono text-xs text-green">2.</span>
+                <p className="text-xs leading-relaxed text-muted">
+                  Your chosen symbols will be used throughout all the exercises.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="mt-0.5 font-mono text-xs text-green">3.</span>
+                <p className="text-xs leading-relaxed text-muted">
+                  There is no right or wrong choice - just pick what makes sense to you.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowHowItWorks(false)}
+              className="cursor-pointer rounded-lg bg-green/10 px-4 py-2 font-mono text-xs text-green transition-colors duration-150 hover:bg-green/20"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Definition selection */}
       <div className="flex min-h-screen w-full flex-col items-center justify-center py-24">
         <span className="text-gray pb-5 text-xl font-medium tracking-wider uppercase">
@@ -484,7 +542,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             totalExercises={realExerciseIndices.length}
             results={remappedResults}
             onRestart={handleRestart}
-            onRate={(rating) => submitRating.mutate({ exerciseId, rating })}
+            onRate={(rating: number) => submitRating.mutate({ exerciseId, rating })}
             surveyHref={`/survey/${exerciseId}`}
           />
         </div>

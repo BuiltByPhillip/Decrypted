@@ -156,10 +156,7 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
           ))}
 
           {/* Free text feedback */}
-          <div
-            className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5"
-            style={fadeUp(`${80 + QUESTIONS.length * 40}ms`)}
-          >
+          <div className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5">
             <label className="mb-3 block font-mono text-[10px] tracking-[0.2em] text-muted/50 uppercase">
               Any other feedback? (optional)
             </label>
@@ -173,10 +170,7 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
           </div>
 
           {/* Bug report */}
-          <div
-            className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5"
-            style={fadeUp(`${80 + (QUESTIONS.length + 1) * 40}ms`)}
-          >
+          <div className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5">
             <label className="mb-3 block font-mono text-[10px] tracking-[0.2em] text-muted/50 uppercase">
               Report a bug (optional)
             </label>
@@ -191,10 +185,7 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
         </div>
 
           {/* Email */}
-          <div
-            className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5"
-            style={fadeUp(`${80 + (QUESTIONS.length + 2) * 40}ms`)}
-          >
+          <div className="rounded-xl border border-medium/30 bg-medium/10 px-6 py-5">
             <label className="mb-1 block font-mono text-[10px] tracking-[0.2em] text-muted/50 uppercase">
               Contact email (optional)
             </label>
@@ -211,10 +202,7 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
           </div>
 
         {/* Submit */}
-        <div
-          className="mt-10 flex items-center justify-between"
-          style={fadeUp(`${80 + (QUESTIONS.length + 2) * 40}ms`)}
-        >
+        <div className="mt-10 flex items-center justify-between">
           <button
             onClick={() => router.back()}
             className="font-mono text-xs text-muted/40 tracking-wider hover:text-muted transition-colors duration-200"
