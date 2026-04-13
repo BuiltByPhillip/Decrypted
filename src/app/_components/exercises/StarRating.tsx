@@ -69,6 +69,7 @@ export default function StarRating({ onRate }: StarRatingProps) {
           );
         })}
       </div>
+
     </div>
   );
 }

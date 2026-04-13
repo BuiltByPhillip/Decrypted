@@ -2,6 +2,7 @@
 
 import { Lock, LockOpen } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Button from "~/components/Button";
 import StarRating from "~/app/_components/exercises/StarRating";
 
@@ -10,6 +11,7 @@ type FinishScreenProps = {
   results: Record<number, boolean>;
   onRestart: () => void;
   onRate?: (rating: number) => void;
+  surveyHref: string;
 };
 
 const SHAKE_DURATION_MS = 750;
@@ -18,7 +20,7 @@ const fadeUp = (delay: string) => ({
   animation: `fade-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay} both`,
 });
 
-export default function FinishScreen({ totalExercises, results, onRestart, onRate }: FinishScreenProps) {
+export default function FinishScreen({ totalExercises, results, onRestart, onRate, surveyHref }: FinishScreenProps) {
   const [unlocked, setUnlocked] = useState(false);
   const correct = Object.values(results).filter(Boolean).length;
   const perfect = correct === totalExercises;
@@ -102,6 +104,11 @@ export default function FinishScreen({ totalExercises, results, onRestart, onRat
         <Button variant="ghostMuted" size="md" onClick={onRestart}>
           Try again
         </Button>
+        <Link href={surveyHref}>
+          <Button variant="continue" size="md">
+            Give feedback
+          </Button>
+        </Link>
         <Button variant="submit" size="md" className="w-36" onClick={() => window.location.href = "/"}>
           Done
         </Button>

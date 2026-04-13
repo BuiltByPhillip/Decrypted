@@ -9,6 +9,7 @@ export const ratingRouter = createTRPCRouter({
     .input(z.object({
       exerciseId: z.string(),
       rating: z.number().int().min(1).max(5),
+      comment: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(ratings).values({
