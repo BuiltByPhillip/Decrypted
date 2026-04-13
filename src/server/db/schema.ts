@@ -32,6 +32,7 @@ export const ratings = pgTable("ratings", {
     .notNull()
     .references(() => exercises.id),
   rating: integer("rating").notNull(),
+  comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   check("rating_range", sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
@@ -45,11 +46,13 @@ export const surveyResponse = pgTable("survey_response", {
   q3: integer("q3").notNull(),
   q4: integer("q4").notNull(),
   q5: integer("q5").notNull(),
-  q6: integer("q6").notNull(),
-  q7: integer("q7").notNull(),
-  q8: integer("q8").notNull(),
-  q9: integer("q9").notNull(),
-  q10: integer("q10").notNull(),
+  c1: text("c1"),
+  c2: text("c2"),
+  c3: text("c3"),
+  c4: text("c4"),
+  c5: text("c5"),
   bug: text("bug"),
+  feedback: text("feedback"),
+  email: text("email"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
