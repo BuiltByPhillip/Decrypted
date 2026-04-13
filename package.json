@@ -33,6 +33,7 @@
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
     "@uiw/react-codemirror": "^4.25.4",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.2",

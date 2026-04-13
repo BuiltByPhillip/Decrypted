@@ -6,6 +6,7 @@ import { Geist, Noto_Sans_Math } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import SmoothScroll from "~/components/SmoothScroll";
 import Logo from "~/app/_components/logo";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Decrypted",
@@ -47,6 +48,7 @@ export default function RootLayout({
         <SmoothScroll>
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </SmoothScroll>
+        <Analytics />
       </body>
     </html>
   );
