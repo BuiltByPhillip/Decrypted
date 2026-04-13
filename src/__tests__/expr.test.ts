@@ -14,9 +14,10 @@ import {
   findDiffPair,
   COMMUTATIVE_OPS,
   tokenToPaletteItem,
+  getPreviewDefinition,
 } from "../app/hooks/expr";
 import { parseExpression } from "../app/hooks/parser";
-import type { Expr, PaletteItem } from "../app/hooks/parser";
+import type { Code, Expr, PaletteItem } from "../app/hooks/parser";
 
 // ─── exprEquals ──────────────────────────────────────────────────────────────
 
@@ -585,6 +586,53 @@ describe("round-trip: token list → string → parseExpression", () => {
     const str = paletteItemToString(item);
     const result = parseExpression(str);
     expect(result).toMatchObject({ kind: "role", name: "generator" });
+  });
+});
+
+// ─── getPreviewDefinition ─────────────────────────────────────────────────────
+
+describe("getPreviewDefinition", () => {
+  const makeCode = (defs: { role: string; symbols: Expr[] }[]): Code => ({
+    information: {
+      name: "Test Protocol",
+      definition: defs.map((d) => ({ type: "select", role: d.role, symbols: d.symbols })),
+    },
+    customOperators: [],
+    step: [],
+  });
+
+  it("maps each role to its first symbol", () => {
+    const code = makeCode([
+      { role: "generator", symbols: [{ kind: "var", name: "g" }, { kind: "var", name: "h" }] },
+      { role: "prime",     symbols: [{ kind: "var", name: "p" }, { kind: "var", name: "n" }] },
+    ]);
+    const result = getPreviewDefinition(code);
+    expect(result).toEqual({
+      generator: { kind: "var", name: "g" },
+      prime:     { kind: "var", name: "p" },
+    });
+  });
+
+  it("returns an empty record when there are no definitions", () => {
+    const code = makeCode([]);
+    expect(getPreviewDefinition(code)).toEqual({});
+  });
+
+  it("works with a single definition", () => {
+    const code = makeCode([
+      { role: "secret", symbols: [{ kind: "var", name: "a" }] },
+    ]);
+    expect(getPreviewDefinition(code)).toEqual({
+      secret: { kind: "var", name: "a" },
+    });
+  });
+
+  it("ignores all symbols after the first", () => {
+    const code = makeCode([
+      { role: "key", symbols: [{ kind: "var", name: "x" }, { kind: "var", name: "y" }, { kind: "var", name: "z" }] },
+    ]);
+    const result = getPreviewDefinition(code);
+    expect(result.key).toEqual({ kind: "var", name: "x" });
   });
 });
 

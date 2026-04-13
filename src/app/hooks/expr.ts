@@ -10,6 +10,8 @@ import {
   type ConstantSymbol,
   type UnarySymbol,
   type BinarySymbol,
+  type Code,
+  type Definition,
 } from "~/app/hooks/parser";
 
 /**
@@ -442,5 +444,22 @@ export function substituteRolesInString(text: string, definitions: SelectedDefin
     const expr = definitions[role];
     return expr ? exprToString(expr) : match;
   });
+}
+
+/**
+ * Builds a `SelectedDefinitions` map for use in editor previews by automatically
+ * selecting the first available symbol for each role defined in the protocol.
+ *
+ * This is a stand-in for the interactive definition-picking step that students
+ * go through before starting exercises. In the preview context there is no user
+ * interaction, so the first symbol is used as a reasonable placeholder.
+ *
+ * @param code - The parsed protocol, containing the list of role definitions.
+ * @returns A record mapping each role name to its first symbol expression.
+ */
+export function getPreviewDefinition(code: Code): SelectedDefinitions {
+  return Object.fromEntries(
+    code.information.definition.map((definition: Definition) => ([definition.role, definition.symbols[0]!])),
+  );
 }
 
