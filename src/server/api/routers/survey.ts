@@ -18,7 +18,7 @@ export const surveyRouter = createTRPCRouter({
       c5: z.string().optional(),
       bug: z.string().optional(),
       feedback: z.string().optional(),
-      email: z.string().email().optional(),
+      email: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(surveyResponse).values(input);

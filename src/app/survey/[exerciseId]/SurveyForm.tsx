@@ -25,8 +25,11 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const submitSurvey = api.survey.create.useMutation({
     onSuccess: () => setSubmitted(true),
+    onError: (err) => setSubmitError(err.message),
   });
 
   const answered = Object.keys(answers).length;
@@ -209,13 +212,18 @@ export default function SurveyForm({ exerciseId }: { exerciseId: string }) {
           >
             ← Back
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!allAnswered || submitSurvey.isPending}
-            className="rounded-2xl bg-green px-6 py-2 font-mono text-sm font-medium text-green-foreground transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {submitSurvey.isPending ? "Submitting..." : "Submit feedback"}
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            {submitError && (
+              <p className="font-mono text-xs text-danger">{submitError}</p>
+            )}
+            <button
+              onClick={handleSubmit}
+              disabled={!allAnswered || submitSurvey.isPending}
+              className="rounded-2xl bg-green px-6 py-2 font-mono text-sm font-medium text-green-foreground transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {submitSurvey.isPending ? "Submitting..." : "Submit feedback"}
+            </button>
+          </div>
         </div>
 
       </div>
