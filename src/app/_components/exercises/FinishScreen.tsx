@@ -105,11 +105,11 @@ export default function FinishScreen({ totalExercises, results, onRestart, onRat
           Try again
         </Button>
         <Link href={surveyHref}>
-          <Button variant="continue" size="md">
+          <Button variant="submit" size="md">
             Give feedback
           </Button>
         </Link>
-        <Button variant="submit" size="md" className="w-36" onClick={() => window.location.href = "/"}>
+        <Button variant="continue" size="md" className="w-36 pointer-events-none opacity-30">
           Done
         </Button>
       </div>

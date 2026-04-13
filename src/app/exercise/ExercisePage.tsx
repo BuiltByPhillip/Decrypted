@@ -45,6 +45,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
   const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
   const [results, setResults] = useState<Record<number, boolean>>({});
   const [showFinish, setShowFinish] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
   const lenis = useLenis();
@@ -347,8 +348,9 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             <div
               key={stepIndex}
               ref={(el) => setExerciseRef(exerciseIndex, el)}
-              className="flex min-h-screen w-full flex-col items-center justify-center gap-8 pr-10"
+              className="relative flex min-h-screen w-full flex-col items-center justify-center gap-8 pr-10"
             >
+              {showFinish && <div className="absolute inset-0 z-10" />}
               {step.exercise?.type === "select" && exerciseComponents.SelectExercise ? (
                 <exerciseComponents.SelectExercise
                   options={step.exercise!.options!}
@@ -427,7 +429,12 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                     setResults((prev) => ({ ...prev, [exerciseIndex]: true }));
                   }
                   if (isLastExercise) {
-                    handleFinish();
+                    const unanswered = realExerciseIndices.some((idx) => results[idx] === undefined);
+                    if (unanswered) {
+                      setShowFinishConfirm(true);
+                    } else {
+                      handleFinish();
+                    }
                   } else {
                     scrollToExercise(exerciseIndex + 1);
                   }
@@ -442,6 +449,34 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             </div>
           );
         })}
+
+      {showFinishConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div
+            className="w-full max-w-sm rounded-2xl border border-medium/40 bg-[#141820] p-6"
+            style={{ animation: "fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both" }}
+          >
+            <p className="mb-1 text-sm font-semibold text-soft-white">You still have unanswered exercises.</p>
+            <p className="mb-6 text-xs leading-relaxed text-muted">
+              Going back and completing them will help you get the most out of this exercise. Are you sure you want to finish now?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowFinishConfirm(false)}
+                className="cursor-pointer rounded-lg px-4 py-2 font-mono text-xs text-muted transition-colors duration-150 hover:bg-medium/30 hover:text-soft-white"
+              >
+                Go back
+              </button>
+              <button
+                onClick={() => { setShowFinishConfirm(false); handleFinish(); }}
+                className="cursor-pointer rounded-lg bg-danger/10 px-4 py-2 font-mono text-xs text-danger transition-colors duration-150 hover:bg-danger/20"
+              >
+                Finish anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showFinish && exerciseComponents.FinishScreen && (
         <div ref={finishElementRef}>
