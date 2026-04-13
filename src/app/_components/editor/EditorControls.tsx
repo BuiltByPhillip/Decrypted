@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { parse } from "~/app/hooks/parser";
 import Button from "~/components/Button";
 import { api } from "~/trpc/react";
+import ExercisePreview from "~/app/editor/ExercisePreview";
 
 function CodeWindowSkeleton() {
   return (
@@ -35,8 +36,19 @@ const CodeWindow = dynamic(() => import("~/app/_components/editor/CodeWindow"), 
 export default function EditorControls() {
   const router = useRouter();
   const [code, setCode] = useState("");
+  const [debouncedDsl, setDebouncedDsl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const createExercise = api.exercise.create.useMutation();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedDsl(code), 500);
+    return () => clearTimeout(timeout);
+  }, [code]);
+
+  const previewProtocolName = useMemo(() => {
+    try { return parse(debouncedDsl).information.name; } catch { return null; }
+  }, [debouncedDsl]);
 
   const handleClick = async () => {
     try {
@@ -52,36 +64,46 @@ export default function EditorControls() {
 
   return (
     <>
-      {/* editor row */}
-      <div className="relative">
-        {/* editor with glow + corners */}
-        <div className="relative">
-          {/* ambient glow */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -m-12 rounded-full"
-            style={{
-              background: "radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%)",
-            }}
-          />
+      {/* split panel row */}
+      <div className="flex items-start gap-8">
 
-          <div className="relative p-6">
-            <span aria-hidden="true" className="border-green/60 absolute top-0 left-0 z-10 h-8 w-8 rounded-tl border-t border-l" />
-            <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />
-            <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />
-            <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />
-            <div className="h-128 w-240 overflow-hidden rounded-2xl" data-lenis-prevent>
-              <CodeWindow code={code} onChange={setCode} />
+        {/* left: editor */}
+        <div className="relative">
+          {/* live preview toggle - absolutely positioned to the right of the editor */}
+          {!showPreview && (
+            <button
+              onClick={() => setShowPreview(true)}
+              className="absolute top-1/2 -translate-y-1/2 left-full ml-8 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-10"
+            >
+              Open live preview
+            </button>
+          )}
+          <div className="relative">
+            {/* ambient glow */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -m-12 rounded-full"
+              style={{
+                background: "radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%)",
+              }}
+            />
+            <div className="relative p-6">
+              {!showPreview && <span aria-hidden="true" className="border-green/60 absolute top-0 left-0 z-10 h-8 w-8 rounded-tl border-t border-l" />}
+              {!showPreview && <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />}
+              {!showPreview && <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />}
+              {!showPreview && <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />}
+              <div className={`h-128 overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-200" : "w-240"}`} data-lenis-prevent>
+                <CodeWindow code={code} onChange={setCode} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* insert button absolutely to the right of the editor */}
-        <Button
-          className="absolute top-1/2 -translate-y-1/2 left-full ml-4"
-          variant="secondary"
-          onClick={() => {
-            setCode(`protocol: Diffie-Hellman
+          {/* insert sample button below editor */}
+          <div className="flex justify-center">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setCode(`protocol: Diffie-Hellman
 custom:
     operator:
         name: SET
@@ -147,13 +169,41 @@ step:
         prompt: Compute the shared key for Alice and Bob, when {alice_secret} = 4, {bob_secret} = 5, {prime} = 23, {generator} = 5
         hint: The formula is A ^ {bob_secret} mod {prime} and B ^ {alice_secret} mod {prime}
         answer: 12`);
-          }}
-        >
-          (Temporary) Insert code
-        </Button>
+              }}
+            >
+              (Temporary) Insert code
+            </Button>
+          </div>
+        </div>
+
+        {/* right: preview */}
+        {showPreview && (
+          <div className="relative p-6">
+            <div className="h-128 w-200 overflow-hidden rounded-2xl border border-[#393E46] border-b-[#5a6070]" data-lenis-prevent>
+              <div className="border-medium relative flex items-center border-b bg-[rgba(28,33,41,0.8)] px-4 py-3">
+                <button onClick={() => setShowPreview(false)} className="cursor-pointer">
+                  <span className="bg-mac-red h-3 w-3 rounded-full block" />
+                </button>
+                <span className="bg-mac-yellow ml-2 h-3 w-3 rounded-full" />
+                <span className="bg-mac-green ml-2 h-3 w-3 rounded-full" />
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                  <span className="font-mono text-[10px] tracking-[0.2em] text-muted/40 uppercase">Protocol</span>
+                  <span className="font-mono text-[10px] text-muted/40">/</span>
+                  <span className="font-mono text-[10px] font-medium text-soft-white">
+                    {previewProtocolName ?? "Preview"}
+                  </span>
+                </div>
+              </div>
+              <div className="h-full overflow-y-auto custom-scrollbar" data-lenis-prevent>
+                <ExercisePreview dsl={debouncedDsl} />
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
-      {/* error + generate button centered below editor */}
+      {/* error + buttons centered below */}
       <div className="mt-4 flex flex-col items-center">
         <p className={`font-mono text-sm text-danger ${error ? "" : "select-none"}`}>
           {error ?? "\u00A0"}
