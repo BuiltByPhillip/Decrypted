@@ -26,6 +26,7 @@ type DragAndDropProps = {
   errorRange?: TokenRange | null;
   isCorrect?: boolean | null;
   locked?: boolean;
+  hintPaused?: boolean;
   customOperatorItems?: PaletteItem[];
   priorityValueItems?: PaletteItem[];
   prefill?: PaletteItem[];
@@ -33,7 +34,7 @@ type DragAndDropProps = {
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, hintPaused, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenContainerRef = useRef<HTMLDivElement>(null);
   const valuesPaletteRef = useRef<HTMLDivElement>(null);
@@ -85,6 +86,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
 
   const onTokenStartDrag = (index: number, item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
     if (locked) return;
+    dismissHint();
     // Remove immediately so the gap collapses. Restoration happens on drop if needed.
     const filtered = tokens.filter((_, i) => i !== index);
     setTokens(filtered);
@@ -102,6 +104,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         operatorPaletteRef={operatorPaletteRef}
         containerRef={tokenContainerRef}
         dismissed={hintDismissed}
+        paused={hintPaused}
         onDismiss={dismissHint}
       />
       <DraggableWindow

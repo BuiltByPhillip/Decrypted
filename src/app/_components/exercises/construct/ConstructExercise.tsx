@@ -17,10 +17,11 @@ type ConstructExerciseProps = {
   palette?: string[];
   answer: Expr;
   customOperators?: CustomOperator[];
+  hintPaused?: boolean;
   onAnswerAction?: (isCorrect: boolean) => void;
 }
 
-export default function ConstructExercise({ answer, prefill, palette, definitions, prompt, description, hint, customOperators = [], onAnswerAction }: ConstructExerciseProps) {
+export default function ConstructExercise({ answer, prefill, palette, definitions, prompt, description, hint, customOperators = [], hintPaused, onAnswerAction }: ConstructExerciseProps) {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [tokens, setTokens] = useState<PaletteItem[]>([]);
@@ -98,6 +99,7 @@ export default function ConstructExercise({ answer, prefill, palette, definition
           errorRange={errorRange}
           isCorrect={isCorrect}
           locked={locked}
+          hintPaused={hintPaused}
           customOperatorItems={customOperators.map(op => ({ kind: "operator" as const, op: op.name }))}
           priorityValueItems={priorityValueItems}
           prefill={prefill && definitions ? substituteRolesInPalette(prefill, definitions) : prefill}

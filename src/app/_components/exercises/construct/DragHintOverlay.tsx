@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Hand, HandFist } from "lucide-react";
 
 const STORAGE_KEY = "decrypted_drag_hint_seen";
@@ -14,15 +15,22 @@ type Props = {
   operatorPaletteRef: React.RefObject<HTMLDivElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   dismissed: boolean;
+  paused?: boolean;
   onDismiss: () => void;
 };
 
-export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, containerRef, dismissed, onDismiss }: Props) {
+export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, containerRef, dismissed, paused, onDismiss }: Props) {
   const [visible, setVisible] = useState(false);
   const [rects, setRects] = useState<Rects | null>(null);
   const rectsRef = useRef<Rects | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [animationKey, setAnimationKey] = useState(0);
+  const dismissedRef = useRef(dismissed);
+  const pausedRef = useRef(paused);
+  const visibleRef = useRef(false);
+  dismissedRef.current = dismissed;
+  pausedRef.current = paused;
 
   const readRects = useCallback((): Rects | null => {
     const vr = valuesPaletteRef.current?.getBoundingClientRect();
@@ -73,12 +81,14 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
             if (r) {
               rectsRef.current = r;
               setRects(r);
+              visibleRef.current = true;
               setVisible(true);
             }
           });
         } else {
           waitCancelled = true;
-          setVisible(false);
+          visibleRef.current = false;
+          flushSync(() => setVisible(false));
         }
       },
       { threshold: 0.5 }
@@ -91,7 +101,21 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
     };
   }, [dismissed, readRects, containerRef]);
 
-  // Keep spotlight positions in sync with window resizes
+  // Immediately hide when the user scrolls (direct listener, not IntersectionObserver)
+  useEffect(() => {
+    if (!visible || dismissed) return;
+    let called = false;
+    const handleScroll = () => {
+      if (called) return;
+      called = true;
+      visibleRef.current = false;
+      flushSync(() => setVisible(false));
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [visible, dismissed]);
+
+  // Reset animation and re-read rects on window resize
   useEffect(() => {
     if (!visible || dismissed) return;
     const handleResize = () => {
@@ -100,6 +124,8 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
         rectsRef.current = r;
         setRects(r);
       }
+      setPhase("hidden");
+      setAnimationKey(k => k + 1);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -107,7 +133,7 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
 
   // Animation loop
   useEffect(() => {
-    if (!visible || dismissed) return;
+    if (!visible || dismissed || paused) return;
 
     let cancelled = false;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
@@ -117,6 +143,8 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
         const t = setTimeout(resolve, ms);
         timeouts.push(t);
       });
+
+    const shouldStop = () => cancelled || dismissedRef.current || pausedRef.current || !visibleRef.current;
 
     const run = async () => {
       while (!cancelled) {
@@ -132,41 +160,41 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
         setCursorPos({ x: startX - 50, y: startY + 30 });
         setPhase("approaching");
         await wait(16);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("approaching_move");
         await wait(16);
-        if (cancelled) return;
+        if (shouldStop()) return;
         setCursorPos({ x: startX, y: startY });
         await wait(950);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("hovering");
         await wait(500);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("grabbing");
         await wait(250);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("moving");
         await wait(16);
-        if (cancelled) return;
+        if (shouldStop()) return;
         setCursorPos({ x: endX, y: endY });
         await wait(1100);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("at-target");
         await wait(700);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setPhase("hidden");
         await wait(350);
-        if (cancelled) return;
+        if (shouldStop()) return;
 
         setCursorPos({ x: startX, y: startY });
         await wait(100);
-        if (cancelled) return;
+        if (shouldStop()) return;
       }
     };
 
@@ -175,9 +203,9 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
       cancelled = true;
       timeouts.forEach(clearTimeout);
     };
-  }, [visible, dismissed]);
+  }, [visible, dismissed, paused, animationKey]);
 
-  if (!visible || !rects || dismissed) return null;
+  if (!visible || !rects || dismissed || paused) return null;
 
   const cursorVisible = phase !== "idle" && phase !== "hidden";
   const isGrabbing = phase === "grabbing" || phase === "moving" || phase === "at-target";

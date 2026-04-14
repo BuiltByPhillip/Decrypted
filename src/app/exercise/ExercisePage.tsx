@@ -321,52 +321,77 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
         </div>
       )}
 
-      {!showExercises && (
-        <button
-          onClick={() => setShowHowItWorks(true)}
-          className="fixed top-7 right-10 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-40"
-        >
-          How it works?
-        </button>
-      )}
-      {/* How it works modal */}
-      {showHowItWorks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowHowItWorks(false)}>
-          <div
-            className="w-full max-w-md rounded-2xl border border-medium/40 bg-[#141820] p-7"
-            style={{ animation: "fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both" }}
-            onClick={(e) => e.stopPropagation()}
+      {/* How it works button - always visible */}
+      {(() => {
+        const currentExercise = showExercises ? exercises[currentExerciseIndex] : null;
+        const exerciseType = currentExercise?.step.exercise?.type;
+        const hasHowItWorks = !showExercises || !!exerciseType;
+        if (!hasHowItWorks) return null;
+        return (
+          <button
+            onClick={() => setShowHowItWorks(true)}
+            className="fixed top-7 right-10 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-40"
           >
-            <p className="mb-5 text-sm font-semibold text-soft-white">How it works</p>
-            <div className="mb-6 flex flex-col gap-4">
-              <div className="flex gap-3">
-                <span className="mt-0.5 font-mono text-xs text-green">1.</span>
-                <p className="text-xs leading-relaxed text-muted">
-                  Assign a symbol to each role in the protocol. For example, if the roles are <span className="text-soft-white">Alice</span> and <span className="text-soft-white">Bob</span>, you might assign them the symbols <span className="text-soft-white">A</span> and <span className="text-soft-white">B</span>.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <span className="mt-0.5 font-mono text-xs text-green">2.</span>
-                <p className="text-xs leading-relaxed text-muted">
-                  Your chosen symbols will be used throughout all the exercises.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <span className="mt-0.5 font-mono text-xs text-green">3.</span>
-                <p className="text-xs leading-relaxed text-muted">
-                  There is no right or wrong choice - just pick what makes sense to you.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowHowItWorks(false)}
-              className="cursor-pointer rounded-lg bg-green/10 px-4 py-2 font-mono text-xs text-green transition-colors duration-150 hover:bg-green/20"
+            How it works?
+          </button>
+        );
+      })()}
+
+      {/* How it works modal */}
+      {showHowItWorks && (() => {
+        const currentExercise = showExercises ? exercises[currentExerciseIndex] : null;
+        const exerciseType = currentExercise?.step.exercise?.type;
+
+        const steps: { text: React.ReactNode }[] = !showExercises ? [
+          { text: <>Assign a symbol to each role in the protocol. For example, if the roles are <span className="text-soft-white">Alice</span> and <span className="text-soft-white">Bob</span>, you might assign them the symbols <span className="text-soft-white">A</span> and <span className="text-soft-white">B</span>.</> },
+          { text: "Your chosen symbols will be used throughout all the exercises." },
+          { text: "There is no right or wrong choice - just pick what makes sense to you." },
+        ] : exerciseType === "select" ? [
+          { text: "Read the expression shown above and the question in the prompt." },
+          { text: "Click all the options that satisfy the question. You can select multiple." },
+          { text: <>Click <span className="text-soft-white">Check answer</span> to submit. Correct selections turn green; incorrect ones shake and reset.</> },
+        ] : exerciseType === "construct" ? [
+          { text: "Drag tokens from one of the palettes into the build area at the bottom to construct an expression." },
+          { text: "Arrange the tokens to match the target expression described in the prompt." },
+          { text: <>Click <span className="text-soft-white">Check answer</span> to submit. Mismatched parts are highlighted so you can see where to fix.</> },
+        ] : exerciseType === "calculate" ? [
+          { text: "Look at the expression shown above and substitute the symbols you defined at the start." },
+          { text: "Calculate the result by hand - modular arithmetic may be involved." },
+          { text: <>Type your numerical answer in the box and press Enter or click <span className="text-soft-white">Check answer</span>.</> },
+        ] : exerciseType === "match" ? [
+          { text: "Drag each card from the top palette to the slot next to its matching label below." },
+          { text: "Each card has exactly one correct match - there are no duplicates." },
+          { text: <>Click <span className="text-soft-white">Check answer</span> once all slots are filled. If anything is wrong, the cards reset so you can try again.</> },
+        ] : [];
+
+        if (steps.length === 0) return null;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowHowItWorks(false)}>
+            <div
+              className="w-full max-w-md rounded-2xl border border-medium/40 bg-[#141820] p-7"
+              style={{ animation: "fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both" }}
+              onClick={(e) => e.stopPropagation()}
             >
-              Got it
-            </button>
+              <p className="mb-5 text-sm font-semibold text-soft-white">How it works</p>
+              <div className="mb-6 flex flex-col gap-4">
+                {steps.map((step, i) => (
+                  <div key={i} className="flex gap-3">
+                    <span className="mt-0.5 font-mono text-xs text-green shrink-0">{i + 1}.</span>
+                    <p className="text-xs leading-relaxed text-muted">{step.text}</p>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowHowItWorks(false)}
+                className="cursor-pointer rounded-lg bg-green/10 px-4 py-2 font-mono text-xs text-green transition-colors duration-150 hover:bg-green/20"
+              >
+                Got it
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Definition selection */}
       <div className="flex min-h-screen w-full flex-col items-center justify-center py-24">
@@ -380,6 +405,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
           onComplete={() => {
             shouldScrollToFirst.current = true;
             setShowExercises(true);
+            setShowHowItWorks(false);
           }}
         />
         <Button
@@ -391,6 +417,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             } else {
               shouldScrollToFirst.current = true;
               setShowExercises(true);
+              setShowHowItWorks(false);
             }
           }}
         >
@@ -439,6 +466,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                   }
                   definitions={definitions}
                   customOperators={code.customOperators}
+                  hintPaused={showHowItWorks}
                   onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
