@@ -7,7 +7,7 @@ const STORAGE_KEY = "decrypted_drag_hint_seen";
 
 type Rect = { left: number; top: number; width: number; height: number };
 type Rects = { values: Rect; operators: Rect; container: Rect };
-type Phase = "idle" | "hovering" | "grabbing" | "moving" | "at-target" | "hidden";
+type Phase = "idle" | "approaching" | "approaching_move" | "hovering" | "grabbing" | "moving" | "at-target" | "hidden";
 
 type Props = {
   valuesPaletteRef: React.RefObject<HTMLDivElement | null>;
@@ -128,9 +128,21 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
         const endX = r.container.left + r.container.width / 2;
         const endY = r.container.top + r.container.height / 2 - 9;
 
+        // Approach: appear above-right the item, then glide in
+        setCursorPos({ x: startX - 50, y: startY + 30 });
+        setPhase("approaching");
+        await wait(16);
+        if (cancelled) return;
+
+        setPhase("approaching_move");
+        await wait(16);
+        if (cancelled) return;
         setCursorPos({ x: startX, y: startY });
+        await wait(950);
+        if (cancelled) return;
+
         setPhase("hovering");
-        await wait(900);
+        await wait(500);
         if (cancelled) return;
 
         setPhase("grabbing");
@@ -169,7 +181,8 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
 
   const cursorVisible = phase !== "idle" && phase !== "hidden";
   const isGrabbing = phase === "grabbing" || phase === "moving" || phase === "at-target";
-  const isMoving = phase === "moving";
+  const transitionDuration = phase === "approaching_move" ? "0.8s" : "1s";
+  const isTransitioning = phase === "approaching_move" || phase === "moving";
 
   return (
     <>
@@ -178,8 +191,8 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
           className="pointer-events-none fixed top-0 left-0 z-[9999]"
           style={{
             transform: `translate(${cursorPos.x}px, ${cursorPos.y}px)`,
-            transition: isMoving
-              ? "transform 1s cubic-bezier(0.4,0,0.2,1)"
+            transition: isTransitioning
+              ? `transform ${transitionDuration} cubic-bezier(0.4,0,0.2,1)`
               : "none",
           }}
         >
@@ -195,13 +208,13 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
           className="pointer-events-none fixed top-0 left-0 z-[9998]"
           style={{
             transform: `translate(${cursorPos.x-8}px, ${cursorPos.y-9}px)`,
-            transition: isMoving
-              ? "transform 1s cubic-bezier(0.4,0,0.2,1)"
+            transition: isTransitioning
+              ? `transform ${transitionDuration} cubic-bezier(0.4,0,0.2,1)`
               : "none",
           }}
         >
           <div className="flex items-center justify-center h-9 min-w-9 px-2 rounded-xl text-xl select-none bg-dark/80 text-muted border border-muted/30">
-            x
+            a
           </div>
         </div>
       )}
