@@ -17,6 +17,7 @@ import DragGhost from "~/app/_components/exercises/shared/dnd/DragGhost";
 import { useDragSession } from "~/app/_components/exercises/shared/dnd/useDragSession";
 import ExprBlock from "~/app/_components/exercises/construct/ExprBlock";
 import DraggableWindow from "~/app/_components/exercises/shared/dnd/DraggableWindow";
+import DragHintOverlay from "~/app/_components/exercises/construct/DragHintOverlay";
 import Button from "~/components/Button";
 import TokenContainer, { type CombinedToken } from "~/app/_components/exercises/construct/TokenContainer";
 
@@ -35,7 +36,18 @@ type DragAndDropProps = {
 export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenContainerRef = useRef<HTMLDivElement>(null);
+  const valuesPaletteRef = useRef<HTMLDivElement>(null);
+  const operatorPaletteRef = useRef<HTMLDivElement>(null);
   const hoveredGapRef = useRef<number | null>(null);
+
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    try { return !!localStorage.getItem("decrypted_drag_hint_seen"); } catch { return false; }
+  });
+
+  const dismissHint = () => {
+    try { localStorage.setItem("decrypted_drag_hint_seen", "1"); } catch { /* private browsing */ }
+    setHintDismissed(true);
+  };
 
   // Single source-of-truth array. Seeded with frozen prefill tokens; user tokens are inserted as non-frozen.
   const [tokens, setTokens] = useState<CombinedToken[]>(() =>
@@ -67,6 +79,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
 
   const onStartDrag = (item: PaletteItem, x: number, y: number, offsetX: number, offsetY: number) => {
     if (locked) return;
+    dismissHint();
     startDrag(item, x, y, offsetX, offsetY);
   };
 
@@ -84,7 +97,15 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
 
   return (
     <div ref={containerRef} className="relative flex h-full w-full flex-col">
+      <DragHintOverlay
+        valuesPaletteRef={valuesPaletteRef}
+        operatorPaletteRef={operatorPaletteRef}
+        containerRef={tokenContainerRef}
+        dismissed={hintDismissed}
+        onDismiss={dismissHint}
+      />
       <DraggableWindow
+        ref={operatorPaletteRef}
         defaultPosition={{ x: 0, y: 180 }}
         zIndex={getZIndex("palette")}
         onBringToFront={() => bringToFront("palette")}
@@ -104,6 +125,7 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         />
       </DraggableWindow>
       <DraggableWindow
+        ref={valuesPaletteRef}
         defaultPosition={{ x: 0, y: 10 }}
         zIndex={getZIndex("values")}
         onBringToFront={() => bringToFront("values")}

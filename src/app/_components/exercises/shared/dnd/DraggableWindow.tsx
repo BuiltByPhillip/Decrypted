@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, forwardRef } from "react";
 
 type Position = { x: number; y: number };
 
@@ -10,7 +10,8 @@ type DraggableWindowProps = {
   containerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export default function DraggableWindow({ defaultPosition, children, zIndex = 0, onBringToFront, containerRef }: DraggableWindowProps) {
+const DraggableWindow = forwardRef<HTMLDivElement, DraggableWindowProps>(
+function DraggableWindow({ defaultPosition, children, zIndex = 0, onBringToFront, containerRef }: DraggableWindowProps, externalRef) {
   const [position, setPosition] = useState<Position | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<Position>({ x: 0, y: 0 });
@@ -91,9 +92,15 @@ export default function DraggableWindow({ defaultPosition, children, zIndex = 0,
     };
   }, [isDragging]);
 
+  const mergedRef = (node: HTMLDivElement | null) => {
+    (windowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    if (typeof externalRef === "function") externalRef(node);
+    else if (externalRef) (externalRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  };
+
   return (
     <div
-      ref={windowRef}
+      ref={mergedRef}
       onMouseDown={handleMouseDown}
       style={{
         position: "absolute",
@@ -107,4 +114,6 @@ export default function DraggableWindow({ defaultPosition, children, zIndex = 0,
       {children}
     </div>
   );
-}
+});
+
+export default DraggableWindow;

@@ -36,7 +36,7 @@ export default function ExprBlock({ item, className, style, isDeleteMode }: Expr
 
   return (
     <div
-      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-drag rounded-xl text-2xl select-none hover:brightness-125 transition-all duration-200 ${isDeleteMode ? "bg-danger/20 text-danger opacity-50" : className ?? "bg-dark/70 text-muted"}`}
+      className={`flex items-center justify-center h-10 min-w-10 px-2 cursor-grab active:cursor-grabbing rounded-xl text-2xl select-none hover:brightness-125 transition-all duration-200 ${isDeleteMode ? "bg-danger/20 text-danger opacity-50" : className ?? "bg-dark/70 text-muted"}`}
       style={style}
     >
       {renderValue(item)}
