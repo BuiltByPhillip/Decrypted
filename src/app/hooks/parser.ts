@@ -1038,6 +1038,9 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       if (options.length == 0) {
         throw new Error(`Line ${i + 1} - No options for exercise type select`);
       }
+      if (options.length > 6) {
+        throw new Error(`Line ${i + 1} - Select exercise does not allow more than 6 options`);
+      }
       pendingExercise.options = options.map((opt, j) => {
         try {
           const tokens = tokenize(opt);
