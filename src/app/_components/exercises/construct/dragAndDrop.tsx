@@ -105,7 +105,6 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         containerRef={tokenContainerRef}
         dismissed={hintDismissed}
         paused={hintPaused}
-        onDismiss={dismissHint}
       />
       <DraggableWindow
         ref={operatorPaletteRef}
