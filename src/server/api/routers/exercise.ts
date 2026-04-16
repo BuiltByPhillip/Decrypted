@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { exercises } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import {and, eq} from "drizzle-orm";
 
 export const exerciseRouter = createTRPCRouter({
   create: protectedProcedure
@@ -29,7 +29,14 @@ export const exerciseRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.update(exercises)
-        .set({ deletedAt: new Date()})
-        .where(eq(exercises.id, input.id))
+        .set({ deletedAt: new Date() })
+        .where(and(eq(exercises.id, input.id), eq(exercises.userId, ctx.session.userId)))
+    }),
+  edit: protectedProcedure
+    .input(z.object({ id: z.string(), dsl: z.string(), name: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.update(exercises)
+        .set({ dsl: input.dsl, name: input.name, updatedAt: new Date() })
+        .where(and(eq(exercises.id, input.id), eq(exercises.userId, ctx.session.userId)));
     })
 });

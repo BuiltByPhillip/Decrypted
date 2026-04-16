@@ -33,13 +33,20 @@ const CodeWindow = dynamic(() => import("~/app/_components/editor/CodeWindow"), 
   loading: () => <CodeWindowSkeleton />,
 });
 
-export default function EditorControls() {
+type EditorControlProps = {
+  dsl?: string,
+  id?: string,
+}
+
+export default function EditorControls({ dsl, id }: EditorControlProps) {
   const router = useRouter();
-  const [code, setCode] = useState("");
-  const [debouncedDsl, setDebouncedDsl] = useState("");
+  const [code, setCode] = useState(dsl ?? "");
+  const [debouncedDsl, setDebouncedDsl] = useState(dsl ?? "");
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const createExercise = api.exercise.create.useMutation();
+  const editExercise = api.exercise.edit.useMutation();
+  const isEditMode = !!id;
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedDsl(code), 500);
@@ -55,8 +62,12 @@ export default function EditorControls() {
       if (code.trim() === "") throw new Error("No code entered");
       const parsed = parse(code, 0);
       setError(null);
+      if (isEditMode) {
+        editExercise.mutate({ id, dsl: code, name: parsed.information.name });
+      } else {
+        createExercise.mutate({ dsl: code, name: parsed.information.name });
+      }
       router.push("/exercises");
-      createExercise.mutate({ dsl: code, name: parsed.information.name });
     } catch (e) {
       setError((e as Error).message);
     }
@@ -214,7 +225,7 @@ step:
           className="mt-2 font-mono"
           onClick={handleClick}
         >
-          Generate code
+          {isEditMode ? "Save changes" : "Generate code"}
         </Button>
       </div>
     </>

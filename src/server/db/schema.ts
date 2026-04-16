@@ -20,6 +20,7 @@ export const exercises = pgTable("exercises", {
     .unique(),
   name: text("name").notNull(),
   dsl: text("dsl").notNull(),
+  updatedAt: timestamp("updated_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
 });

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export default function ExercisesContent() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data: exercises, isLoading } = api.exercise.getAll.useQuery(undefined, {
     refetchOnMount: true,
@@ -92,6 +94,7 @@ export default function ExercisesContent() {
                   key={exercise.id}
                   className="flex items-center justify-between rounded-xl border border-medium/30 bg-medium/10 px-5 py-4 transition-colors duration-150 hover:border-medium/50"
                 >
+                  {/* Each Exercise */}
                   <div className="flex items-center gap-4">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green/10">
                       <BookOpen size={14} strokeWidth={1.5} className="text-green" />
@@ -129,7 +132,10 @@ export default function ExercisesContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-medium/40 hover:text-soft-white">
+                    <button
+                      onClick={() => router.push('/editor/' + exercise.slug)}
+                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-medium/40 hover:text-soft-white"
+                    >
                       <Pencil size={14} strokeWidth={1.5} />
                     </button>
                     <button
