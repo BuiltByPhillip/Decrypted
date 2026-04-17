@@ -437,7 +437,7 @@ describe("parseExpression", () => {
 
 describe("define block parsing", () => {
   it("parses a multi-element set", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, x, a}`;
     const result = parse(dsl, 0);
@@ -445,7 +445,7 @@ define:
   });
 
   it("parses a single-element set {g} (regression for ROLE_REF bug)", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g}`;
     const result = parse(dsl, 0);
@@ -454,28 +454,28 @@ define:
   });
 
   it("throws on duplicate symbols in a definition", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, g, x}`;
     expect(() => parse(dsl, 0)).toThrow();
   });
 
   it("throws on missing \\elem", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator {g, x}`;
     expect(() => parse(dsl, 0)).toThrow();
   });
 
   it("error message includes the line number", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, g}`;
     expect(() => parse(dsl, 0)).toThrow(/Line 3/);
   });
 
   it("parses the role name correctly", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     prime \\elem {p, q}`;
     const result = parse(dsl, 0);
@@ -483,7 +483,7 @@ define:
   });
 
   it("parses multiple definitions", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, x}
     prime \\elem {p, q}`;
@@ -492,7 +492,7 @@ define:
   });
 
   it("parses numbers as valid symbols", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     exponent \\elem {2, 3, 65537}`;
     const result = parse(dsl, 0);
@@ -501,14 +501,14 @@ define:
   });
 
   it("throws on duplicate numbers in a definition", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     exponent \\elem {2, 2}`;
     expect(() => parse(dsl, 0)).toThrow();
   });
 
   it("throws on empty symbol set", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {}`;
     expect(() => parse(dsl, 0)).toThrow();
@@ -517,7 +517,7 @@ define:
 
 describe("construct define block parsing", () => {
   it("parses a variables line into multiple definitions", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime, alice_secret`;
@@ -526,7 +526,7 @@ define:
   });
 
   it("parses role names correctly", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime`;
@@ -536,7 +536,7 @@ define:
   });
 
   it("sets type to construct on each definition", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime`;
@@ -546,7 +546,7 @@ define:
   });
 
   it("sets symbols to empty array for each definition", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime`;
@@ -556,14 +556,14 @@ define:
   });
 
   it("throws when variables: is used without type: construct", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     variables: generator, prime`;
     expect(() => parse(dsl, 0)).toThrow(/'variables:' is only valid for type 'construct'/);
   });
 
   it("throws when variables: is used with type: select", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: select
     variables: generator, prime`;
@@ -574,7 +574,7 @@ define:
 // ─── construct exercise parsing ───────────────────────────────────────────────
 
 describe("construct exercise parsing", () => {
-  const constructDsl = `protocol: Test
+  const constructDsl = `title: Test
 define:
     generator \\elem {g, x}
     prime \\elem {p, q}
@@ -596,7 +596,7 @@ step:
   });
 
   it("throws when construct exercise has no answer", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Compute public key
     exercise:
@@ -606,7 +606,7 @@ step:
   });
 
   it("parses a single palette category", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     secret \\elem {x, y}
@@ -623,7 +623,7 @@ step:
   });
 
   it("parses multiple palette categories", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     secret \\elem {x, y}
@@ -640,7 +640,7 @@ step:
   });
 
   it("throws on unknown palette category", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Compute public key
     exercise:
@@ -652,7 +652,7 @@ step:
   });
 
   it("throws when palette is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Compute public key
     exercise:
@@ -677,7 +677,7 @@ step:
       "NUMBER_SET_CONSTANTS",
     ];
     for (const category of categories) {
-      const dsl = `protocol: Test
+      const dsl = `title: Test
 step:
     description: Compute public key
     exercise:
@@ -693,7 +693,7 @@ step:
 // ─── select exercise parsing ──────────────────────────────────────────────────
 
 describe("select exercise parsing", () => {
-  const selectDsl = `protocol: Test
+  const selectDsl = `title: Test
 step:
     description: Choose a value
     exercise:
@@ -720,7 +720,7 @@ step:
   });
 
   it("throws when select exercise has no options", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Choose a value
     exercise:
@@ -735,7 +735,7 @@ step:
 
 describe("parse error messages", () => {
   it("includes line number in error for invalid exercise type", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -746,7 +746,7 @@ step:
   });
 
   it("throws on a step with no description", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     exercise:
         type: select
@@ -762,7 +762,7 @@ step:
   });
 
   it("throws when answer is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -774,7 +774,7 @@ step:
   });
 
   it("throws when prompt is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -786,7 +786,7 @@ step:
   });
 
   it("throws when exercise type is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -798,7 +798,7 @@ step:
   });
 
   it("throws on multiple define blocks", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, x}
 define:
@@ -810,7 +810,7 @@ define:
 // ─── match exercise parsing ───────────────────────────────────────────────────
 
 describe("match exercise parsing", () => {
-  const matchDsl = `protocol: Test
+  const matchDsl = `title: Test
 step:
     description: Test step
     exercise:
@@ -847,7 +847,7 @@ step:
   });
 
   it("throws when match exercise has no pairs", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Test step
     exercise:
@@ -862,7 +862,7 @@ step:
   });
 
   it("throws on a pair with no -> separator", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Test step
     exercise:
@@ -874,7 +874,7 @@ step:
   });
 
   it("throws on a pair with multiple -> separators", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Test step
     exercise:
@@ -886,7 +886,7 @@ step:
   });
 
   it("throws on a pair with empty left and right sides", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Test step
     exercise:
@@ -901,7 +901,7 @@ step:
 // ─── custom operator block parsing ───────────────────────────────────────────
 
 describe("customParse - parseOperatorDef", () => {
-  const binaryDsl = `protocol: Test
+  const binaryDsl = `title: Test
 custom:
     operator:
         name: SET
@@ -911,7 +911,7 @@ custom:
 define:
     generator \\elem {g, x}`;
 
-  const unaryDsl = `protocol: Test
+  const unaryDsl = `title: Test
 custom:
     operator:
         name: HASH
@@ -959,7 +959,7 @@ custom:
   });
 
   it("defaults commutative to false when omitted", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: XOP
@@ -970,7 +970,7 @@ custom:
   });
 
   it("parses multiple custom operators", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -987,7 +987,7 @@ custom:
   });
 
   it("throws when name is missing", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         type: BINARY
@@ -996,7 +996,7 @@ custom:
   });
 
   it("throws when type is missing", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1005,7 +1005,7 @@ custom:
   });
 
   it("throws when precedence is missing", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1014,7 +1014,7 @@ custom:
   });
 
   it("throws on invalid type value", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1024,7 +1024,7 @@ custom:
   });
 
   it("throws on non-numeric precedence", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1034,7 +1034,7 @@ custom:
   });
 
   it("throws on negative precedence", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1044,7 +1044,7 @@ custom:
   });
 
   it("throws on duplicate name field", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1055,7 +1055,7 @@ custom:
   });
 
   it("throws on duplicate type field", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1066,7 +1066,7 @@ custom:
   });
 
   it("throws on duplicate precedence field", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1077,12 +1077,12 @@ custom:
   });
 
   it("code.customOperators is empty when no custom block is present", () => {
-    const result = parse(`protocol: Test`, 0);
+    const result = parse(`title: Test`, 0);
     expect(result.customOperators).toHaveLength(0);
   });
 
   it("throws when name conflicts with a built-in arithmetic operator", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: mod
@@ -1092,7 +1092,7 @@ custom:
   });
 
   it("throws when name conflicts with a built-in operator regardless of case", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: MOD
@@ -1102,7 +1102,7 @@ custom:
   });
 
   it("preserves the original case of the operator name", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1113,7 +1113,7 @@ custom:
   });
 
   it("throws when name conflicts with a binary symbol", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: xor
@@ -1123,7 +1123,7 @@ custom:
   });
 
   it("throws when name conflicts with a unary symbol", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: forall
@@ -1133,7 +1133,7 @@ custom:
   });
 
   it("throws when name conflicts with a constant symbol", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: reals
@@ -1199,7 +1199,7 @@ describe("custom operator expression parsing", () => {
   });
 
   it("answer expression using custom BINARY operator parses correctly via full DSL", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: SET
@@ -1222,7 +1222,7 @@ step:
   });
 
   it("answer expression using custom UNARY operator parses correctly via full DSL", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 custom:
     operator:
         name: HASH
@@ -1247,7 +1247,7 @@ step:
 // ─── prefill parsing ──────────────────────────────────────────────────────────
 
 describe("prefill parsing", () => {
-  const base = (prefill: string, answer = "{generator} ^ {secret} mod {prime}") => `protocol: Test
+  const base = (prefill: string, answer = "{generator} ^ {secret} mod {prime}") => `title: Test
 define:
     generator \\elem {g, x}
     prime \\elem {p, q}
@@ -1309,7 +1309,7 @@ step:
   });
 
   it("prefill is undefined when not specified", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1321,7 +1321,7 @@ step:
   });
 
   it("throws when prefill is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1366,7 +1366,7 @@ step:
   });
 
   it("error message includes line number for invalid prefill token", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1382,7 +1382,7 @@ step:
 
 describe("hint field parsing", () => {
   it("parses a hint on a construct exercise", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1395,7 +1395,7 @@ step:
   });
 
   it("parses a hint on a select exercise", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1411,7 +1411,7 @@ step:
   });
 
   it("hint is undefined when not specified", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1423,7 +1423,7 @@ step:
   });
 
   it("throws when hint is defined multiple times", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1439,7 +1439,7 @@ step:
 // ─── calculate exercise parsing ───────────────────────────────────────────────
 
 describe("calculate exercise parsing", () => {
-  const calculateDsl = `protocol: Test
+  const calculateDsl = `title: Test
 step:
     description: Compute the value
     exercise:
@@ -1463,7 +1463,7 @@ step:
   });
 
   it("throws when calculate exercise has no answer", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Compute the value
     exercise:
@@ -1477,7 +1477,7 @@ step:
 
 describe("step without exercise", () => {
   it("parses a step that has only a description", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Just some context`;
     const result = parse(dsl, 0);
@@ -1486,7 +1486,7 @@ step:
   });
 
   it("parses multiple steps where some have no exercise", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Context step
 step:
@@ -1588,7 +1588,7 @@ describe("collectRole", () => {
 
 describe("validateCode", () => {
   it("does not throw when all roles in answer are defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
 step:
@@ -1601,7 +1601,7 @@ step:
   });
 
   it("throws when a role in answer is not defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
 step:
@@ -1614,7 +1614,7 @@ step:
   });
 
   it("throws when a role in options is not defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
 step:
@@ -1630,7 +1630,7 @@ step:
   });
 
   it("does not throw when no roles are used and define block is absent", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1641,7 +1641,7 @@ step:
   });
 
   it("throws when a role is used but define block is entirely absent", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1652,7 +1652,7 @@ step:
   });
 
   it("does not throw when multiple roles are all defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     prime \\elem {p, q}
@@ -1670,7 +1670,7 @@ step:
 
 describe("duplicate role definitions", () => {
   it("throws when the same role is defined twice", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     generator \\elem {x, y}`;
@@ -1678,7 +1678,7 @@ define:
   });
 
   it("does not throw when two different roles are defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     prime \\elem {p, q}`;
@@ -1690,7 +1690,7 @@ define:
 
 describe("duplicate symbols across roles", () => {
   it("throws when the same symbol appears in two different roles", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     prime \\elem {p, a}`;
@@ -1698,7 +1698,7 @@ define:
   });
 
   it("does not throw when all symbols are unique across roles", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     prime \\elem {p, q}`;
@@ -1706,7 +1706,7 @@ define:
   });
 
   it("treats uppercase and lowercase as distinct symbols", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a, b}
     prime \\elem {G, A, B}`;
@@ -1714,7 +1714,7 @@ define:
   });
 
   it("throws when a symbol is shared across three roles", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, a}
     prime \\elem {p, q}
@@ -1727,7 +1727,7 @@ define:
 
 describe("variables: field validation", () => {
   it("throws when variables: is defined twice", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime
@@ -1736,7 +1736,7 @@ define:
   });
 
   it("throws when the same role appears twice in variables:", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, generator`;
@@ -1744,7 +1744,7 @@ define:
   });
 
   it("does not throw when all role names in variables: are unique", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     variables: generator, prime, secret`;
@@ -1752,7 +1752,7 @@ define:
   });
 
   it("throws when \\elem syntax is used in a construct block", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: construct
     generator \\elem {g, a, b}`;
@@ -1760,7 +1760,7 @@ define:
   });
 
   it("does not throw when \\elem syntax is used in a select block", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     type: select
     generator \\elem {g, a, b}`;
@@ -1772,7 +1772,7 @@ define:
 
 describe("role validation in prompt and hint", () => {
   it("throws when an undefined role is used in a prompt", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, h, k}
 step:
@@ -1785,7 +1785,7 @@ step:
   });
 
   it("throws when an undefined role is used in a hint", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, h, k}
 step:
@@ -1799,7 +1799,7 @@ step:
   });
 
   it("does not throw when all roles in prompt and hint are defined", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     generator \\elem {g, h, k}
     prime \\elem {p, q}
@@ -1818,7 +1818,7 @@ step:
 
 describe("select answer must match an option", () => {
   it("throws when the answer does not match any option", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1832,7 +1832,7 @@ step:
   });
 
   it("does not throw when the answer matches an option", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Step
     exercise:
@@ -1846,7 +1846,7 @@ step:
   });
 
   it("does not throw when the answer matches an option containing a role", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 define:
     prime \\elem {p, q}
 step:

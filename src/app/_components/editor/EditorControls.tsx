@@ -54,7 +54,7 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
     return () => clearTimeout(timeout);
   }, [code]);
 
-  const previewProtocolName = useMemo(() => {
+  const previewTitle = useMemo(() => {
     try { return parse(debouncedDsl).information.name; } catch { return null; }
   }, [debouncedDsl]);
 
@@ -117,7 +117,7 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
             <Button
               variant="secondary"
               onClick={() => {
-                setCode(`protocol: Diffie-Hellman
+                setCode(`title: Diffie-Hellman
 custom:
     operator:
         name: SET
@@ -201,10 +201,10 @@ step:
                 <span className="bg-mac-yellow ml-2 h-3 w-3 rounded-full" />
                 <span className="bg-mac-green ml-2 h-3 w-3 rounded-full" />
                 <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-                  <span className="font-mono text-[10px] tracking-[0.2em] text-muted/40 uppercase">Protocol</span>
+                  <span className="font-mono text-[10px] tracking-[0.2em] text-muted/40 uppercase">Title</span>
                   <span className="font-mono text-[10px] text-muted/40">/</span>
                   <span className="font-mono text-[10px] font-medium text-soft-white">
-                    {previewProtocolName ?? "Preview"}
+                    {previewTitle ?? "Preview"}
                   </span>
                 </div>
               </div>

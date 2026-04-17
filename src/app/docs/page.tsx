@@ -145,12 +145,11 @@ export default function DocsPage() {
               answers, and see the final summarization page of how they did.
             </Body>
             <SubHeading id="getting-started">Getting Started</SubHeading>
-            <SubSubHeading id="protocol">Protocol</SubSubHeading>
+            <SubSubHeading id="title">Title</SubSubHeading>
             <Body>
-              To get started building exercises, you have to put in the protocol
-              that the exercises relate to. This is purely a title and DOES NOT
-              affect the exercises. You put the name of the protocol at the
-              start of the code.
+              To get started building exercises, you have to put in a title for
+              the exercise. This is purely a display name and DOES NOT affect
+              the exercises. You put the title at the start of the code.
             </Body>
             <SubSubHeading id="define">Define</SubSubHeading>
             <Body>
@@ -164,7 +163,7 @@ export default function DocsPage() {
             </Body>
             <SubSubHeading id="step">Step</SubSubHeading>
             <CodeBlock label="Example">
-              {`protocol: Diffie-Hellman Key Exchange
+              {`title: Diffie-Hellman Key Exchange
 
 define:
   type: select
@@ -180,10 +179,13 @@ step:
     options: { g^a \mod p, g^b \mod p, g^ab \mod p }`}
             </CodeBlock>
             <Body>
-              Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-              officia deserunt mollit anim id est laborum. Sed ut perspiciatis
-              unde omnis iste natus error sit voluptatem accusantium doloremque
-              laudantium.
+              Each step is rendered with the description at the top of the page and,
+              if an exercise is defined, it will appear below it. Each step takes up
+              an entire page. This means that if the exercise is omitted from the step,
+              the page will only contain a description, which is useful for information
+              between exercises. See the{" "}
+              <DocLink href="#select">exercise types</DocLink>{" "}
+              section for the fields each type accepts.
             </Body>
           </section>
 
@@ -208,10 +210,70 @@ npm run dev`}
               Syntax Overview
             </SectionHeading>
             <Body>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim
-              ad minima veniam, quis nostrum exercitationem ullam corporis
-              suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.
+              A Decrypted exercise is made up of four top-level blocks that must
+              appear in this order: <code>title</code>, <code>define</code>,{" "}
+              <code>custom</code>, and <code>step</code>. Only <code>title</code>{" "}
+              and at least one <code>step</code> are required - the others are
+              optional. Fields inside a block are indented with two spaces.
             </Body>
+            <Body>
+              The <code>title</code> is a display name for the exercise. It has
+              no effect on the exercises themselves, but it will be visible to
+              you and anyone you share it with.
+            </Body>
+            <Body>
+              The <code>define</code> block declares the roles that students
+              assign symbols to before the exercises begin. There are two
+              variants: <code>select</code> (students pick from a fixed set) and{" "}
+              <code>construct</code> (students build their own symbol via
+              drag-and-drop). See the{" "}
+              <DocLink href="#define-block">Define Block</DocLink> section for
+              full details.
+            </Body>
+            <Body>
+              The <code>custom</code> block lets you define your own operators
+              if the built-in set does not cover what you need. See{" "}
+              <DocLink href="#custom-operators">Custom Operators</DocLink> for a
+              full guide.
+            </Body>
+            <Body>
+              One or more <code>step</code> blocks define the actual exercises.
+              Each step occupies its own page and contains a description and an
+              optional exercise.
+            </Body>
+            <Body>
+              Role references are written as{" "}<code>{"{role_name}"}</code> and
+              can appear in descriptions, prompts, and expressions. When a
+              student has assigned a symbol to a role, every occurrence of that
+              reference is automatically replaced with their chosen symbol. This
+              only works if a <code>define</code> block is present. See{" "}
+              <DocLink href="#roles-and-symbols">Roles &amp; Symbols</DocLink>{" "}
+              for more detail.
+            </Body>
+            <CodeBlock label="Skeleton">
+              {`title: Diffie-Hellman Key Exchange
+
+define:
+  type: select
+  generator \\elem {g, h, k}
+  prime \\elem {p, q, r}
+
+custom:
+  operator:
+    name: myop
+    type: BINARY
+    precedence: 5
+
+step:
+  description: Alice uses {generator} as the base for her calculation.
+  exercise:
+    type: select
+    prompt: What is the base used with {prime}?
+    options:
+      - {generator}
+      - {prime}
+    answer: {generator}`}
+            </CodeBlock>
 
             <SectionHeading id="define-block">Define Block</SectionHeading>
             <Body>

@@ -8,7 +8,7 @@ import DefinitionStep from "~/app/_components/definition/DefinitionStep";
 
 function wrapDefineFragment(fragment: string): string {
   const indented = fragment.split("\n").map(l => `  ${l}`).join("\n");
-  return `protocol: Preview\ndefine:\n${indented}\nstep:\n  description: Preview`;
+  return `title: Preview\ndefine:\n${indented}\nstep:\n  description: Preview`;
 }
 
 export default function DefinePreview({ code }: { code: string }) {

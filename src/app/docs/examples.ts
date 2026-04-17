@@ -1,5 +1,5 @@
 const SHELL = (exercise: string) => `
-protocol: Diffie-Hellman
+title: Diffie-Hellman
 define:
   type: select
   generator \\elem {g, h, k}

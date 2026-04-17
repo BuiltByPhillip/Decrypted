@@ -570,8 +570,8 @@ export function parse(input: string, startIndex: number = 0): Code {
       throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
-    if (line.startsWith("protocol:")) {
-      code.information.name = line.replace("protocol:", "").trim();
+    if (line.startsWith("title:")) {
+      code.information.name = line.replace("title:", "").trim();
     }
     else if (line.startsWith("custom:")) {
       const [operators, nextI] = customParse(lines, i)
@@ -723,7 +723,7 @@ function customParse(lines: string[], startIndex: number): [CustomOperator[], nu
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim();
 
-    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("define:")) {
+    if (!line || line.startsWith("step") || line.startsWith("title") || line.startsWith("define:")) {
       break;
     }
 
@@ -747,7 +747,7 @@ function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator,
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim();
 
-    if (!line || line.startsWith("operator:") || line.startsWith("define:") || line.startsWith("step") || line.startsWith("protocol:")) {
+    if (!line || line.startsWith("operator:") || line.startsWith("define:") || line.startsWith("step") || line.startsWith("title:")) {
       break;
     }
 
@@ -817,7 +817,7 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
   while (i < lines.length) {
     const line: string | undefined = lines[i]?.trim()
 
-    if (!line || line.startsWith("step") || line.startsWith("protocol") || line.startsWith("custom:") || line.startsWith("define:")) {
+    if (!line || line.startsWith("step") || line.startsWith("title") || line.startsWith("custom:") || line.startsWith("define:")) {
       break; // End of define block
     }
 
@@ -997,7 +997,7 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       throw new Error(`Line ${i + 1} - Line is undefined`);
     }
 
-    if (!line || line.startsWith("step") || line.startsWith("description:") || line.startsWith("define:") || line.startsWith("custom:") || line.startsWith("protocol:")) {
+    if (!line || line.startsWith("step") || line.startsWith("description:") || line.startsWith("define:") || line.startsWith("custom:") || line.startsWith("title:")) {
       break;
     }
 

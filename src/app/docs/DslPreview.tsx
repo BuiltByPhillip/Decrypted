@@ -18,7 +18,7 @@ function wrapFragment(fragment: string): string {
   const lines = fragment.split("\n");
   const start = lines[0]?.trim() === "exercise:" ? 1 : 0;
   const indented = lines.slice(start).map(l => `    ${l}`).join("\n");
-  return `protocol: Preview
+  return `title: Preview
 define:
   type: select
   generator \\elem {g, h, k}
