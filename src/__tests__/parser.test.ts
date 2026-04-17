@@ -729,6 +729,43 @@ step:
         answer: 7`;
     expect(() => parse(dsl, 0)).toThrow();
   });
+
+  it("parses exactly 6 options without throwing", () => {
+    const dsl = `protocol: Test
+step:
+    description: Choose a value
+    exercise:
+        type: select
+        prompt: Pick the right one
+        options:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+        answer: 1`;
+    expect(() => parse(dsl, 0)).not.toThrow();
+  });
+
+  it("throws when select exercise has more than 6 options", () => {
+    const dsl = `protocol: Test
+step:
+    description: Choose a value
+    exercise:
+        type: select
+        prompt: Pick the right one
+        options:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+        answer: 1`;
+    expect(() => parse(dsl, 0)).toThrow(/more than 6 options/);
+  });
 });
 
 // ─── general parse errors ─────────────────────────────────────────────────────

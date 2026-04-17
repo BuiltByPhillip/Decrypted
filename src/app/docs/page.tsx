@@ -426,6 +426,10 @@ variables: generator, prime, alice_secret, bob_secret`}
     - {prime}-2
   answer: 7`}
             </DslCodeBlock>
+            <Callout>
+              A select exercise supports a maximum of 6 options. The parser
+              will throw an error if more than 6 options are provided.
+            </Callout>
 
             <SectionHeading id="construct">Drag And Drop</SectionHeading>
             <Body>

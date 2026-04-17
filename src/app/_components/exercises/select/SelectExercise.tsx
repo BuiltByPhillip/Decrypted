@@ -97,7 +97,7 @@ export default function SelectExercise({options, description, prompt, hint, defi
       {options.map((option, i) => (
         <Option
           key={i}
-          className={`hover:border-amber h-20 w-full ${handleButtonColor(i)}`}
+          className={`hover:border-amber h-20 w-full ${options.length % 2 === 1 && i === options.length - 1 ? "col-span-2" : ""} ${handleButtonColor(i)}`}
           text={substituteRoles(option, definitions!)}
           onClick={() => handleSelect(i)}
           justCorrect={justCorrect && selected.includes(i)}
