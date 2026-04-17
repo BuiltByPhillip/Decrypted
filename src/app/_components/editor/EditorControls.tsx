@@ -16,6 +16,7 @@ function CodeWindowSkeleton() {
         <span className="bg-mac-yellow h-3 w-3 rounded-full ml-2" />
         <span className="bg-mac-green h-3 w-3 rounded-full ml-2" />
         <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-[0.32em] text-muted uppercase">Exercise Editor</span>
+        <div className="absolute right-4 top-5 -translate-y-1/2 font-mono text-[10px] leading-none text-green">Open live preview</div>
       </div>
 
       <div className="flex-1 bg-[rgba(34,40,49,0.7)]">
@@ -80,15 +81,6 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
 
         {/* left: editor */}
         <div className="relative">
-          {/* live preview toggle - absolutely positioned to the right of the editor */}
-          {!showPreview && (
-            <button
-              onClick={() => setShowPreview(true)}
-              className="absolute top-1 -translate-y-1/2 left-1/2 -translate-x-1/2 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-10"
-            >
-              Open live preview
-            </button>
-          )}
           <div className="relative">
             {/* ambient glow */}
             <div
@@ -104,7 +96,18 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />}
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />}
               <div className={`h-128 overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-[min(45vw,50rem)]" : "w-[min(80vw,55rem)]"}`} data-lenis-prevent>
-                <CodeWindow code={code} onChange={setCode} />
+                <CodeWindow
+                  code={code}
+                  onChange={setCode}
+                  headerRight={!showPreview && (
+                    <button
+                      onClick={() => setShowPreview(true)}
+                      className="cursor-pointer font-mono text-[10px] leading-none py-0 text-green transition-colors duration-150 hover:text-green/70"
+                    >
+                      Open live preview
+                    </button>
+                  )}
+                />
               </div>
             </div>
           </div>
