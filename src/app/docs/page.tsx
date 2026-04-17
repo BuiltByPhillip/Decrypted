@@ -374,9 +374,94 @@ variables: generator, prime, alice_secret, bob_secret`}
 
             <SectionHeading id="expressions">Expressions</SectionHeading>
             <Body>
-              Nam libero tempore, cum soluta nobis est eligendi optio cumque
-              nihil impedit quo minus id quod maxime placeat facere possimus,
-              omnis voluptas assumenda est, omnis dolor repellendus.
+              An expression is any valid combination of values, variables, and
+              operators, for example <code>g ^ a mod p</code> or{" "}
+              <code>A \xor B</code>. Expressions are used in the{" "}
+              <code>answer</code>, <code>options</code>, <code>pairs</code>, and{" "}
+              <code>prefill</code> fields. Role references (e.g.{" "}
+              <code>{"{generator}"}</code>) are also valid inside expressions and
+              are substituted with the student's chosen symbol at runtime. See{" "}
+              <DocLink href="#roles-and-symbols">Roles &amp; Symbols</DocLink>{" "}
+              for details.
+            </Body>
+            <SubHeading id="built-in-operators">Built-in Operators</SubHeading>
+            <Body>
+              Operators that are standard keyboard characters are written
+              directly. Operators that require a special symbol are written with
+              a backslash prefix followed by their name (e.g.{" "}
+              <code>\xor</code> renders as ⊕). All built-in operators are
+              grouped by category below. If you need an operator that is not
+              listed, you can define your own - see{" "}
+              <DocLink href="#custom-operators">Custom Operators</DocLink>.
+            </Body>
+            <div className="mb-4 flex flex-col gap-3">
+              {Object.keys(PALETTE_CATEGORIES).map((name) => (
+                <div key={name} className="flex items-center gap-3">
+                  <Badge label={name} />
+                  <div className="flex flex-wrap gap-1">
+                    {PALETTE_CATEGORIES[name]!.map((item) => {
+                      const op = "op" in item ? item.op : "";
+                      const display =
+                        { ...operatorSymbol, ...symbolDisplay }[op] ?? op;
+                      return (
+                        <span
+                          key={op}
+                          className="border-medium text-muted rounded border px-1.5 py-0.5 font-mono text-[11px]"
+                          title={op}
+                        >
+                          {display}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <SubHeading id="operator-precedence">Operator Precedence</SubHeading>
+            <Body>
+              When an expression contains multiple operators, higher-precedence
+              operators bind more tightly. The precedence order from highest to
+              lowest is:
+            </Body>
+            <div className="mb-4 overflow-hidden rounded-xl border border-[#2a2f3a]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#2a2f3a] bg-[rgba(28,33,41,0.6)]">
+                    <th className="text-muted px-4 py-2 text-left font-mono text-[11px] font-semibold tracking-widest uppercase">Precedence</th>
+                    <th className="text-muted px-4 py-2 text-left font-mono text-[11px] font-semibold tracking-widest uppercase">Operators</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2a2f3a]">
+                  {[
+                    ["Highest (5)", "^"],
+                    ["4", "*, /, mod"],
+                    ["3", "+, -"],
+                    ["2", "<, >, =, and all \\backslash symbols"],
+                    ["Lowest (1)", "and, or"],
+                  ].map(([level, ops]) => (
+                    <tr key={level} className="bg-[rgba(34,40,49,0.4)]">
+                      <td className="text-muted px-4 py-2 text-[12px]">{level}</td>
+                      <td className="text-green px-4 py-2 font-mono text-[12px]">{ops}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Body>
+              For example, <code>g ^ a mod p</code> is parsed as{" "}
+              <code>(g ^ a) mod p</code> because <code>^</code> has higher
+              precedence than <code>mod</code>. Use parentheses to override the
+              default order when needed.
+            </Body>
+            <SubHeading id="commutativity">Commutativity</SubHeading>
+            <Body>
+              When checking a student's answer, Decrypted treats the following
+              operators as commutative: <code>+</code>, <code>*</code>,{" "}
+              <code>and</code>, <code>or</code>, and <code>=</code>. This means
+              that if the correct answer is <code>a + b</code>, a student who
+              writes <code>b + a</code> will still be marked correct. You do not
+              need to do anything to enable this - it is applied automatically
+              for those operators.
             </Body>
           </section>
 
