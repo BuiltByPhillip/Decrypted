@@ -84,7 +84,7 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
           {!showPreview && (
             <button
               onClick={() => setShowPreview(true)}
-              className="absolute top-1/2 -translate-y-1/2 left-full ml-8 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-10"
+              className="absolute top-1 -translate-y-1/2 left-1/2 -translate-x-1/2 cursor-pointer font-mono text-xs text-green transition-colors duration-150 hover:text-green/70 z-10"
             >
               Open live preview
             </button>
@@ -103,7 +103,7 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />}
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />}
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />}
-              <div className={`h-128 overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-[min(45vw,50rem)]" : "w-[min(55vw,60rem)]"}`} data-lenis-prevent>
+              <div className={`h-128 overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-[min(45vw,50rem)]" : "w-[min(80vw,55rem)]"}`} data-lenis-prevent>
                 <CodeWindow code={code} onChange={setCode} />
               </div>
             </div>
