@@ -1031,6 +1031,9 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       if (pairs.length == 0) {
         throw new Error(`Line ${i + 1} - No pairs for exercise type match`);
       }
+      if (pairs.length < 2) {
+        throw new Error(`Line ${i + 1} - Match exercise must have at least 2 pairs`);
+      }
       pendingExercise.pairs = pairs;
       i = nextI;
       continue;

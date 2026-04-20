@@ -99,6 +99,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
 
   const assignedValues = new Set(Object.values(assignments));
   const unassignedItems = shuffledPairs.map(p => p.left).filter(left => !assignedValues.has(left));
+  const colsClass = ({ 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as Record<number, string>)[shuffledPairs.length] ?? "grid-cols-4";
 
   return (
     <ExerciseShell
@@ -122,7 +123,7 @@ export default function MatchExercise({ description, prompt, hint, pairs, onAnsw
       </Button>
 
       {/* Source palette - unassigned cards */}
-      <div className="border-muted grid grid-cols-2 gap-4 rounded-2xl border p-3 sm:grid-cols-4">
+      <div className={`border-muted grid gap-4 rounded-2xl border p-3 ${colsClass}`}>
         {shuffledPairs.map((pair) => (
           <div key={pair.left} className="relative min-h-16 w-full">
             {/* Placeholder: always in flow so the grid slot never collapses when the card is dragging */}
