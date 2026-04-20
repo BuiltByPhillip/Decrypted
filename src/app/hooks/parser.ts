@@ -959,7 +959,11 @@ function stepParse(lines: string[], startIndex: number, customOperators: CustomO
     }
 
     if (line.startsWith("description:")) {
-      currentStep.description = line.replace("description:", "").trim()
+      const desc = line.replace("description:", "").trim()
+      if (desc.length > 150) {
+        throw new Error(`Line ${i + 1} - Description exceeds the 150 character limit (${desc.length} characters)`)
+      }
+      currentStep.description = desc
     }
     else if (line.startsWith("exercise:")) {
       const rest = line.replace("exercise:", "").trim()
