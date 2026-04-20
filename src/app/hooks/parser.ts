@@ -1034,6 +1034,9 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       if (pairs.length < 2) {
         throw new Error(`Line ${i + 1} - Match exercise must have at least 2 pairs`);
       }
+      if (pairs.length > 8) {
+        throw new Error(`Line ${i + 1} - Match exercise does not allow more than 8 pairs`);
+      }
       pendingExercise.pairs = pairs;
       i = nextI;
       continue;
@@ -1044,6 +1047,9 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       const [options, nextI] = optionsParse(lines, i+1)
       if (options.length == 0) {
         throw new Error(`Line ${i + 1} - No options for exercise type select`);
+      }
+      if (options.length < 2) {
+        throw new Error(`Line ${i + 1} - Select exercise must have at least 2 options`);
       }
       if (options.length > 6) {
         throw new Error(`Line ${i + 1} - Select exercise does not allow more than 6 options`);
