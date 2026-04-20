@@ -5,30 +5,10 @@ import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyToken, COOKIE_NAME } from "~/server/session";
-import { rateLimit, getIp } from "~/server/rateLimit";
 
-const CHANGE_PASSWORD_MAX_ATTEMPTS = 5;
-const CHANGE_PASSWORD_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const FAILURE_DELAY_MS = 1500;
 
 export async function POST(req: NextRequest) {
-  const ip = getIp(req);
-  const { allowed, retryAfterMs } = rateLimit(
-    `change-password:${ip}`,
-    CHANGE_PASSWORD_MAX_ATTEMPTS,
-    CHANGE_PASSWORD_WINDOW_MS,
-  );
-
-  if (!allowed) {
-    const retryAfterSecs = Math.ceil(retryAfterMs / 1000);
-    return NextResponse.json(
-      { error: "Too many attempts. Please try again later." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(retryAfterSecs) },
-      },
-    );
-  }
-
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   const session = token ? await verifyToken(token) : null;
@@ -56,7 +36,10 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!valid) return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+  if (!valid) {
+    await new Promise((resolve) => setTimeout(resolve, FAILURE_DELAY_MS));
+    return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+  }
 
   const newHash = await bcrypt.hash(newPassword, 12);
   await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id));
