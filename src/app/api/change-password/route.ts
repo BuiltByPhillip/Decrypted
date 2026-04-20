@@ -5,8 +5,30 @@ import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyToken, COOKIE_NAME } from "~/server/session";
+import { rateLimit, getIp } from "~/server/rateLimit";
+
+const CHANGE_PASSWORD_MAX_ATTEMPTS = 5;
+const CHANGE_PASSWORD_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 export async function POST(req: NextRequest) {
+  const ip = getIp(req);
+  const { allowed, retryAfterMs } = rateLimit(
+    `change-password:${ip}`,
+    CHANGE_PASSWORD_MAX_ATTEMPTS,
+    CHANGE_PASSWORD_WINDOW_MS,
+  );
+
+  if (!allowed) {
+    const retryAfterSecs = Math.ceil(retryAfterMs / 1000);
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSecs) },
+      },
+    );
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   const session = token ? await verifyToken(token) : null;
