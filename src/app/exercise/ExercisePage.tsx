@@ -314,7 +314,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
 
       {/* Title */}
       {code.information.name && (
-        <div className={`fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 transition-all duration-500 ${showExercises ? "top-7" : "top-20"}`}>
+        <div className={`fixed z-40 flex items-center gap-2 transition-all duration-500 ${showExercises ? "bottom-7 left-10" : "left-1/2 -translate-x-1/2 top-20"}`}>
           <span className="font-mono text-[10px] tracking-[0.2em] text-muted/40 uppercase">Title</span>
           <span className="font-mono text-[10px] text-muted/40">/</span>
           <span className="font-mono text-xs font-medium text-soft-white">{code.information.name}</span>
