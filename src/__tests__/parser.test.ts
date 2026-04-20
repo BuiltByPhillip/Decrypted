@@ -730,8 +730,21 @@ step:
     expect(() => parse(dsl, 0)).toThrow();
   });
 
+  it("throws when select exercise has only 1 option", () => {
+    const dsl = `title: Test
+step:
+    description: Choose a value
+    exercise:
+        type: select
+        prompt: Pick the right one
+        options:
+            - 7
+        answer: 7`;
+    expect(() => parse(dsl, 0)).toThrow(/at least 2 options/);
+  });
+
   it("parses exactly 6 options without throwing", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Choose a value
     exercise:
@@ -749,7 +762,7 @@ step:
   });
 
   it("throws when select exercise has more than 6 options", () => {
-    const dsl = `protocol: Test
+    const dsl = `title: Test
 step:
     description: Choose a value
     exercise:
@@ -891,6 +904,57 @@ step:
         type: match
         prompt: Match the values`;
     expect(() => parse(dsl, 0)).toThrow();
+  });
+
+  it("throws when match exercise has only 1 pair", () => {
+    const dsl = `title: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - 0 -> Always produces 1`;
+    expect(() => parse(dsl, 0)).toThrow(/at least 2 pairs/);
+  });
+
+  it("parses exactly 8 pairs without throwing", () => {
+    const dsl = `title: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - 1 -> Label 1
+            - 2 -> Label 2
+            - 3 -> Label 3
+            - 4 -> Label 4
+            - 5 -> Label 5
+            - 6 -> Label 6
+            - 7 -> Label 7
+            - 8 -> Label 8`;
+    expect(() => parse(dsl, 0)).not.toThrow();
+  });
+
+  it("throws when match exercise has more than 8 pairs", () => {
+    const dsl = `title: Test
+step:
+    description: Test step
+    exercise:
+        type: match
+        prompt: Match the values
+        pairs:
+            - 1 -> Label 1
+            - 2 -> Label 2
+            - 3 -> Label 3
+            - 4 -> Label 4
+            - 5 -> Label 5
+            - 6 -> Label 6
+            - 7 -> Label 7
+            - 8 -> Label 8
+            - 9 -> Label 9`;
+    expect(() => parse(dsl, 0)).toThrow(/more than 8 pairs/);
   });
 
   it("does not require an answer field for match exercises", () => {
