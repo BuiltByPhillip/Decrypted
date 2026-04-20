@@ -498,7 +498,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                   }
                 />
               ) : !step.exercise && step.description && exerciseComponents.ExerciseDescription ? (
-                <exerciseComponents.ExerciseDescription description={step.description} />
+                <exerciseComponents.ExerciseDescription description={step.description} definitions={definitions} />
               ) : (
                 <div>Something went wrong while rendering</div>
               )}
