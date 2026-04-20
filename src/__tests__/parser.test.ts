@@ -1495,6 +1495,19 @@ step:
     expect(result.step[0]?.exercise?.hint).toBe("Try using the generator");
   });
 
+  it("parses a hint on a calculate exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Step
+    exercise:
+        type: calculate
+        prompt: What is 2 + 2?
+        hint: Think about addition
+        answer: 4`;
+    const result = parse(dsl, 0);
+    expect(result.step[0]?.exercise?.hint).toBe("Think about addition");
+  });
+
   it("parses a hint on a select exercise", () => {
     const dsl = `title: Test
 step:

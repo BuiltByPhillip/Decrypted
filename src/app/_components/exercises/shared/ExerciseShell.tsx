@@ -33,7 +33,7 @@ export default function ExerciseShell({ description, prompt, hint, onSubmit, sub
 
       {children}
 
-      <div className="flex flex-col items-center pt-10">
+      <div className="flex w-full flex-col items-center pt-10">
         <div
           className={`relative flex w-full items-center justify-center ${footerClassName}`}
         >

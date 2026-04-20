@@ -475,7 +475,11 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                 <exerciseComponents.MatchExercise
                   description={step.description}
                   prompt={step.exercise.prompt}
-                  hint={step.exercise.hint}
+                  hint={
+                    step.exercise.hint
+                      ? substituteRolesInString(step.exercise.hint, definitions)
+                      : undefined
+                  }
                   definitions={definitions}
                   onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
