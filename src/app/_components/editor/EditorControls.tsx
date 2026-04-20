@@ -95,7 +95,7 @@ export default function EditorControls({ dsl, id }: EditorControlProps) {
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute top-0 right-0 z-10 h-8 w-8 rounded-tr border-t border-r" />}
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute bottom-0 left-0 z-10 h-8 w-8 rounded-bl border-b border-l" />}
               {!showPreview && <span aria-hidden="true" className="border-green/60 absolute right-0 bottom-0 z-10 h-8 w-8 rounded-br border-b border-r" />}
-              <div className={`h-128 overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-[min(45vw,50rem)]" : "w-[min(80vw,55rem)]"}`} data-lenis-prevent>
+              <div className={`h-[512px] overflow-hidden rounded-2xl transition-all duration-500 ${showPreview ? "w-[min(45vw,50rem)]" : "w-[min(80vw,55rem)]"}`} data-lenis-prevent>
                 <CodeWindow
                   code={code}
                   onChange={setCode}
@@ -193,7 +193,7 @@ step:
         {/* right: preview */}
         {showPreview && (
           <div className="relative p-6">
-            <div className="h-128 w-[min(45vw,50rem)] overflow-hidden rounded-2xl border border-[#393E46] border-b-[#5a6070]" data-lenis-prevent>
+            <div className="h-[512px] w-[min(45vw,50rem)] overflow-hidden rounded-2xl border border-[#393E46] border-b-[#5a6070]" data-lenis-prevent>
               <div className="border-medium relative flex items-center border-b bg-[rgba(28,33,41,0.8)] px-4 py-3">
                 <button onClick={() => setShowPreview(false)} className="cursor-pointer">
                   <span className="bg-mac-red h-3 w-3 rounded-full block" />

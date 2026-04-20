@@ -39,13 +39,13 @@ export default function CodeWindow({ code, onChange, headerRight }: Props) {
         {headerRight && <div className="absolute right-4 top-1/2 -translate-y-1/2">{headerRight}</div>}
       </div>
       <CodeMirror
-        height="500px"
+        height="100%"
         value={code}
         onChange={onChange}
         theme="none"
         extensions={[darkTheme, autoIndentAfterColon]}
         placeholder="Enter your code here..."
-        className="h-full"
+        className="flex-1 min-h-0"
       />
     </div>
   );

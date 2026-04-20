@@ -36,6 +36,13 @@ const NAV = [
       { label: "Roles & Symbols", href: "#roles-and-symbols" },
     ],
   },
+  {
+    group: "Examples",
+    items: [
+      { label: "Diffie-Hellman", href: "#example-diffie-hellman" },
+      { label: "El-Gamal", href: "#example-elgamal" },
+    ],
+  },
 ];
 
 const ALL_IDS = NAV.flatMap((s) => s.items.map((i) => i.href.slice(1)));
