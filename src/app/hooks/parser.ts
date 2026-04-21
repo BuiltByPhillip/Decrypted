@@ -252,13 +252,13 @@ export function tokenize(input: string): Token[] {
     }
     // Check for multi-char operators BEFORE variables (so they aren't consumed as a variable)
     // Word-boundary check: only match if the character after the keyword is not a letter/digit/underscore/prime
-    if (input.substring(i, i + 3) === "mod" && !/[a-zA-Z_']/.test(input[i + 3] ?? "")) {
+    if (input.substring(i, i + 3) === "mod" && !/[a-zA-Z_'0-9]/.test(input[i + 3] ?? "")) {
       return inner(i + 3, [...acc, { type: "OPERATOR", value: "mod" }]);
     }
-    if (input.substring(i, i + 3) === "and" && !/[a-zA-Z_']/.test(input[i + 3] ?? "")) {
+    if (input.substring(i, i + 3) === "and" && !/[a-zA-Z_'0-9]/.test(input[i + 3] ?? "")) {
       return inner(i + 3, [...acc, { type: "OPERATOR", value: "and"}]);
     }
-    if (input.substring(i, i + 2) === "or" && !/[a-zA-Z_']/.test(input[i + 2] ?? "")) {
+    if (input.substring(i, i + 2) === "or" && !/[a-zA-Z_'0-9]/.test(input[i + 2] ?? "")) {
       return inner(i + 2, [...acc, { type: "OPERATOR", value: "or"}]);
     }
     // Check for keywords/symbols (e.g., \elem, \subset, \forall)
@@ -276,7 +276,7 @@ export function tokenize(input: string): Token[] {
     if (/[a-zA-Z_]/.test(input[i] ?? "")) {
       let str: string = ""
       let j: number = i
-      while (j < input.length && /[a-zA-Z_']/.test(input[j] ?? "")) {
+      while (j < input.length && /[a-zA-Z_'0-9]/.test(input[j] ?? "")) {
         str += input[j];
         j++
       }
@@ -448,6 +448,15 @@ class ExpressionParser {
       }
       case "ROLE_REF":
         return { kind: "role", name: token.value, tokenRange: { start, end: this.current} };
+      case "OPERATOR":
+        if (token.value === "-") {
+          const operand = this.parsePrimary();
+          if (operand.kind === "int") {
+            return { kind: "int", value: -operand.value, tokenRange: { start, end: this.current } };
+          }
+          return { kind: "binary", op: "sub", left: { kind: "int", value: 0 }, right: operand, tokenRange: { start, end: this.current } };
+        }
+        throw new Error(`Unexpected token: ${token.type} '${token.value}'`);
       case "LPAR":
         const expr = this.parseExpression(0);
         if (this.peek().type !== "RPAR") {

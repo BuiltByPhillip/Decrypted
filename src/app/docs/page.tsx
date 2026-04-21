@@ -7,6 +7,7 @@ import DefineCodeBlock from "~/app/docs/DefineCodeBlock";
 import FieldList from "~/app/docs/FieldList";
 import { Badge } from "~/app/docs/Badge";
 import { PALETTE_CATEGORIES, operatorSymbol, symbolDisplay } from "~/app/hooks/parser";
+import { EL_GAMAL_EXAMPLE, DIFFIE_HELLMAN_EXAMPLE } from "~/app/docs/examples";
 
 
 function Callout({ children }: { children: React.ReactNode }) {
@@ -714,50 +715,7 @@ custom: \cat Concatenation`}
               final step uses concrete numbers to verify understanding.
             </Body>
             <CodeBlock label="Full Example">
-              {`title: Diffie-Hellman Key Exchange
-
-define:
-  type: select
-  generator \\elem {g, h, k}
-  prime \\elem {p, q, r}
-  alice_secret \\elem {a, s, x}
-  bob_secret \\elem {b, t, y}
-
-step:
-  description: Alice and Bob agree on public parameters - a generator {generator} and a prime {prime}.
-
-step:
-  description: Alice chooses a secret exponent and computes her public key A.
-  exercise:
-    type: construct
-    prompt: Build Alice's public key A
-    palette: ARITHMETIC_OPERATORS
-    answer: {generator} ^ {alice_secret} mod {prime}
-
-step:
-  description: Bob chooses a secret exponent and computes his public key B.
-  exercise:
-    type: construct
-    prompt: Build Bob's public key B
-    palette: ARITHMETIC_OPERATORS
-    answer: {generator} ^ {bob_secret} mod {prime}
-
-step:
-  description: Alice and Bob exchange their public keys. Now each can derive the shared secret.
-  exercise:
-    type: match
-    prompt: Match each party to the shared secret they compute
-    pairs:
-      - B^{alice_secret} mod {prime} -> Alice's shared secret
-      - A^{bob_secret} mod {prime} -> Bob's shared secret
-
-step:
-  description: Verify the protocol with concrete values. Use generator = 2, prime = 11, alice_secret = 3, bob_secret = 4.
-  exercise:
-    type: calculate
-    prompt: What is the shared secret?
-    hint: Compute A = 2^3 mod 11, then raise it to bob_secret mod prime
-    answer: 4`}
+              {DIFFIE_HELLMAN_EXAMPLE}
             </CodeBlock>
 
             <SubHeading id="example-elgamal">El-Gamal Encryption</SubHeading>
@@ -768,59 +726,7 @@ step:
               recovering the plaintext.
             </Body>
             <CodeBlock label="Full Example">
-              {`title: El-Gamal Encryption
-
-define:
-  type: select
-  generator \\elem {g, h, k}
-  prime \\elem {p, q, r}
-  private_key \\elem {x, a, s}
-  ephemeral \\elem {k, r, t}
-
-step:
-  description: The recipient generates a key pair. They choose a prime {prime}, a generator {generator}, and a private key {private_key}.
-  exercise:
-    type: construct
-    prompt: Build the recipient's public key h
-    palette: ARITHMETIC_OPERATORS
-    answer: {generator} ^ {private_key} mod {prime}
-
-step:
-  description: To encrypt a message m, the sender picks a random ephemeral value {ephemeral} and computes the first ciphertext component.
-  exercise:
-    type: construct
-    prompt: Build the first ciphertext component c1
-    palette: ARITHMETIC_OPERATORS
-    answer: {generator} ^ {ephemeral} mod {prime}
-
-step:
-  description: The sender uses the recipient's public key h to mask the message m.
-  exercise:
-    type: construct
-    prompt: Build the second ciphertext component c2
-    palette: ARITHMETIC_OPERATORS
-    answer: m * h ^ {ephemeral} mod {prime}
-
-step:
-  description: To decrypt, the recipient first recovers the shared secret from c1 using their private key {private_key}.
-  exercise:
-    type: construct
-    prompt: Compute the shared secret s from c1
-    palette: ARITHMETIC_OPERATORS
-    answer: c1 ^ {private_key} mod {prime}
-
-step:
-  description: The recipient now uses the shared secret s to recover the original message from c2.
-  exercise:
-    type: select
-    prompt: How does the recipient recover message m?
-    hint: s masks the message, so you need to invert it
-    options:
-      - c2 * s^(-1) mod {prime}
-      - c2 + s mod {prime}
-      - c2 \\xor s
-      - c2 - s mod {prime}
-    answer: c2 * s^(-1) mod {prime}`}
+              {EL_GAMAL_EXAMPLE}
             </CodeBlock>
           </section>
 
