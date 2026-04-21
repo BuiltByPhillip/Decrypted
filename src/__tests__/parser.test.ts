@@ -107,10 +107,22 @@ describe("tokenize", () => {
     expect(tokenize("or")[0]).toEqual({ type: "OPERATOR", value: "or" });
   });
 
-  it("digits are not part of a variable name: x1 → VAR('x') + NUMBER('1')", () => {
+  it("digits after the first letter are part of the variable name: x1 → VAR('x1')", () => {
     const tokens = tokenize("x1");
-    expect(tokens[0]).toEqual({ type: "VAR", value: "x" });
-    expect(tokens[1]).toEqual({ type: "NUMBER", value: "1" });
+    expect(tokens[0]).toEqual({ type: "VAR", value: "x1" });
+    expect(tokens[1]).toEqual({ type: "EOF", value: "" });
+  });
+
+  it("tokenizes alphanumeric variable names like c1, c2", () => {
+    expect(tokenize("c1")[0]).toEqual({ type: "VAR", value: "c1" });
+    expect(tokenize("c2")[0]).toEqual({ type: "VAR", value: "c2" });
+    expect(tokenize("mod2")[0]).toEqual({ type: "VAR", value: "mod2" });
+  });
+
+  it("a digit still cannot start a variable name: 1x → NUMBER('1') + VAR('x')", () => {
+    const tokens = tokenize("1x");
+    expect(tokens[0]).toEqual({ type: "NUMBER", value: "1" });
+    expect(tokens[1]).toEqual({ type: "VAR", value: "x" });
   });
 
   it("a number followed immediately by a letter: 42x → NUMBER('42') + VAR('x')", () => {
@@ -194,6 +206,43 @@ describe("parseExpression", () => {
       kind: "unary",
       op: "exists",
       operand: { kind: "var", name: "n" },
+    });
+  });
+
+  // --- Unary minus ---
+
+  it("parses -1 as int(-1)", () => {
+    expect(parseExpression("-1")).toMatchObject({ kind: "int", value: -1 });
+  });
+
+  it("parses (-1) as int(-1)", () => {
+    expect(parseExpression("(-1)")).toMatchObject({ kind: "int", value: -1 });
+  });
+
+  it("parses unary minus applied to a variable as 0 - x", () => {
+    expect(parseExpression("-x")).toMatchObject({
+      kind: "binary", op: "sub",
+      left: { kind: "int", value: 0 },
+      right: { kind: "var", name: "x" },
+    });
+  });
+
+  it("parses s^(-1) correctly", () => {
+    expect(parseExpression("s^(-1)")).toMatchObject({
+      kind: "binary", op: "pow",
+      left: { kind: "var", name: "s" },
+      right: { kind: "int", value: -1 },
+    });
+  });
+
+  it("parses a variable name with digits", () => {
+    expect(parseExpression("c1")).toMatchObject({ kind: "var", name: "c1" });
+    expect(parseExpression("c2")).toMatchObject({ kind: "var", name: "c2" });
+  });
+
+  it("parses an expression with alphanumeric variables", () => {
+    expect(parseExpression("c2 * s^(-1) mod p")).toMatchObject({
+      kind: "binary", op: "mod",
     });
   });
 

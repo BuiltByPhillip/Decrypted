@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parse } from "../app/hooks/parser";
-import { DOC_EXAMPLES } from "../app/docs/examples";
+import { DOC_EXAMPLES, EL_GAMAL_EXAMPLE, DIFFIE_HELLMAN_EXAMPLE } from "../app/docs/examples";
 
 // Inline wrapFragment so preview parsing is tested independently of the component
 function wrapFragment(fragment: string): string {
@@ -26,6 +26,14 @@ describe("docs examples", () => {
       expect(() => parse(program)).not.toThrow();
     });
   }
+
+  it("parses the El-Gamal example without error", () => {
+    expect(() => parse(EL_GAMAL_EXAMPLE)).not.toThrow();
+  });
+
+  it("parses the Diffie-Hellman example without error", () => {
+    expect(() => parse(DIFFIE_HELLMAN_EXAMPLE)).not.toThrow();
+  });
 });
 
 describe("docs preview (wrapFragment)", () => {
