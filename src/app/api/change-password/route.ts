@@ -6,6 +6,8 @@ import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyToken, COOKIE_NAME } from "~/server/session";
 
+const FAILURE_DELAY_MS = 1500;
+
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -34,7 +36,10 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!valid) return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+  if (!valid) {
+    await new Promise((resolve) => setTimeout(resolve, FAILURE_DELAY_MS));
+    return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+  }
 
   const newHash = await bcrypt.hash(newPassword, 12);
   await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id));
