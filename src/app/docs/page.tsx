@@ -468,6 +468,12 @@ variables: generator, prime, alice_secret, bob_secret`}
 
           {/* ── Exercise Types ── */}
           <section>
+            <Callout>
+              The <code>type</code> field must always be the first field inside
+              an <code>exercise</code> block. The parser uses it to validate
+              other fields, so declaring <code>prompt</code> or any other field
+              before <code>type</code> will throw an error.
+            </Callout>
             <SectionHeading id="select">Multiple Choice</SectionHeading>
             <Body>
               The student is presented with a prompt and must pick the correct

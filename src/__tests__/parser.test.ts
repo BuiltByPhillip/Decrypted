@@ -644,6 +644,95 @@ step:
     expect(result.step[0]?.exercise?.answer).toHaveLength(1);
   });
 
+  it("throws when prompt: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Compute public key
+    exercise:
+        prompt: Build the expression
+        type: construct
+        answer: g ^ a`;
+    expect(() => parse(dsl, 0)).toThrow(/type.*before.*prompt|prompt.*before.*type/i);
+  });
+
+  it("throws when hint: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Compute public key
+    exercise:
+        hint: Try using exponentiation
+        type: construct
+        prompt: Build the expression
+        answer: g ^ a`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when answer: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Compute public key
+    exercise:
+        answer: g ^ a
+        type: construct
+        prompt: Build the expression`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when options: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Pick one
+    exercise:
+        options:
+            - g ^ a
+            - g ^ b
+        type: select
+        prompt: Choose the correct expression
+        answer: g ^ a`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when pairs: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Match them
+    exercise:
+        pairs:
+            - Alice: g ^ a
+            - Bob: g ^ b
+        type: match
+        prompt: Match each party to their public key`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when palette: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+step:
+    description: Compute public key
+    exercise:
+        palette: ARITHMETIC_OPERATORS
+        type: construct
+        prompt: Build the expression
+        answer: g ^ a`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
+  it("throws when prefill: appears before type: in an exercise", () => {
+    const dsl = `title: Test
+define:
+    generator \\elem {g, x}
+    prime \\elem {p, q}
+    secret \\elem {a, b}
+step:
+    description: Compute public key
+    exercise:
+        prefill: g ^
+        type: construct
+        prompt: Build the expression
+        answer: {generator} ^ {secret} mod {prime}`;
+    expect(() => parse(dsl, 0)).toThrow(/type/i);
+  });
+
   it("throws when construct exercise has no answer", () => {
     const dsl = `title: Test
 step:

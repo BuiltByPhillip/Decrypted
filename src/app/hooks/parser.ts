@@ -1024,9 +1024,13 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       pendingExercise.type = rest
     }
     else if (line.startsWith("prompt:")) {
+      const promptLimit = 256;
       if (pendingExercise.prompt)
         throw new Error(`Line ${i + 1} - Prompt defined multiple times`);
       pendingExercise.prompt = line.replace("prompt:", "").trim()
+      if (pendingExercise.prompt.length > promptLimit) {
+        throw new Error(`Line ${i + 1} - Prompt exceeds maximum length of ${promptLimit} characters`);
+      }
     }
     else if (line.startsWith("hint:")) {
       if (pendingExercise.hint)

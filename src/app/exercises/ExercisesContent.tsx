@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, Check, Pencil, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { api } from "~/trpc/react";
@@ -25,6 +25,13 @@ export default function ExercisesContent() {
     },
   });
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyLink(slug: string, id: string) {
+    void navigator.clipboard.writeText(`${window.location.origin}/exercise/${slug}`);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  }
 
   return (
     <>
@@ -132,6 +139,23 @@ export default function ExercisesContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
+                    <div className="relative">
+                      {copiedId === exercise.id && (
+                        <span className="text-green pointer-events-none absolute bottom-full left-1/2 mb-1.5 whitespace-nowrap font-mono text-[10px] [animation:copied-float_2s_ease_forwards]">
+                          Copied!
+                        </span>
+                      )}
+                      <button
+                        onClick={() => copyLink(exercise.slug, exercise.id)}
+                        className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors duration-150 hover:bg-medium/40 ${copiedId === exercise.id ? "text-green hover:text-green" : "text-muted hover:text-soft-white"}`}
+                      >
+                        {copiedId === exercise.id ? (
+                          <Check size={14} strokeWidth={1.5} />
+                        ) : (
+                          <Share2 size={14} strokeWidth={1.5} />
+                        )}
+                      </button>
+                    </div>
                     <button
                       onClick={() => router.push('/editor/' + exercise.slug)}
                       className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-medium/40 hover:text-soft-white"
