@@ -140,7 +140,7 @@ export default function DocsPage() {
             </SubHeading>
             <Body>
               Exercises have to be individually inside a step. A step covers
-              what the user will see one a single page. This means that multiple
+              what the user will see on a single page. This means that multiple
               steps, e.g. 4 steps, will cover four separate pages. Once the user
               has completed all 4 steps, the user will be able to submit their
               answers, and see the final summarization page of how they did.
