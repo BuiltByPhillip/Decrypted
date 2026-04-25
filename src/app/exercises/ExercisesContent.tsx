@@ -26,6 +26,8 @@ export default function ExercisesContent() {
   });
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   function copyLink(slug: string, id: string) {
     void navigator.clipboard.writeText(`${window.location.origin}/exercise/${slug}`);
@@ -62,7 +64,7 @@ export default function ExercisesContent() {
       )}
 
       {/* Sidebar */}
-      <div className="flex w-64 shrink-0 flex-col border-r border-medium/40 px-6 pb-10 pt-24">
+      <div className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-medium/40 px-6 pb-10 pt-24">
         <p className="mb-8 font-mono text-[10px] tracking-[0.32em] text-green uppercase">
           // my exercises
         </p>
@@ -82,7 +84,7 @@ export default function ExercisesContent() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-12 pb-12 pt-24">
+      <div className="flex-1 px-12 pb-12 pt-24">
         <div className="mx-auto max-w-3xl">
           <h1 className="mb-10 text-xl font-bold tracking-tight text-soft-white">
             My Exercises
@@ -95,8 +97,9 @@ export default function ExercisesContent() {
               ))}
             </div>
           ) : exercises && exercises.length > 0 ? (
+            <>
             <div className="flex flex-col gap-3">
-              {exercises.map((exercise) => (
+              {exercises.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((exercise) => (
                 <div
                   key={exercise.id}
                   className="flex items-center justify-between rounded-xl border border-medium/30 bg-medium/10 px-5 py-4 transition-colors duration-150 hover:border-medium/50"
@@ -172,6 +175,43 @@ export default function ExercisesContent() {
                 </div>
               ))}
             </div>
+            {exercises.length > PAGE_SIZE && (
+              <div className="mt-6 flex items-center justify-between">
+                <span className="font-mono text-[11px] text-muted">
+                  {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, exercises.length)} of {exercises.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage(p => p - 1)}
+                    disabled={page === 1}
+                    className="cursor-pointer rounded-lg px-3 py-1.5 font-mono text-xs text-muted transition-colors duration-150 hover:bg-medium/30 hover:text-soft-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ← prev
+                  </button>
+                  {Array.from({ length: Math.ceil(exercises.length / PAGE_SIZE) }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`cursor-pointer rounded-lg px-3 py-1.5 font-mono text-xs transition-colors duration-150 ${
+                        n === page
+                          ? "bg-green/10 text-green"
+                          : "text-muted hover:bg-medium/30 hover:text-soft-white"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page === Math.ceil(exercises.length / PAGE_SIZE)}
+                    className="cursor-pointer rounded-lg px-3 py-1.5 font-mono text-xs text-muted transition-colors duration-150 hover:bg-medium/30 hover:text-soft-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    next →
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <div className="flex flex-col items-center gap-5 rounded-2xl border border-medium/30 bg-medium/10 px-8 py-20 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green/10">
