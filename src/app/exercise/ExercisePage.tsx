@@ -32,7 +32,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     try { return parse(dsl); } catch { return null; }
   });
 
-  const [showExercises, setShowExercises] = useState(false);
+  const [showExercises, setShowExercises] = useState(() => code?.information.definition.length === 0);
   const [exerciseComponents, setExerciseComponents] = useState<ExerciseComponents>({
     SelectExercise: null,
     ConstructExercise: null,
@@ -394,7 +394,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
       })()}
 
       {/* Definition selection */}
-      <div className="flex min-h-screen w-full flex-col items-center justify-center py-24">
+      {code.information.definition.length > 0 && <div className="flex min-h-screen w-full flex-col items-center justify-center py-24">
         <span className="text-gray pb-5 text-xl font-medium tracking-wider uppercase">
           define symbols for exercises
         </span>
@@ -423,7 +423,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
         >
           Continue
         </Button>
-      </div>
+      </div>}
 
       {/* Exercise sections */}
       {showExercises &&
