@@ -134,7 +134,7 @@ export function searchValues(query: string): Item[] {
   const seen = new Set<string>();
 
   // If query is a number, add it as an int
-  if (/^\d+$/.test(q)) {
+  if (/^-?\d+$/.test(q)) {
     const value = parseInt(q, 10);
     results.push({ kind: "int", value });
     seen.add(`int:${value}`);
