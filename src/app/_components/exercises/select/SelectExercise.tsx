@@ -1,7 +1,7 @@
 "use client"
 
 import Option from "~/app/_components/exercises/select/option"
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { Expr } from "~/app/hooks/parser"
 import { exprListContains, substituteRoles } from "~/app/hooks/expr";
 import type { SelectedDefinitions } from "~/app/exercise/page";
@@ -16,6 +16,9 @@ type SelectExerciseProps = {
   definitions?: SelectedDefinitions;
   answers: Expr[];
   onAnswerAction?: (isCorrect: boolean) => void;
+  initialSelected?: number[];
+  initialLocked?: boolean;
+  onStateChange?: (state: { selected: number[]; locked: boolean }) => void;
 }
 
 /**
@@ -31,10 +34,16 @@ type SelectExerciseProps = {
  * @param onAnswerAction - Optional callback fired after submission. Receives `true` if every selected option was correct, `false` otherwise.
  * @constructor
  */
-export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction}: SelectExerciseProps) {
-  const [selected, setSelected] = useState<number[]>([]);
-  const [locked, setLocked] = useState<boolean>(false);
+export default function SelectExercise({options, description, prompt, hint, definitions, answers, onAnswerAction, initialSelected, initialLocked, onStateChange}: SelectExerciseProps) {
+  const [selected, setSelected] = useState<number[]>(initialSelected ?? []);
+  const [locked, setLocked] = useState<boolean>(initialLocked ?? false);
   const [lastResults, setLastResults] = useState<[number, boolean][]>([]);
+
+  const onStateChangeRef = useRef(onStateChange);
+  useEffect(() => { onStateChangeRef.current = onStateChange; });
+  useEffect(() => {
+    onStateChangeRef.current?.({ selected, locked });
+  }, [selected, locked]);
   const [justCorrect, setJustCorrect] = useState<boolean>(false);
   const [wrongAnswer, setWrongAnswer] = useState<boolean>(false);
 

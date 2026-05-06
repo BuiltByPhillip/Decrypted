@@ -31,10 +31,11 @@ type DragAndDropProps = {
   priorityValueItems?: PaletteItem[];
   prefill?: PaletteItem[];
   defaultPaletteItems?: PaletteItem[];
+  initialTokens?: PaletteItem[];
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, hintPaused, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, hintPaused, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems, initialTokens }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenContainerRef = useRef<HTMLDivElement>(null);
   const valuesPaletteRef = useRef<HTMLDivElement>(null);
@@ -50,9 +51,11 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     setHintDismissed(true);
   };
 
-  // Single source-of-truth array. Seeded with frozen prefill tokens; user tokens are inserted as non-frozen.
+  // Single source-of-truth array. Seeded from saved state (if restoring) or frozen prefill tokens.
   const [tokens, setTokens] = useState<CombinedToken[]>(() =>
-    prefill.map(token => ({ token, frozen: true }))
+    initialTokens?.length
+      ? initialTokens.map(token => ({ token, frozen: false }))
+      : prefill.map(token => ({ token, frozen: true }))
   );
   const [isOutsideContainer, setIsOutsideContainer] = useState(false);
 

@@ -3,7 +3,7 @@
 import DragAndDrop from "~/app/_components/exercises/construct/dragAndDrop";
 import {type CustomOperator, type Expr, type PaletteItem, parseExpression, type TokenRange, PALETTE_CATEGORIES} from "~/app/hooks/parser";
 import type { SelectedDefinitions } from "~/app/exercise/page";
-import {useState} from "react";
+import { useState, useRef, useEffect } from "react";
 import {exprDiff, exprEquals, paletteItemToString, substituteRoles, substituteRolesInPalette} from "~/app/hooks/expr";
 import UserFeedback from "~/app/_components/exercises/shared/UserFeedback";
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
@@ -19,12 +19,21 @@ type ConstructExerciseProps = {
   customOperators?: CustomOperator[];
   hintPaused?: boolean;
   onAnswerAction?: (isCorrect: boolean) => void;
+  initialTokens?: PaletteItem[];
+  initialLocked?: boolean;
+  onStateChange?: (state: { tokens: PaletteItem[]; locked: boolean }) => void;
 }
 
-export default function ConstructExercise({ answer, prefill, palette, definitions, prompt, description, hint, customOperators = [], hintPaused, onAnswerAction }: ConstructExerciseProps) {
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [locked, setLocked] = useState(false);
-  const [tokens, setTokens] = useState<PaletteItem[]>([]);
+export default function ConstructExercise({ answer, prefill, palette, definitions, prompt, description, hint, customOperators = [], hintPaused, onAnswerAction, initialTokens, initialLocked, onStateChange }: ConstructExerciseProps) {
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(initialLocked ? true : null);
+  const [locked, setLocked] = useState(initialLocked ?? false);
+  const [tokens, setTokens] = useState<PaletteItem[]>(initialTokens ?? []);
+
+  const onStateChangeRef = useRef(onStateChange);
+  useEffect(() => { onStateChangeRef.current = onStateChange; });
+  useEffect(() => {
+    onStateChangeRef.current?.({ tokens, locked });
+  }, [tokens, locked]);
   const [errorRange, setErrorRange] = useState<TokenRange | null>(null);
   const [submittedAnswer, setSubmittedAnswer] = useState<{ status: "valid"; expr: Expr } | { status: "invalid" } | null>(null);
   const [resolvedAnswer, setResolvedAnswer] = useState<Expr>(answer);
@@ -104,6 +113,7 @@ export default function ConstructExercise({ answer, prefill, palette, definition
           priorityValueItems={priorityValueItems}
           prefill={prefill && definitions ? substituteRolesInPalette(prefill, definitions) : prefill}
           defaultPaletteItems={palette?.flatMap(cat => PALETTE_CATEGORIES[cat] ?? [])}
+          initialTokens={initialTokens}
         />
       </ExerciseShell>
 

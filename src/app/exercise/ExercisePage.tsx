@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "~/trpc/react";
-import type { Code, Expr } from "~/app/hooks/parser";
+import type { Code, Expr, PaletteItem } from "~/app/hooks/parser";
 import { parse } from "~/app/hooks/parser";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyComponent = React.ComponentType<any>;
@@ -26,13 +26,37 @@ type ExerciseComponents = {
 // Map of <Role, Symbol>
 export type SelectedDefinitions = Record<string, Expr>
 
+type SelectStepState = { type: "select"; selected: number[]; locked: boolean };
+type ConstructStepState = { type: "construct"; tokens: PaletteItem[]; locked: boolean };
+type MatchStepState = { type: "match"; assignments: Record<string, string>; locked: boolean };
+type CalculateStepState = { type: "calculate"; value: string; locked: boolean };
+type StepState = SelectStepState | ConstructStepState | MatchStepState | CalculateStepState;
+
+type SavedProgress = {
+  definitions: SelectedDefinitions;
+  results: Record<number, boolean>;
+  showExercises: boolean;
+  currentExerciseIndex: number;
+  stepStates: Record<number, StepState>;
+};
+
 export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exerciseId: string }) {
   const submitRating = api.rating.create.useMutation();
   const [code] = useState<Code | null>(() => {
     try { return parse(dsl); } catch { return null; }
   });
 
-  const [showExercises, setShowExercises] = useState(() => code?.information.definition.length === 0);
+  const [savedProgress] = useState<SavedProgress | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(`exercise-progress-${exerciseId}`);
+      return raw ? (JSON.parse(raw) as SavedProgress) : null;
+    } catch { return null; }
+  });
+
+  const [showExercises, setShowExercises] = useState(
+    savedProgress?.showExercises ?? code?.information.definition.length === 0
+  );
   const [exerciseComponents, setExerciseComponents] = useState<ExerciseComponents>({
     SelectExercise: null,
     ConstructExercise: null,
@@ -42,21 +66,22 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     ProgressBar: null,
     ExerciseDescription: null,
   });
-  const [definitions, setDefinitions] = useState<SelectedDefinitions>({});
-  const [results, setResults] = useState<Record<number, boolean>>({});
+  const [definitions, setDefinitions] = useState<SelectedDefinitions>(savedProgress?.definitions ?? {});
+  const [results, setResults] = useState<Record<number, boolean>>(savedProgress?.results ?? {});
+  const [stepStates, setStepStates] = useState<Record<number, StepState>>(savedProgress?.stepStates ?? {});
   const [showFinish, setShowFinish] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(savedProgress?.currentExerciseIndex ?? 0);
 
   const lenis = useLenis();
   const exerciseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Flag to trigger scroll to first exercise after render
-  const shouldScrollToFirst = useRef(false);
+  const shouldScrollToFirst = useRef(!!savedProgress?.showExercises);
 
   // Snap scroll state
-  const currentExerciseIndexRef = useRef(0);
+  const currentExerciseIndexRef = useRef(savedProgress?.currentExerciseIndex ?? 0);
   const lastScrollTimeRef = useRef(0);
   const finishElementRef = useRef<HTMLDivElement | null>(null);
   const showFinishRef = useRef(false);
@@ -206,18 +231,19 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     };
   }, [showExercises, lenis, scrollToExercise]);
 
-  // Handle scroll to first exercise after content is rendered
+  // Handle scroll to first (or restored) exercise after content is rendered
   useEffect(() => {
     if (!shouldScrollToFirst.current || !showExercises || !lenis) return;
 
     shouldScrollToFirst.current = false;
+    const targetIndex = currentExerciseIndexRef.current;
 
     // Double requestAnimationFrame ensures:
     // 1. First rAF: Browser has processed the DOM changes
     // 2. Second rAF: Layout calculations are complete
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        scrollToExercise(0);
+        scrollToExercise(targetIndex);
       });
     });
   }, [showExercises, lenis, scrollToExercise]);
@@ -226,7 +252,20 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     setResults(prev => ({ ...prev, [exerciseIndex]: isCorrect }));
   }, []);
 
+  const handleStepStateChange = useCallback((exerciseIndex: number, state: StepState) => {
+    setStepStates(prev => {
+      if (JSON.stringify(prev[exerciseIndex]) === JSON.stringify(state)) return prev;
+      return { ...prev, [exerciseIndex]: state };
+    });
+  }, []);
+
+  useEffect(() => {
+    const progress: SavedProgress = { definitions, results, showExercises, currentExerciseIndex, stepStates };
+    try { localStorage.setItem(`exercise-progress-${exerciseId}`, JSON.stringify(progress)); } catch { /* private browsing */ }
+  }, [exerciseId, definitions, results, showExercises, currentExerciseIndex, stepStates]);
+
   const handleFinish = () => {
+    try { localStorage.removeItem(`exercise-progress-${exerciseId}`); } catch { /* private browsing */ }
     showFinishRef.current = true;
     currentExerciseIndexRef.current = exercisesLengthRef.current;
     setShowFinish(true);
@@ -243,10 +282,12 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
   }, [showFinish, lenis]);
 
   const handleRestart = () => {
+    try { localStorage.removeItem(`exercise-progress-${exerciseId}`); } catch { /* private browsing */ }
     currentExerciseIndexRef.current = 0;
     lastScrollTimeRef.current = 0;
     showFinishRef.current = false;
     setResults({});
+    setStepStates({});
     setShowFinish(false);
     setShowExercises(false);
     lenis?.scrollTo("top", { duration: 1.5 });
@@ -403,6 +444,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
           onSelect={updateDefinitions}
           selected={definitions}
           onComplete={() => {
+            currentExerciseIndexRef.current = 0;
             shouldScrollToFirst.current = true;
             setShowExercises(true);
             setShowHowItWorks(false);
@@ -415,6 +457,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             if (showExercises) {
               scrollToExercise(0);
             } else {
+              currentExerciseIndexRef.current = 0;
               shouldScrollToFirst.current = true;
               setShowExercises(true);
               setShowHowItWorks(false);
@@ -451,6 +494,11 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                   onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
+                  initialSelected={(stepStates[exerciseIndex] as SelectStepState)?.selected}
+                  initialLocked={(stepStates[exerciseIndex] as SelectStepState)?.locked}
+                  onStateChange={(state: { selected: number[]; locked: boolean }) =>
+                    handleStepStateChange(exerciseIndex, { type: "select", ...state })
+                  }
                 />
               ) : step.exercise?.type === "construct" && exerciseComponents.ConstructExercise ? (
                 <exerciseComponents.ConstructExercise
@@ -470,6 +518,11 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                   onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
+                  initialTokens={(stepStates[exerciseIndex] as ConstructStepState)?.tokens}
+                  initialLocked={(stepStates[exerciseIndex] as ConstructStepState)?.locked}
+                  onStateChange={(state: { tokens: PaletteItem[]; locked: boolean }) =>
+                    handleStepStateChange(exerciseIndex, { type: "construct", ...state })
+                  }
                 />
               ) : step.exercise?.type === "match" && exerciseComponents.MatchExercise ? (
                 <exerciseComponents.MatchExercise
@@ -485,6 +538,11 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                     onAnswerAction(exerciseIndex, isCorrect)
                   }
                   pairs={step.exercise.pairs!}
+                  initialAssignments={(stepStates[exerciseIndex] as MatchStepState)?.assignments}
+                  initialLocked={(stepStates[exerciseIndex] as MatchStepState)?.locked}
+                  onStateChange={(state: { assignments: Record<string, string>; locked: boolean }) =>
+                    handleStepStateChange(exerciseIndex, { type: "match", ...state })
+                  }
                 />
               ) : step.exercise?.type === "calculate" && exerciseComponents.CalculateExercise ? (
                 <exerciseComponents.CalculateExercise
@@ -499,6 +557,11 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
                   definitions={definitions}
                   onAnswerAction={(isCorrect: boolean) =>
                     onAnswerAction(exerciseIndex, isCorrect)
+                  }
+                  initialValue={(stepStates[exerciseIndex] as CalculateStepState)?.value}
+                  initialLocked={(stepStates[exerciseIndex] as CalculateStepState)?.locked}
+                  onStateChange={(state: { value: string; locked: boolean }) =>
+                    handleStepStateChange(exerciseIndex, { type: "calculate", ...state })
                   }
                 />
               ) : !step.exercise && step.description && exerciseComponents.ExerciseDescription ? (

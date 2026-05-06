@@ -2,7 +2,7 @@
 
 import type {SelectedDefinitions} from "~/app/exercise/page";
 import type {Expr} from "~/app/hooks/parser";
-import {useState} from "react";
+import { useState, useRef, useEffect } from "react";
 import ExerciseShell from "~/app/_components/exercises/shared/ExerciseShell";
 
 type CalculateExerciseProps = {
@@ -12,12 +12,21 @@ type CalculateExerciseProps = {
     answer: Expr;
     onAnswerAction?: (isCorrect: boolean) => void;
     definitions: SelectedDefinitions;
+    initialValue?: string;
+    initialLocked?: boolean;
+    onStateChange?: (state: { value: string; locked: boolean }) => void;
 }
 
-export default function CalculateExercise({ description, prompt, hint, answer, onAnswerAction, definitions }: CalculateExerciseProps) {
-    const [value, setValue] = useState("");
-    const [locked, setLocked] = useState(false);
+export default function CalculateExercise({ description, prompt, hint, answer, onAnswerAction, definitions, initialValue, initialLocked, onStateChange }: CalculateExerciseProps) {
+    const [value, setValue] = useState(initialValue ?? "");
+    const [locked, setLocked] = useState(initialLocked ?? false);
     const [wrongAnswer, setWrongAnswer] = useState(false);
+
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => { onStateChangeRef.current = onStateChange; });
+    useEffect(() => {
+        onStateChangeRef.current?.({ value, locked });
+    }, [value, locked]);
 
     const checkAnswer = () => {
       if (!value.trim() || locked) return;

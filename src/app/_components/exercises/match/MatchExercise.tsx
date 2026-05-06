@@ -15,6 +15,9 @@ type MatchExerciseProps = {
   pairs: {left: string, right: string}[];
   onAnswerAction?: (isCorrect: boolean) => void;
   definitions: SelectedDefinitions;
+  initialAssignments?: Record<string, string>;
+  initialLocked?: boolean;
+  onStateChange?: (state: { assignments: Record<string, string>; locked: boolean }) => void;
 };
 
 /**
@@ -32,10 +35,16 @@ type MatchExerciseProps = {
  * Drag behaviour: uses DragElement so the actual card moves rather than a ghost clone.
  * Each slot always renders a dashed placeholder underneath so layout never shifts.
  */
-export default function MatchExercise({ description, prompt, hint, pairs, onAnswerAction, definitions }: MatchExerciseProps) {
-  const [locked, setLocked] = useState(false);
+export default function MatchExercise({ description, prompt, hint, pairs, onAnswerAction, definitions, initialAssignments, initialLocked, onStateChange }: MatchExerciseProps) {
+  const [locked, setLocked] = useState(initialLocked ?? false);
   const [wrongAnswer, setWrongAnswer] = useState(false);
-  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [assignments, setAssignments] = useState<Record<string, string>>(initialAssignments ?? {});
+
+  const onStateChangeRef = useRef(onStateChange);
+  useEffect(() => { onStateChangeRef.current = onStateChange; });
+  useEffect(() => {
+    onStateChangeRef.current?.({ assignments, locked });
+  }, [assignments, locked]);
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [hoveredPaletteEl, setHoveredPaletteEl] = useState<HTMLDivElement | null>(null);
   const [shuffledPairs] = useState(() => [...pairs].sort(() => Math.random() - 0.5));
