@@ -5,12 +5,12 @@ import { Hand, HandFist } from "lucide-react";
 import { useLenis } from "~/components/SmoothScroll";
 
 type Rect = { left: number; top: number; width: number; height: number };
-type Rects = { values: Rect; operators: Rect; container: Rect };
+type Rects = { values: Rect; operators?: Rect; container: Rect };
 type Phase = "idle" | "approaching" | "approaching_move" | "hovering" | "grabbing" | "moving" | "at-target" | "hidden";
 
 type Props = {
   valuesPaletteRef: React.RefObject<HTMLDivElement | null>;
-  operatorPaletteRef: React.RefObject<HTMLDivElement | null>;
+  operatorPaletteRef?: React.RefObject<HTMLDivElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   dismissed: boolean;
   paused?: boolean;
@@ -35,12 +35,12 @@ export default function DragHintOverlay({ valuesPaletteRef, operatorPaletteRef, 
 
   const readRects = useCallback((): Rects | null => {
     const vr = valuesPaletteRef.current?.getBoundingClientRect();
-    const or = operatorPaletteRef.current?.getBoundingClientRect();
+    const or = operatorPaletteRef?.current?.getBoundingClientRect();
     const cr = containerRef.current?.getBoundingClientRect();
-    if (!vr || !or || !cr) return null;
+    if (!vr || !cr) return null;
     return {
       values: { left: vr.left, top: vr.top, width: vr.width, height: vr.height },
-      operators: { left: or.left, top: or.top, width: or.width, height: or.height },
+      ...(or && { operators: { left: or.left, top: or.top, width: or.width, height: or.height } }),
       container: { left: cr.left, top: cr.top, width: cr.width, height: cr.height },
     };
   }, [valuesPaletteRef, operatorPaletteRef, containerRef]);

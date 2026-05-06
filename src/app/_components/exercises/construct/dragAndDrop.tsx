@@ -32,10 +32,11 @@ type DragAndDropProps = {
   prefill?: PaletteItem[];
   defaultPaletteItems?: PaletteItem[];
   initialTokens?: PaletteItem[];
+  hidePalette?: boolean;
 };
 
 
-export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, hintPaused, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems, initialTokens }: DragAndDropProps) {
+export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrect, locked, hintPaused, customOperatorItems = [], priorityValueItems = [], prefill = [], defaultPaletteItems, initialTokens, hidePalette = false }: DragAndDropProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenContainerRef = useRef<HTMLDivElement>(null);
   const valuesPaletteRef = useRef<HTMLDivElement>(null);
@@ -104,31 +105,33 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
     <div ref={containerRef} className="relative flex h-full w-full flex-col">
       <DragHintOverlay
         valuesPaletteRef={valuesPaletteRef}
-        operatorPaletteRef={operatorPaletteRef}
+        operatorPaletteRef={hidePalette ? undefined : operatorPaletteRef}
         containerRef={tokenContainerRef}
         dismissed={hintDismissed}
         paused={hintPaused}
       />
-      <DraggableWindow
-        ref={operatorPaletteRef}
-        defaultPosition={{ x: 0, y: 180 }}
-        zIndex={getZIndex("palette")}
-        onBringToFront={() => bringToFront("palette")}
-        containerRef={containerRef}
-      >
-        <ExprPalette
-          category="Palette"
-          defaultItems={(() => {
-            const prioritySlots = customOperatorItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
-            const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
-            const baseItems = defaultPaletteItems ?? DEFAULT_PALETTE_ITEMS;
-            return [...customOperatorItems, ...baseItems.slice(0, remaining)];
-          })()}
-          searchFn={(q) => searchPalette(q, customOperatorItems)}
-          onStartDrag={onStartDrag}
-          searchPlaceholder="Search..."
-        />
-      </DraggableWindow>
+      {!hidePalette && (
+        <DraggableWindow
+          ref={operatorPaletteRef}
+          defaultPosition={{ x: 0, y: 180 }}
+          zIndex={getZIndex("palette")}
+          onBringToFront={() => bringToFront("palette")}
+          containerRef={containerRef}
+        >
+          <ExprPalette
+            category="Palette"
+            defaultItems={(() => {
+              const prioritySlots = customOperatorItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
+              const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
+              const baseItems = defaultPaletteItems ?? DEFAULT_PALETTE_ITEMS;
+              return [...customOperatorItems, ...baseItems.slice(0, remaining)];
+            })()}
+            searchFn={(q) => searchPalette(q, customOperatorItems)}
+            onStartDrag={onStartDrag}
+            searchPlaceholder="Search..."
+          />
+        </DraggableWindow>
+      )}
       <DraggableWindow
         ref={valuesPaletteRef}
         defaultPosition={{ x: 0, y: 10 }}

@@ -60,6 +60,7 @@ export default function DefinitionsConstruct({ definitions, onSelect, selected, 
             { kind: "binarySymbol", op: "elem" },
             { kind: "role", name: currentDefinition.role },
           ]}
+          hidePalette
         />
         {error && (
           <p className="pt-3 text-center text-sm text-red-500">{error}</p>
