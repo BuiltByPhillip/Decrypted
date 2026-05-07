@@ -1024,6 +1024,8 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       pendingExercise.type = rest
     }
     else if (line.startsWith("prompt:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'prompt:'`);
       const promptLimit = 256;
       if (pendingExercise.prompt)
         throw new Error(`Line ${i + 1} - Prompt defined multiple times`);
@@ -1033,11 +1035,15 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       }
     }
     else if (line.startsWith("hint:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'hint:'`);
       if (pendingExercise.hint)
         throw new Error(`Line ${i + 1} - Hint defined multiple times`);
       pendingExercise.hint = line.replace("hint:", "").trim()
     }
     else if (line.startsWith("pairs:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'pairs:'`);
       if (pendingExercise.pairs)
         throw new Error(`Line ${i + 1} - Pairs defined multiple times`);
       const [pairs, nextI] = pairsParse(lines, i+1)
@@ -1055,6 +1061,8 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       continue;
     }
     else if (line.startsWith("options:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'options:'`);
       if (pendingExercise.options)
         throw new Error(`Line ${i + 1} - Options defined multiple times`);
       const [options, nextI] = optionsParse(lines, i+1)
@@ -1080,6 +1088,8 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       continue
     }
     else if (line.startsWith("palette:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'palette:'`);
       if (pendingExercise.palette)
         throw new Error(`Line ${i + 1} - Palette defined multiple times`);
       const values = line.replace("palette:", "").split(",").map(s => s.trim());
@@ -1091,6 +1101,8 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       pendingExercise.palette = values;
     }
     else if (line.startsWith("prefill:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'prefill:'`);
       if (pendingExercise.prefill)
         throw new Error(`Line ${i + 1} - Prefill defined multiple times`);
       const prefillText = line.replace("prefill:", "").trim()
@@ -1106,6 +1118,8 @@ function exerciseParse(lines: string[], startIndex: number, customOperators: Cus
       }
     }
     else if (line.startsWith("answer:")) {
+      if (!pendingExercise.type)
+        throw new Error(`Line ${i + 1} - 'type:' must be defined before 'answer:'`);
       if (pendingExercise.answer)
         throw new Error(`Line ${i + 1} - Answer defined multiple times`);
       const answerText = line.replace("answer:", "").trim()
