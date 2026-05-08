@@ -141,7 +141,7 @@ export function searchValues(query: string): Item[] {
   }
 
   // If query matches variable pattern (letters with optional prime)
-  if (/^[a-zA-Z]+'?$/.test(query.trim())) {
+  if (/^[a-zA-Z][a-zA-Z0-9_]*'?$/.test(query.trim())) {
     results.push({ kind: "var", name: query.trim() });
     seen.add(`var:${q}`);
   }

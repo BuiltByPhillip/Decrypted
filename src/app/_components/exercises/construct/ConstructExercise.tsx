@@ -85,12 +85,29 @@ export default function ConstructExercise({ answer, prefill, palette, definition
     }
   };
 
-  const priorityValueItems: PaletteItem[] = Object.values(definitions ?? {})
+  function collectValueItems(expr: Expr): PaletteItem[] {
+    if (expr.kind === "var") return [{ kind: "var", name: expr.name }];
+    if (expr.kind === "int") return [{ kind: "int", value: expr.value }];
+    if (expr.kind === "binary") return [...collectValueItems(expr.left), ...collectValueItems(expr.right)];
+    if (expr.kind === "unary") return collectValueItems(expr.operand);
+    return [];
+  }
+
+  const definitionItems: PaletteItem[] = Object.values(definitions ?? {})
     .flatMap((expr): PaletteItem[] =>
       expr.kind === "var" ? [{ kind: "var" as const, name: expr.name }]
       : expr.kind === "int" ? [{ kind: "int" as const, value: expr.value }]
       : []
     );
+
+  const answerItems = collectValueItems(answer).filter(item =>
+    !definitionItems.some(d =>
+      (item.kind === "var" && d.kind === "var" && item.name === d.name) ||
+      (item.kind === "int" && d.kind === "int" && item.value === d.value)
+    )
+  );
+
+  const priorityValueItems: PaletteItem[] = [...definitionItems, ...answerItems];
 
   return (
       <ExerciseShell

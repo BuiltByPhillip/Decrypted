@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { searchValues } from "~/app/_components/exercises/construct/paletteSearch";
 import {
   exprEquals,
   exprToString,
@@ -1128,5 +1129,32 @@ describe("tokenToPaletteItem", () => {
 
   it("throws for a RBRACE token", () => {
     expect(() => tokenToPaletteItem({ type: "RBRACE", value: "}" })).toThrow();
+  });
+});
+
+describe("searchValues", () => {
+  it("returns alphanumeric variable names like c1", () => {
+    const results = searchValues("c1");
+    expect(results).toContainEqual({ kind: "var", name: "c1" });
+  });
+
+  it("returns simple letter variables", () => {
+    const results = searchValues("c");
+    expect(results).toContainEqual({ kind: "var", name: "c" });
+  });
+
+  it("returns primed variables", () => {
+    const results = searchValues("c'");
+    expect(results).toContainEqual({ kind: "var", name: "c'" });
+  });
+
+  it("returns integer results for numeric input", () => {
+    const results = searchValues("42");
+    expect(results).toContainEqual({ kind: "int", value: 42 });
+  });
+
+  it("does not return a variable for a query starting with a digit", () => {
+    const results = searchValues("1c");
+    expect(results.every(r => r.kind !== "var" || r.name !== "1c")).toBe(true);
   });
 });
