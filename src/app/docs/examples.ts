@@ -140,3 +140,49 @@ step:
       - c2 \\xor s
       - c2 - s mod {prime}
     answer: c2 * s^(-1) mod {prime}`;
+
+export const TLS_EXAMPLE = `title: TLS Handshake (Key Exchange)
+
+define:
+  type: select
+  generator \\elem {g, h, k}
+  prime \\elem {p, q, n}
+  client_priv \\elem {c, a, x}
+  server_priv \\elem {s, b, y}
+
+step:
+  description: The TLS handshake begins. The client sends a ClientHello with a random nonce and an ECDH key share derived from its private value {client_priv}.
+
+step:
+  description: The client computes its ECDH key share to include in the ClientHello.
+  exercise:
+    type: construct
+    prompt: Build the client's ECDH public key share C
+    palette: ARITHMETIC_OPERATORS
+    answer: {generator} ^ {client_priv} mod {prime}
+
+step:
+  description: The server responds with a ServerHello and its own ECDH key share S, computed from its private value {server_priv}.
+  exercise:
+    type: construct
+    prompt: Build the server's ECDH public key share S
+    palette: ARITHMETIC_OPERATORS
+    answer: {generator} ^ {server_priv} mod {prime}
+
+step:
+  description: Each party can now independently compute the pre-master secret using the other party's public key share.
+  exercise:
+    type: match
+    prompt: Match each party to the pre-master secret they compute
+    hint: Both computations must yield the same result for the handshake to succeed
+    pairs:
+      - S ^ {client_priv} mod {prime} -> Client's pre-master secret
+      - C ^ {server_priv} mod {prime} -> Server's pre-master secret
+
+step:
+  description: Verify the key exchange with concrete values. Use generator = 2, prime = 11, client_priv = 3, server_priv = 5.
+  exercise:
+    type: calculate
+    prompt: What is the pre-master secret?
+    hint: Compute C = 2^3 mod 11 = 8, then raise it to server_priv mod prime
+    answer: 10`;

@@ -7,7 +7,7 @@ import DefineCodeBlock from "~/app/docs/DefineCodeBlock";
 import FieldList from "~/app/docs/FieldList";
 import { Badge } from "~/app/docs/Badge";
 import { PALETTE_CATEGORIES, operatorSymbol, symbolDisplay } from "~/app/hooks/parser";
-import { EL_GAMAL_EXAMPLE, DIFFIE_HELLMAN_EXAMPLE } from "~/app/docs/examples";
+import { EL_GAMAL_EXAMPLE, DIFFIE_HELLMAN_EXAMPLE, TLS_EXAMPLE } from "~/app/docs/examples";
 
 
 function Callout({ children }: { children: React.ReactNode }) {
@@ -733,6 +733,17 @@ custom: \cat Concatenation`}
             </Body>
             <CodeBlock label="Full Example">
               {EL_GAMAL_EXAMPLE}
+            </CodeBlock>
+
+            <SubHeading id="example-tls">TLS Handshake (Key Exchange)</SubHeading>
+            <Body>
+              A five-step exercise walking students through the ECDH-based key
+              exchange at the heart of TLS: computing each party's public key
+              share, deriving the pre-master secret independently on both sides,
+              and verifying the result with concrete numbers.
+            </Body>
+            <CodeBlock label="Full Example">
+              {TLS_EXAMPLE}
             </CodeBlock>
           </section>
 

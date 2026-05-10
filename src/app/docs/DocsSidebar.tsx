@@ -41,6 +41,7 @@ const NAV = [
     items: [
       { label: "Diffie-Hellman", href: "#example-diffie-hellman" },
       { label: "El-Gamal", href: "#example-elgamal" },
+      { label: "TLS Handshake", href: "#example-tls" },
     ],
   },
 ];
