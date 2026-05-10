@@ -8,8 +8,8 @@ import {
 import {
   DEFAULT_PALETTE_ITEMS,
   DEFAULT_VALUE_ITEMS,
-  SLOT_BUDGET,
-  estimateSlotCost,
+  PIXEL_BUDGET,
+  itemPixelWidth,
   searchPalette,
   searchValues,
 } from "~/app/_components/exercises/construct/paletteSearch";
@@ -121,10 +121,17 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
           <ExprPalette
             category="Palette"
             defaultItems={(() => {
-              const prioritySlots = customOperatorItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
-              const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
               const baseItems = defaultPaletteItems ?? DEFAULT_PALETTE_ITEMS;
-              return [...customOperatorItems, ...baseItems.slice(0, remaining)];
+              let budget = PIXEL_BUDGET;
+              for (const item of customOperatorItems) budget -= itemPixelWidth(item);
+              const filtered: typeof baseItems = [];
+              for (const item of baseItems) {
+                const w = itemPixelWidth(item);
+                if (budget < w) break;
+                filtered.push(item);
+                budget -= w;
+              }
+              return [...customOperatorItems, ...filtered];
             })()}
             searchFn={(q) => searchPalette(q, customOperatorItems)}
             onStartDrag={onStartDrag}
@@ -142,14 +149,21 @@ export default function DragAndDrop({ onTokensChangeAction, errorRange, isCorrec
         <ExprPalette
           category="Values"
           defaultItems={(() => {
-            const prioritySlots = priorityValueItems.reduce((sum, item) => sum + estimateSlotCost(item), 0);
-            const remaining = Math.max(0, Math.floor(SLOT_BUDGET - prioritySlots));
-            const filtered = DEFAULT_VALUE_ITEMS.filter(item =>
+            const deduped = DEFAULT_VALUE_ITEMS.filter(item =>
               !priorityValueItems.some(p =>
                 (p.kind === "var" && item.kind === "var" && p.name === item.name) ||
                 (p.kind === "int" && item.kind === "int" && p.value === item.value)
               )
-            ).slice(0, remaining);
+            );
+            let budget = PIXEL_BUDGET;
+            for (const item of priorityValueItems) budget -= itemPixelWidth(item);
+            const filtered: typeof deduped = [];
+            for (const item of deduped) {
+              const w = itemPixelWidth(item);
+              if (budget < w) break;
+              filtered.push(item);
+              budget -= w;
+            }
             return [...priorityValueItems, ...filtered].sort((a, b) =>
               a.kind === "var" && b.kind === "var" ? a.name.localeCompare(b.name) : 0
             );

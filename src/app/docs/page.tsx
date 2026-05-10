@@ -678,29 +678,120 @@ variables: generator, prime, alice_secret, bob_secret`}
               Custom Operators
             </SectionHeading>
             <Body>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation.
+              If the built-in operator set does not cover what your protocol
+              needs, you can define your own. Custom operators are declared in
+              a <code>custom:</code> block and can be used anywhere an
+              expression is valid: answers, options, and prefill.
             </Body>
+            <FieldList
+              required={[
+                {
+                  name: "name",
+                  description:
+                    "The identifier used in expressions. Written exactly as-is - for example, name: HASH means you write HASH x in an expression. Must not conflict with any built-in operator name (checked case-insensitively).",
+                },
+                {
+                  name: "type",
+                  description:
+                    'Either "BINARY" (two operands) or "UNARY" (one operand). Controls how the operator is parsed and how many operands it takes.',
+                },
+                {
+                  name: "precedence",
+                  description:
+                    "A non-negative integer controlling how tightly the operator binds. Higher numbers bind more tightly. Uses the same scale as built-in operators - click to expand.",
+                  details: (
+                    <div className="overflow-hidden rounded-xl border border-[#2a2f3a]">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-[#2a2f3a] bg-[rgba(28,33,41,0.6)]">
+                            <th className="text-muted px-3 py-2 text-left font-mono text-[11px] font-semibold tracking-widest uppercase">Value</th>
+                            <th className="text-muted px-3 py-2 text-left font-mono text-[11px] font-semibold tracking-widest uppercase">Built-in operators at this level</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#2a2f3a]">
+                          {[
+                            ["5", "^ (strongest)"],
+                            ["4", "*, /, mod"],
+                            ["3", "+, -"],
+                            ["2", "<, >, =, \\backslash symbols (\\elem, \\xor, …)"],
+                            ["1", "and, or"],
+                          ].map(([level, ops]) => (
+                            <tr key={level} className="bg-[rgba(34,40,49,0.4)]">
+                              <td className="text-muted px-3 py-2 font-mono text-[12px]">{level}</td>
+                              <td className="text-green px-3 py-2 font-mono text-[12px]">{ops}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ),
+                },
+              ]}
+              optional={[
+                {
+                  name: "commutative",
+                  description:
+                    'Whether a OP b and b OP a are treated as equal when checking answers. Defaults to false. Set to "true" to enable - the operator will then behave like + or * when evaluating student answers.',
+                },
+              ]}
+            />
             <CodeBlock label="Example">
-              {`custom: \oplus XOR
-custom: \cat Concatenation`}
+              {`custom:
+  operator:
+    name: HASH
+    type: UNARY
+    precedence: 6
+  operator:
+    name: SET
+    type: BINARY
+    commutative: true
+    precedence: 3`}
             </CodeBlock>
+            <Body>
+              Once defined, custom operators are written directly by name in
+              expressions. Binary operators are infix (<code>a SET b</code>),
+              and unary operators are prefix (<code>HASH x</code>). They are
+              also automatically added to the palette in construct exercises,
+              so students can drag them in without any extra configuration.
+            </Body>
+            <Callout>
+              Custom operator names tokenize as plain identifiers, not backslash
+              symbols. This means a name like <code>HASH</code> is written as{" "}
+              <code>HASH x</code> in the DSL, not <code>\HASH x</code>. The
+              name must be unique and must not match any built-in operator
+              (e.g. <code>mod</code>, <code>xor</code>, <code>forall</code>).
+            </Callout>
 
             <SectionHeading id="roles-and-symbols">
               Roles & Symbols
             </SectionHeading>
             <Body>
-              At vero eos et accusamus et iusto odio dignissimos ducimus qui
-              blanditiis praesentium voluptatum deleniti atque corrupti quos
-              dolores et quas molestias excepturi sint occaecati cupiditate non
-              provident.
+              A role reference is written as <code>{"{role_name}"}</code> and
+              acts as a placeholder that is replaced with the student's chosen
+              symbol at runtime. Role references can appear anywhere in the code.
             </Body>
             <Body>
-              Nam libero tempore, cum soluta nobis est eligendi optio cumque
-              nihil impedit quo minus id quod maxime placeat facere possimus,
-              omnis voluptas assumenda est.
+              Once a student has assigned a symbol to a role in the define
+              step, every <code>{"{role_name}"}</code> occurrence throughout
+              the exercise is replaced with that symbol. This means a single
+              exercise definition can feel personalized to each student, since
+              their chosen symbols appear consistently everywhere.
             </Body>
+            <DslCodeBlock label="Example">
+              {`step:
+  description: Alice chooses her secret {alice_secret} and computes her public key.
+  exercise:
+    type: construct
+    prompt: Build the formula Alice uses with {generator} and {prime}
+    hint: The exponent is {alice_secret}
+    answer: {generator} ^ {alice_secret} mod {prime}`}
+            </DslCodeBlock>
+            <Callout>
+              Every role reference used anywhere in the exercise must be
+              declared in the <code>define:</code> block. Using a role name
+              that has not been defined - in a prompt, hint, or expression -
+              will cause a parse error.
+            </Callout>
           </section>
 
           {/* ── Examples ── */}
