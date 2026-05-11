@@ -32,6 +32,12 @@ Educators write exercises in a built-in browser editor with live validation, and
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+# Then fill in the values:
+#   DATABASE_URL  — Postgres connection string (e.g. from Neon)
+#   JWT_SECRET    — Secret key used to sign auth tokens
+
 # Push database schema
 npm run db:push
 
