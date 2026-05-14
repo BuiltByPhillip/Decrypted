@@ -11,7 +11,6 @@ type FinishScreenProps = {
   results: Record<number, boolean>;
   onRestart: () => void;
   onRate?: (rating: number) => void;
-  surveyHref: string;
 };
 
 const SHAKE_DURATION_MS = 750;
@@ -20,7 +19,7 @@ const fadeUp = (delay: string) => ({
   animation: `fade-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay} both`,
 });
 
-export default function FinishScreen({ totalExercises, results, onRestart, onRate, surveyHref }: FinishScreenProps) {
+export default function FinishScreen({ totalExercises, results, onRestart, onRate }: FinishScreenProps) {
   const [unlocked, setUnlocked] = useState(false);
   const correct = Object.values(results).filter(Boolean).length;
   const perfect = correct === totalExercises;
@@ -104,14 +103,11 @@ export default function FinishScreen({ totalExercises, results, onRestart, onRat
         <Button variant="ghostMuted" size="md" onClick={onRestart}>
           Try again
         </Button>
-        <Link href={surveyHref}>
-          <Button variant="submit" size="md">
-            Give feedback
+        <Link href="/">
+          <Button variant="continue" size="md" className="w-36">
+            Done
           </Button>
         </Link>
-        <Button variant="continue" size="md" className="w-36 pointer-events-none opacity-30">
-          Done
-        </Button>
       </div>
 
     </div>

@@ -638,7 +638,6 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
             results={remappedResults}
             onRestart={handleRestart}
             onRate={(rating: number) => submitRating.mutate({ exerciseId, rating })}
-            surveyHref={`/survey/${exerciseId}`}
           />
         </div>
       )}
