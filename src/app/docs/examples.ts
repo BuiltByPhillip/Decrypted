@@ -174,21 +174,21 @@ define:
   server_priv \\elem {s, b, y}
 
 step:
-  description: The TLS handshake begins. The client sends a ClientHello with a random nonce and an ECDH key share derived from its private value {client_priv}.
+  description: The TLS handshake begins. The client sends a ClientHello with a random nonce and an DH key share derived from its private value {client_priv}.
 
 step:
-  description: The client computes its ECDH key share to include in the ClientHello.
+  description: The client computes its DH key share to include in the ClientHello.
   exercise:
     type: construct
-    prompt: Build the client's ECDH public key share C
+    prompt: Build the client's DH public key share C
     palette: ARITHMETIC_OPERATORS
     answer: {generator} ^ {client_priv} mod {prime}
 
 step:
-  description: The server responds with a ServerHello and its own ECDH key share S, computed from its private value {server_priv}.
+  description: The server responds with a ServerHello and its own DH key share S, computed from its private value {server_priv}.
   exercise:
     type: construct
-    prompt: Build the server's ECDH public key share S
+    prompt: Build the server's DH public key share S
     palette: ARITHMETIC_OPERATORS
     answer: {generator} ^ {server_priv} mod {prime}
 
