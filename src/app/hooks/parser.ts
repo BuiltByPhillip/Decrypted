@@ -346,6 +346,15 @@ export function tokenize(input: string): Token[] {
   return inner(0, [])
 }
 
+/**
+ * Convenience wrapper: tokenizes `input` and returns the root `Expr` node.
+ * Prefer this over constructing `ExpressionParser` directly.
+ *
+ * @param input - The raw expression string to parse.
+ * @param customOperators - Custom operators defined in the DSL `custom:` block.
+ * @returns The root of the parsed expression tree.
+ * @throws If the input cannot be tokenized or parsed.
+ */
 export function parseExpression(input: string, customOperators: CustomOperator[] = []): Expr {
   const tokens = tokenize(input);
   const parser = new ExpressionParser(tokens, customOperators);
@@ -562,6 +571,16 @@ class ExpressionParser {
   }
 }
 
+/**
+ * Main entry point for the DSL. Parses a full exercise file into a `Code` object.
+ * Processes `title:`, `custom:`, `define:`, and `step` blocks in order, then
+ * runs `validateCode` before returning.
+ *
+ * @param input - The full DSL text (newline-separated lines).
+ * @param startIndex - Line index to start parsing from (default `0`).
+ * @returns A fully validated `Code` object.
+ * @throws If any DSL syntax or semantic rule is violated.
+ */
 export function parse(input: string, startIndex: number = 0): Code {
   const lines: string[] = input.split("\n");
   let code: Code = {
@@ -725,6 +744,14 @@ export function collectRole(expr: Expr, acc: Set<string>): Set<string> {
   }
 }
 
+/**
+ * Parses a `custom:` block, collecting all `operator:` sub-definitions within it.
+ * Stops at a blank line or the start of any other top-level block.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - The index of the `custom:` line itself.
+ * @returns A tuple of the parsed `CustomOperator[]` and the index of the first unconsumed line.
+ */
 function customParse(lines: string[], startIndex: number): [CustomOperator[], number] {
   let i: number = startIndex + 1;
   let operators: CustomOperator[] = [];
@@ -749,6 +776,15 @@ function customParse(lines: string[], startIndex: number): [CustomOperator[], nu
   return [operators, i];
 }
 
+/**
+ * Parses one `operator:` definition block, reading `name:`, `type:`, `commutative:`,
+ * and `precedence:` fields. `commutative` defaults to `false` if omitted.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - The index of the `operator:` line.
+ * @returns A tuple of the completed `CustomOperator` and the index of the first unconsumed line.
+ * @throws If required fields are missing, defined more than once, or have invalid values.
+ */
 function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator, number] {
   let i: number = startIndex + 1;
   let customOp: Partial<CustomOperator> = {};
@@ -817,6 +853,17 @@ function parseOperatorDef(lines: string[], startIndex: number): [CustomOperator,
   return [customOp as CustomOperator, i];
 }
 
+/**
+ * Parses a `define:` block into an array of role `Definition` objects.
+ * Supports `select` type (set-membership syntax `role \elem {a,b,c}`) and
+ * `construct` type (`variables: a, b, c`). Validates for duplicate roles and
+ * conflicting symbol sets across definitions.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - The index of the `define:` line.
+ * @returns A tuple of the parsed `Definition[]` and the index of the first unconsumed line.
+ * @throws If duplicate roles, conflicting symbols, or unrecognised fields are found.
+ */
 function defineParse(lines: string[], startIndex: number): [Definition[], number] {
   let i: number = startIndex + 1;
   let definitions: Definition[] = [];
@@ -891,6 +938,16 @@ function defineParse(lines: string[], startIndex: number): [Definition[], number
   return [definitions, i];
 }
 
+/**
+ * Parses a single role definition line of the form `<role> \elem {a, b, c}`
+ * from an already-tokenized token array.
+ *
+ * @param tokens - Tokens for the definition line (produced by `tokenize`).
+ * @param type - The active definition type (`"select"` or `"construct"`).
+ * @param line - 0-based line index, used only for error message formatting.
+ * @returns A fully populated `Definition` object.
+ * @throws If the token sequence does not match the expected grammar.
+ */
 function parseDefinition(tokens: Token[], type: DefinitionType, line: number): Definition {
   let i: number = 0;
   let definition: Definition = {type, role: "", symbols: []};
@@ -949,6 +1006,16 @@ function parseDefinition(tokens: Token[], type: DefinitionType, line: number): D
   return definition;
 }
 
+/**
+ * Parses a `step` block into a `Step` object containing a description and
+ * an optional `exercise` sub-block.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - The index of the `step` line.
+ * @param customOperators - Custom operators for expression parsing inside the exercise.
+ * @returns A tuple of the parsed `Step` and the index of the first unconsumed line.
+ * @throws If the step has no description or contains unrecognised fields.
+ */
 function stepParse(lines: string[], startIndex: number, customOperators: CustomOperator[] = []): [Step, number] {
   let i: number = startIndex + 1;
 
@@ -997,6 +1064,17 @@ function stepParse(lines: string[], startIndex: number, customOperators: CustomO
   return [currentStep, i]
 }
 
+/**
+ * Parses an `exercise:` block, reading `type:`, `prompt:`, `hint:`, `options:`,
+ * `palette:`, `prefill:`, `answer:`, and `pairs:` fields, then delegates to
+ * `finalizeExercise` for validation before returning.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - The index of the first line inside the exercise block (line after `exercise:`).
+ * @param customOperators - Custom operators for parsing expression fields.
+ * @returns A tuple of the finalized `Exercise` and the index of the first unconsumed line.
+ * @throws If required fields are missing, duplicated, or contain invalid expressions.
+ */
 function exerciseParse(lines: string[], startIndex: number, customOperators: CustomOperator[] = []): [Exercise, number] {
   let i: number = startIndex;
   let pendingExercise: Partial<Exercise> = {};
@@ -1176,6 +1254,15 @@ function pairsParse(lines: string[], startIndex: number): [{ left: string; right
   return [pairs, i]
 }
 
+/**
+ * Parses a list of `select` exercise options from lines that start with `-`.
+ * Stops at the first line that does not start with `-`.
+ * Returns raw strings; the caller (`exerciseParse`) is responsible for tokenizing them.
+ *
+ * @param lines - All DSL lines.
+ * @param startIndex - Index of the first `-` option line.
+ * @returns A tuple of raw option strings and the index of the first unconsumed line.
+ */
 function optionsParse(lines: string[], startIndex: number): [string[], number] {
   let i: number = startIndex;
   let options: string[] = [];
@@ -1207,6 +1294,18 @@ const OPERATOR_TOKEN_TO_INTERNAL: Record<string, string> = {
   "<": "less", ">": "greater", "=": "equal",
 };
 
+/**
+ * Validates a partially-built exercise and casts it to a complete `Exercise`.
+ * Enforces type-specific invariants: `select` answers must appear in `options`;
+ * `construct` prefill tokens must form an ordered subsequence of the answer tokens.
+ *
+ * @param fields - Partial exercise fields accumulated during `exerciseParse`.
+ * @param line - 0-based index of the `exercise:` header line (for error messages).
+ * @param answerLine - 0-based index of the `answer:` field line (for error messages).
+ * @param prefillLine - 0-based index of the `prefill:` field line (for error messages).
+ * @returns The validated `Exercise` object.
+ * @throws If required fields are absent or type-specific invariants are violated.
+ */
 function finalizeExercise(fields: Partial<Exercise>, line: number, answerLine: number, prefillLine: number): Exercise {
   if (!fields.type) {
     throw new Error(`Line ${line + 1} - Exercise type must be specified`)
@@ -1278,10 +1377,12 @@ function finalizeExercise(fields: Partial<Exercise>, line: number, answerLine: n
   return fields as Exercise
 }
 
+/** Type guard: returns `true` if `value` is a valid `ExerciseType` string. */
 function isExerciseType(value: string): value is ExerciseType {
   return (EXERCISE_TYPES as readonly string[]).includes(value);
 }
 
+/** Type guard: returns `true` if `value` is a valid `DefinitionType` string. */
 function isDefinitionType(value: string): value is DefinitionType {
   return (DEFINITION_TYPES as readonly string[]).includes(value);
 }
