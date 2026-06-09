@@ -288,6 +288,7 @@ export default function ExercisePage({ dsl, exerciseId }: { dsl: string; exercis
     showFinishRef.current = false;
     setResults({});
     setStepStates({});
+    setDefinitions({});
     setShowFinish(false);
     setShowExercises(false);
     lenis?.scrollTo("top", { duration: 1.5 });

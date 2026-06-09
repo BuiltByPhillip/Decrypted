@@ -14,17 +14,24 @@ const PREVIEW_DEFINITIONS = {
 };
 
 function wrapFragment(fragment: string): string {
-  // Strip leading "exercise:" line if present, since the wrapper adds it
   const lines = fragment.split("\n");
-  const start = lines[0]?.trim() === "exercise:" ? 1 : 0;
-  const indented = lines.slice(start).map(l => `    ${l}`).join("\n");
-  return `title: Preview
-define:
+  const firstLine = lines[0]?.trim();
+  const define = `define:
   type: select
   generator \\elem {g, h, k}
   prime \\elem {p, n, m, q}
   alice_secret \\elem {a, s, x}
-  bob_secret \\elem {b, t, y}
+  bob_secret \\elem {b, t, y}`;
+
+  if (firstLine === "step:") {
+    return `title: Preview\n${define}\n${fragment}`;
+  }
+
+  // Strip leading "exercise:" line if present, since the wrapper adds it
+  const start = firstLine === "exercise:" ? 1 : 0;
+  const indented = lines.slice(start).map(l => `    ${l}`).join("\n");
+  return `title: Preview
+${define}
 step:
   description: Preview
   exercise:
